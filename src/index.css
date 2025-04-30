@@ -1,92 +1,96 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Base colors from provided palette converted to HSL */
+    --cream: 60 10% 94%;        /* #f1f0ec */
+    --teal-light: 184 34% 59%;  /* #75b2b7 */
+    --teal: 186 77% 22%;        /* #0d6269 */
+    --gold: 42 91% 65%;         /* #f6c254 */
+    --orange: 33 86% 48%;       /* #ed8707 */
+    --teal-dark: 185 76% 13%;   /* #073136 */
+    
+    /* Theme semantic colors - Light Mode */
+    --background: var(--cream);
+    --foreground: var(--teal-dark);
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: var(--teal-dark);
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: var(--teal-dark);
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --primary: var(--teal);
+    --primary-foreground: var(--cream);
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: var(--gold);
+    --secondary-foreground: var(--teal-dark);
 
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: var(--teal-light);
+    --accent-foreground: var(--teal-dark);
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 214.3 31.8% 91.4%;
+    --border: var(--teal-light);
     --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --ring: var(--teal);
 
     --radius: 0.5rem;
 
-    --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-background: var(--cream);
+    --sidebar-foreground: var(--teal-dark);
+    --sidebar-primary: var(--teal);
+    --sidebar-primary-foreground: var(--cream);
+    --sidebar-accent: var(--teal-light);
+    --sidebar-accent-foreground: var(--teal-dark);
+    --sidebar-border: var(--teal-light);
+    --sidebar-ring: var(--gold);
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    --background: var(--teal-dark);
+    --foreground: var(--cream);
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --card: var(--teal);
+    --card-foreground: var(--cream);
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: var(--teal);
+    --popover-foreground: var(--cream);
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: var(--teal-light);
+    --primary-foreground: var(--teal-dark);
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: var(--orange);
+    --secondary-foreground: var(--cream);
 
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent: var(--gold);
+    --accent-foreground: var(--teal-dark);
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 217.2 32.6% 17.5%;
+    --border: var(--teal-light);
     --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --ring: var(--gold);
+    
+    --sidebar-background: var(--teal);
+    --sidebar-foreground: var(--cream);
+    --sidebar-primary: var(--gold);
+    --sidebar-primary-foreground: var(--teal-dark);
+    --sidebar-accent: var(--teal-light);
+    --sidebar-accent-foreground: var(--cream);
+    --sidebar-border: var(--teal-light);
+    --sidebar-ring: var(--gold);
   }
 }
 

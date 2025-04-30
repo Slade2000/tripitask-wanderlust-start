@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -19,6 +20,15 @@ export default {
 		},
 		extend: {
 			colors: {
+				// Custom palette colors
+				"cream": "#f1f0ec",
+				"teal-light": "#75b2b7",
+				"teal": "#0d6269",
+				"gold": "#f6c254",
+				"orange": "#ed8707",
+				"teal-dark": "#073136",
+				
+				// Theme semantic colors
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
 				ring: 'hsl(var(--ring))',
