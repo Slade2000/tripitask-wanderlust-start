@@ -12,27 +12,39 @@ import {
 import { cn } from "@/lib/utils";
 import { LogIn, UserPlus } from "lucide-react";
 
-// Sample carousel images
+// Sample carousel images with travel quotes
 const carouselImages = [
   {
     src: "/vanlife1.jpg",
     alt: "Van parked at sunset",
     caption: "Freedom on the road",
+    quote: "The journey is the destination.",
+    font: "font-serif",
+    color: "#ed8707" // Orange
   },
   {
     src: "/vanlife2.jpg",
     alt: "Person fixing van",
     caption: "Get help when you need it",
+    quote: "Not all who wander are lost.",
+    font: "font-mono",
+    color: "#f6c254" // Gold
   },
   {
     src: "/vanlife3.jpg", 
     alt: "Community gathering",
     caption: "Connect with the community",
+    quote: "A journey is best measured in friends, not miles.",
+    font: "font-sans italic",
+    color: "#f1f0ec" // Cream
   },
   {
     src: "/vanlife4.jpg",
     alt: "Roadside assistance",
     caption: "Never travel alone",
+    quote: "Adventure awaits where the road ends.",
+    font: "font-serif font-bold",
+    color: "#75b2b7" // Light Teal
   },
 ];
 
@@ -101,6 +113,23 @@ const WelcomePage = () => {
                   }}
                 >
                   <div className="absolute inset-0 bg-black/40" />
+                  
+                  {/* Travel Quote */}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div 
+                      className={cn("max-w-3xl text-center px-6 py-8 rounded-lg bg-[#073136]/70 transform transition-all duration-700", 
+                        index === currentSlide ? "scale-100 opacity-100" : "scale-95 opacity-0"
+                      )}
+                    >
+                      <p 
+                        className={cn("text-2xl md:text-4xl mb-4 transition-colors", image.font)}
+                        style={{ color: image.color }}
+                      >
+                        "{image.quote}"
+                      </p>
+                      <p className="text-cream text-lg md:text-xl">{image.caption}</p>
+                    </div>
+                  </div>
                 </div>
               </CarouselItem>
             ))}
