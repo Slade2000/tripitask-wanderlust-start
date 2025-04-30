@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -38,16 +38,36 @@ const carouselImages = [
 
 const WelcomePage = () => {
   const navigate = useNavigate();
+  const [api, setApi] = useState(null);
   const [currentSlide, setCurrentSlide] = useState(0);
 
-  // Auto-advance carousel every 5 seconds
+  // Setup auto carousel rotation
   useEffect(() => {
+    if (!api) return;
+
     const interval = setInterval(() => {
+      api.scrollNext();
       setCurrentSlide((prev) => (prev + 1) % carouselImages.length);
     }, 5000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [api]);
+
+  // Handle manual slide changes
+  const onSelect = useCallback(() => {
+    if (!api) return;
+    setCurrentSlide(api.selectedScrollSnap());
+  }, [api]);
+
+  useEffect(() => {
+    if (!api) return;
+    
+    api.on("select", onSelect);
+    
+    return () => {
+      api.off("select", onSelect);
+    };
+  }, [api, onSelect]);
 
   // Placeholder functions for login and signup
   const handleLogin = () => {
@@ -70,7 +90,7 @@ const WelcomePage = () => {
     <div className="relative min-h-screen w-full flex flex-col justify-between overflow-hidden">
       {/* Background Carousel */}
       <div className="absolute inset-0 z-0">
-        <Carousel className="w-full h-full" selectedIndex={currentSlide}>
+        <Carousel className="w-full h-full" setApi={setApi}>
           <CarouselContent className="h-full">
             {carouselImages.map((image, index) => (
               <CarouselItem key={index} className="h-full">
