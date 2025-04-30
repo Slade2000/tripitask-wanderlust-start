@@ -1,134 +1,136 @@
 
 import { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
-import BottomNav from "@/components/BottomNav";
-import BasicInfoStep from "@/components/post-task/BasicInfoStep";
-import LocationDateStep from "@/components/post-task/LocationDateStep";
-import ReviewSubmitStep from "@/components/post-task/ReviewSubmitStep";
-import TaskConfirmation from "@/components/post-task/TaskConfirmation";
-import { createTask, TaskData } from "@/services/taskService";
 import { useAuth } from "@/contexts/AuthContext";
-import { toast } from "@/components/ui/sonner";
+import BasicInfoStep from "../components/post-task/BasicInfoStep";
+import LocationDateStep from "../components/post-task/LocationDateStep";
+import ReviewSubmitStep from "../components/post-task/ReviewSubmitStep";
+import TaskConfirmation from "../components/post-task/TaskConfirmation";
+import { TaskData, createTask } from "../services/taskService";
+import { toast } from "sonner";
+
+interface BasicInfoFormData {
+  title: string;
+  photos: File[];
+  budget: string;
+}
+
+interface LocationDateFormData {
+  location: string;
+  dueDate: Date;
+  description: string;
+}
+
+type StepType = "basic-info" | "location-date" | "review" | "confirmation";
 
 const PostTask = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
   const { user } = useAuth();
-  const [currentStep, setCurrentStep] = useState(1);
+  const [currentStep, setCurrentStep] = useState<StepType>("basic-info");
+  const [taskId, setTaskId] = useState<string | null>(null);
   const [taskData, setTaskData] = useState<TaskData>({
     title: "",
     photos: [],
     budget: "",
     location: "",
-    dueDate: undefined,
+    dueDate: new Date(),
     description: "",
+    user_id: user?.id || "",
+    due_date: new Date().toISOString(),
   });
-  const [submitting, setSubmitting] = useState(false);
-  const [taskId, setTaskId] = useState<string | null>(null);
 
-  // Check if user is logged in
-  if (!user) {
-    navigate("/login", { state: { from: location.pathname } });
-  }
+  const handleBasicInfoSubmit = (data: BasicInfoFormData) => {
+    setTaskData((prev) => ({
+      ...prev,
+      title: data.title,
+      budget: data.budget,
+      photos: data.photos,
+    }));
+    setCurrentStep("location-date");
+  };
 
-  // Handle going back to previous step or welcome screen
-  const handleBack = () => {
-    if (currentStep > 1) {
-      setCurrentStep((prev) => prev - 1);
-    } else {
-      navigate("/welcome-after-login");
+  const handleLocationDateSubmit = async (data: LocationDateFormData) => {
+    const updatedTaskData = {
+      ...taskData,
+      location: data.location,
+      description: data.description,
+      due_date: data.dueDate.toISOString(),
+    };
+    setTaskData(updatedTaskData);
+    setCurrentStep("review");
+  };
+
+  const handleSubmitTask = async () => {
+    if (!user) {
+      toast.error("You must be logged in to create a task");
+      return;
     }
-  };
 
-  // Handle proceeding to next step
-  const handleNext = (data: Partial<TaskData>) => {
-    setTaskData(prev => ({ ...prev, ...data }));
-    setCurrentStep((prev) => prev + 1);
-  };
-
-  // Handle task submission
-  const handleSubmit = async () => {
     try {
-      setSubmitting(true);
-      
-      // Submit task data to Supabase
-      const task = await createTask(taskData);
-      setTaskId(task.id);
-      
-      // Move to confirmation screen
-      setCurrentStep(4);
-      toast.success("Task posted successfully!");
+      const newTaskId = await createTask({
+        ...taskData,
+        user_id: user.id,
+      });
+
+      if (newTaskId) {
+        setTaskId(newTaskId);
+        setCurrentStep("confirmation");
+        toast.success("Task created successfully!");
+      } else {
+        toast.error("Failed to create task");
+      }
     } catch (error) {
-      console.error("Error submitting task:", error);
-      toast.error("Failed to post task. Please try again.");
-    } finally {
-      setSubmitting(false);
+      console.error("Error creating task:", error);
+      toast.error("An error occurred while creating the task");
     }
   };
 
-  // Get the current step component
   const renderCurrentStep = () => {
     switch (currentStep) {
-      case 1:
-        return <BasicInfoStep onNext={handleNext} initialData={taskData} />;
-      case 2:
-        return <LocationDateStep onNext={handleNext} initialData={taskData} />;
-      case 3:
+      case "basic-info":
         return (
-          <ReviewSubmitStep 
-            taskData={taskData} 
-            onSubmit={handleSubmit} 
-            onEdit={(step) => setCurrentStep(step)} 
-            submitting={submitting}
+          <BasicInfoStep
+            initialData={{
+              title: taskData.title,
+              photos: taskData.photos || [],
+              budget: taskData.budget,
+            }}
+            onSubmit={handleBasicInfoSubmit}
           />
         );
-      case 4:
-        return <TaskConfirmation onViewTask={() => navigate("/my-jobs")} taskId={taskId} />;
+      case "location-date":
+        return (
+          <LocationDateStep
+            initialData={{
+              location: taskData.location,
+              dueDate: new Date(taskData.due_date),
+              description: taskData.description,
+            }}
+            onSubmit={handleLocationDateSubmit}
+            onBack={() => setCurrentStep("basic-info")}
+          />
+        );
+      case "review":
+        return (
+          <ReviewSubmitStep
+            taskData={taskData}
+            onSubmit={handleSubmitTask}
+            onBack={() => setCurrentStep("location-date")}
+          />
+        );
+      case "confirmation":
+        return <TaskConfirmation taskId={taskId} />;
       default:
-        return <BasicInfoStep onNext={handleNext} initialData={taskData} />;
+        return null;
     }
   };
 
-  // Show step indicator only for steps 1-3
-  const showStepIndicator = currentStep >= 1 && currentStep <= 3;
-
   return (
-    <div className="min-h-screen bg-cream p-4 pb-20">
-      {/* Header with Back Button and Logo */}
-      <header className="flex justify-between items-center mb-6">
-        {currentStep < 4 && (
-          <Button variant="ghost" onClick={handleBack} className="p-2">
-            <ArrowLeft className="h-5 w-5 text-teal" />
-          </Button>
-        )}
-        <div className="flex-1 text-center">
-          <h1 className="text-2xl font-bold text-teal">
-            {currentStep === 4 ? "" : "Post a Task"}
-          </h1>
-        </div>
-        <div className="w-12 h-12 rounded-full bg-teal flex items-center justify-center">
-          <span className="text-lg font-bold text-cream">TT</span>
-        </div>
-      </header>
-
-      {/* Step Indicator */}
-      {showStepIndicator && (
-        <div className="mb-6">
-          <p className="text-sm text-teal-dark font-medium">
-            Step {currentStep} of 3
-          </p>
-        </div>
-      )}
-
-      {/* Current Step Content */}
-      <div className="max-w-md mx-auto">
+    <div className="min-h-screen bg-cream p-4">
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-3xl font-bold text-teal mb-6 text-center">
+          Post a New Task
+        </h1>
         {renderCurrentStep()}
       </div>
-
-      {/* Bottom Navigation */}
-      <BottomNav currentPath={location.pathname} />
     </div>
   );
 };

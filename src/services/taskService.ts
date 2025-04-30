@@ -1,31 +1,36 @@
 
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from "@/integrations/supabase/client";
 
 export interface TaskData {
+  id?: string;
   title: string;
-  description?: string;
-  budget?: string;
-  location?: string;
-  latitude?: number;
-  longitude?: number;
-  dueDate?: Date;
+  description: string;
+  budget: string;
+  location: string;
+  created_at?: string;
+  user_id: string;
+  due_date: string;
+  status?: string;
+  latitude?: number | null;
+  longitude?: number | null;
   photos?: File[];
 }
 
-export async function createTask(taskData: TaskData) {
+export async function createTask(taskData: TaskData): Promise<string | null> {
   try {
-    // 1. First create the task
-    const { data: task, error: taskError } = await supabase
+    // Create task entry
+    const { data: taskInsertData, error: taskError } = await supabase
       .from('tasks')
       .insert({
         title: taskData.title,
         description: taskData.description,
-        budget: taskData.budget ? parseFloat(taskData.budget) : null,
+        budget: taskData.budget,
         location: taskData.location,
+        user_id: taskData.user_id,
+        due_date: taskData.due_date,
+        status: 'open',
         latitude: taskData.latitude,
-        longitude: taskData.longitude,
-        due_date: taskData.dueDate,
-        creator_id: (await supabase.auth.getUser()).data.user?.id,
+        longitude: taskData.longitude
       })
       .select()
       .single();
@@ -34,72 +39,87 @@ export async function createTask(taskData: TaskData) {
       throw taskError;
     }
 
-    // 2. If there are photos, upload them to storage and create records
-    if (taskData.photos && taskData.photos.length > 0) {
-      // Create a storage folder for this task's photos
-      const taskId = task.id;
-      const photoPromises = taskData.photos.map(async (photo, index) => {
-        const fileExt = photo.name.split('.').pop();
-        const filePath = `task-photos/${taskId}/${index}-${Date.now()}.${fileExt}`;
-        
-        // Upload the photo to Supabase Storage
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('task-photos')
-          .upload(filePath, photo);
-          
-        if (uploadError) {
-          console.error('Error uploading photo:', uploadError);
-          return null;
-        }
-        
-        // Get the public URL
-        const { data: publicUrl } = supabase.storage
-          .from('task-photos')
-          .getPublicUrl(filePath);
-          
-        // Create a record in the task_photos table
-        const { error: photoError } = await supabase
-          .from('task_photos')
-          .insert({
-            task_id: taskId,
-            photo_url: publicUrl.publicUrl
-          });
-          
-        if (photoError) {
-          console.error('Error creating photo record:', photoError);
-          return null;
-        }
-        
-        return publicUrl.publicUrl;
-      });
-      
-      await Promise.all(photoPromises);
+    if (!taskInsertData || !taskInsertData.id) {
+      throw new Error("Failed to get task ID after creation");
     }
 
-    return task;
+    const taskId = taskInsertData.id;
+
+    // Handle photos if provided
+    if (taskData.photos && taskData.photos.length > 0) {
+      await uploadTaskPhotos(taskId, taskData.photos);
+    }
+
+    return taskId;
   } catch (error) {
-    console.error('Error creating task:', error);
+    console.error("Error creating task:", error);
+    return null;
+  }
+}
+
+export async function uploadTaskPhotos(taskId: string, photos: File[]): Promise<void> {
+  try {
+    for (const photo of photos) {
+      // Upload photo to storage
+      const fileName = `${taskId}/${Date.now()}-${photo.name}`;
+      const { error: storageError, data: storageData } = await supabase
+        .storage
+        .from('task-photos')
+        .upload(fileName, photo, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (storageError) {
+        throw storageError;
+      }
+
+      // Get public URL for the uploaded file
+      const { data: publicUrl } = supabase
+        .storage
+        .from('task-photos')
+        .getPublicUrl(fileName);
+
+      if (!publicUrl || !publicUrl.publicUrl) {
+        throw new Error('Failed to get public URL for uploaded photo');
+      }
+
+      // Create task photo entry
+      const { error: taskPhotoError } = await supabase
+        .from('task_photos')
+        .insert({
+          task_id: taskId,
+          photo_url: publicUrl.publicUrl
+        });
+
+      if (taskPhotoError) {
+        throw taskPhotoError;
+      }
+    }
+  } catch (error) {
+    console.error("Error uploading photos:", error);
     throw error;
   }
 }
 
-export async function getUserTasks() {
+export async function getUserTasks(userId: string) {
   try {
     const { data, error } = await supabase
       .from('tasks')
       .select(`
         *,
-        task_photos (*)
+        task_photos(*)
       `)
+      .eq('user_id', userId)
       .order('created_at', { ascending: false });
 
     if (error) {
       throw error;
     }
 
-    return data;
+    return data || [];
   } catch (error) {
-    console.error('Error fetching user tasks:', error);
-    throw error;
+    console.error("Error fetching user tasks:", error);
+    return [];
   }
 }

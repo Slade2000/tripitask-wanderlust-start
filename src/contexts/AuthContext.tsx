@@ -3,7 +3,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import { supabase } from '@/integrations/supabase/client';
 import { Session, User } from '@supabase/supabase-js';
 import { useNavigate } from 'react-router-dom';
-import { toast } from '@/components/ui/sonner';
+import { toast } from 'sonner';
 
 interface AuthContextProps {
   session: Session | null;
