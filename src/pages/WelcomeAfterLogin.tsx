@@ -1,14 +1,16 @@
 
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Plus, Briefcase } from "lucide-react";
+import BottomNav from "@/components/BottomNav";
 
 // Just use a single background image instead of a carousel
 const backgroundImage = "/vanlife1.jpg";
 
 const WelcomeAfterLogin = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [currentUser, setCurrentUser] = useState("Friend");
   
   // In a real app, this would come from your auth system
@@ -30,7 +32,7 @@ const WelcomeAfterLogin = () => {
   };
 
   return (
-    <div className="relative min-h-screen w-full flex flex-col overflow-hidden">
+    <div className="relative min-h-screen w-full flex flex-col overflow-hidden pb-16">
       {/* Top Small Logo */}
       <div className="absolute top-4 right-4 z-20">
         <div className="w-12 h-12 rounded-full bg-teal flex items-center justify-center">
@@ -79,6 +81,9 @@ const WelcomeAfterLogin = () => {
           </div>
         </div>
       </div>
+
+      {/* Bottom Navigation */}
+      <BottomNav currentPath={location.pathname} />
     </div>
   );
 };
