@@ -1,41 +1,30 @@
 
-import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
-const Home = () => {
+const FindWork = () => {
   const navigate = useNavigate();
-
-  const handleLogout = () => {
-    // TODO: Implement actual logout functionality
-    navigate("/");
-  };
-
-  // After login, redirect to the welcome page
-  useEffect(() => {
-    navigate("/welcome-after-login");
-  }, [navigate]);
 
   return (
     <div className="min-h-screen bg-cream p-4">
       <header className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-teal">TripiTask</h1>
-        <Button variant="outline" onClick={handleLogout}>
-          Logout
+        <Button variant="outline" onClick={() => navigate("/welcome-after-login")}>
+          Back
         </Button>
       </header>
       
       <div className="text-center my-20">
         <h2 className="text-2xl font-bold text-teal-dark mb-4">
-          Welcome to TripiTask Home!
+          Find Work
         </h2>
         <p className="text-teal-dark">
-          This is a placeholder for the main dashboard. 
-          More functionality coming soon.
+          This is where users will be able to browse available tasks.
+          Task listing implementation coming soon.
         </p>
       </div>
     </div>
   );
 };
 
-export default Home;
+export default FindWork;

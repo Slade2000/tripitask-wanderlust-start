@@ -13,6 +13,9 @@ import Home from "./pages/Home";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import NotFound from "./pages/NotFound";
+import WelcomeAfterLogin from "./pages/WelcomeAfterLogin";
+import PostTask from "./pages/PostTask";
+import FindWork from "./pages/FindWork";
 
 const queryClient = new QueryClient();
 
@@ -28,6 +31,9 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/home" element={<Home />} />
+            <Route path="/welcome-after-login" element={<WelcomeAfterLogin />} />
+            <Route path="/post-task" element={<PostTask />} />
+            <Route path="/find-work" element={<FindWork />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy" element={<Privacy />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
