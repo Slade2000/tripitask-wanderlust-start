@@ -1,85 +1,22 @@
 
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel";
 import { cn } from "@/lib/utils";
 import { LogIn, UserPlus } from "lucide-react";
 
-// Sample carousel images with travel quotes
-const carouselImages = [
-  {
-    src: "/vanlife1.jpg",
-    alt: "Van parked at sunset",
-    caption: "Freedom on the road",
-    quote: "The journey is the destination.",
-    font: "font-serif",
-    color: "#ed8707" // Orange
-  },
-  {
-    src: "/vanlife2.jpg",
-    alt: "Person fixing van",
-    caption: "Get help when you need it",
-    quote: "Not all who wander are lost.",
-    font: "font-mono",
-    color: "#f6c254" // Gold
-  },
-  {
-    src: "/vanlife3.jpg", 
-    alt: "Community gathering",
-    caption: "Connect with the community",
-    quote: "A journey is best measured in friends, not miles.",
-    font: "font-sans italic",
-    color: "#f1f0ec" // Cream
-  },
-  {
-    src: "/vanlife4.jpg",
-    alt: "Roadside assistance",
-    caption: "Never travel alone",
-    quote: "Adventure awaits where the road ends.",
-    font: "font-serif font-bold",
-    color: "#75b2b7" // Light Teal
-  },
-];
+// Single background image with quote
+const background = {
+  src: "/vanlife1.jpg",
+  alt: "Van parked at sunset",
+  caption: "Freedom on the road",
+  quote: "The journey is the destination.",
+  font: "font-serif",
+  color: "#f1f0ec" // Cream color for better visibility
+};
 
 const WelcomePage = () => {
   const navigate = useNavigate();
-  const [api, setApi] = useState(null);
-  const [currentSlide, setCurrentSlide] = useState(0);
-
-  // Setup auto carousel rotation
-  useEffect(() => {
-    if (!api) return;
-
-    const interval = setInterval(() => {
-      api.scrollNext();
-      setCurrentSlide((prev) => (prev + 1) % carouselImages.length);
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, [api]);
-
-  // Handle manual slide changes
-  const onSelect = useCallback(() => {
-    if (!api) return;
-    setCurrentSlide(api.selectedScrollSnap());
-  }, [api]);
-
-  useEffect(() => {
-    if (!api) return;
-    
-    api.on("select", onSelect);
-    
-    return () => {
-      api.off("select", onSelect);
-    };
-  }, [api, onSelect]);
 
   // Placeholder functions for login and signup
   const handleLogin = () => {
@@ -100,41 +37,29 @@ const WelcomePage = () => {
 
   return (
     <div className="relative min-h-screen w-full flex flex-col justify-between overflow-hidden">
-      {/* Background Carousel */}
+      {/* Static Background */}
       <div className="absolute inset-0 z-0">
-        <Carousel className="w-full h-full" setApi={setApi}>
-          <CarouselContent className="h-full">
-            {carouselImages.map((image, index) => (
-              <CarouselItem key={index} className="h-full">
-                <div
-                  className="w-full h-screen bg-cover bg-center"
-                  style={{
-                    backgroundImage: `url(${image.src})`,
-                  }}
-                >
-                  <div className="absolute inset-0 bg-black/40" />
-                  
-                  {/* Travel Quote */}
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div 
-                      className={cn("max-w-3xl text-center px-6 py-8 rounded-lg bg-[#073136]/70 transform transition-all duration-700", 
-                        index === currentSlide ? "scale-100 opacity-100" : "scale-95 opacity-0"
-                      )}
-                    >
-                      <p 
-                        className={cn("text-2xl md:text-4xl mb-4 transition-colors", image.font)}
-                        style={{ color: image.color }}
-                      >
-                        "{image.quote}"
-                      </p>
-                      <p className="text-cream text-lg md:text-xl">{image.caption}</p>
-                    </div>
-                  </div>
-                </div>
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-        </Carousel>
+        <div
+          className="w-full h-screen bg-cover bg-center"
+          style={{
+            backgroundImage: `url(${background.src})`,
+          }}
+        >
+          <div className="absolute inset-0 bg-black/40" />
+          
+          {/* Travel Quote */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="max-w-3xl text-center px-6 py-8 rounded-lg bg-[#073136]/70">
+              <p 
+                className={cn("text-2xl md:text-4xl mb-4", background.font)}
+                style={{ color: background.color }}
+              >
+                "{background.quote}"
+              </p>
+              <p className="text-cream text-lg md:text-xl">{background.caption}</p>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Content Overlay */}
