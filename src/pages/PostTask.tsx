@@ -28,13 +28,12 @@ const PostTask = () => {
   const [taskId, setTaskId] = useState<string | null>(null);
   const [taskData, setTaskData] = useState<TaskData>({
     title: "",
-    photos: [],
+    description: "",
     budget: "",
     location: "",
-    dueDate: new Date(),
-    description: "",
     user_id: user?.id || "",
     due_date: new Date().toISOString(),
+    photos: []
   });
 
   const handleBasicInfoSubmit = (data: BasicInfoFormData) => {
@@ -83,6 +82,11 @@ const PostTask = () => {
     }
   };
 
+  const handleViewTask = () => {
+    // Navigate to task details page
+    window.location.href = `/tasks/${taskId}`;
+  };
+
   const renderCurrentStep = () => {
     switch (currentStep) {
       case "basic-info":
@@ -117,7 +121,7 @@ const PostTask = () => {
           />
         );
       case "confirmation":
-        return <TaskConfirmation taskId={taskId} />;
+        return <TaskConfirmation taskId={taskId} onViewTask={handleViewTask} />;
       default:
         return null;
     }

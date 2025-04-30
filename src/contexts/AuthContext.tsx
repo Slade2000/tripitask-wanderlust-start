@@ -5,10 +5,17 @@ import { Session, User } from '@supabase/supabase-js';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
+interface Profile {
+  id: string;
+  full_name: string | null;
+  avatar_url: string | null;
+  created_at: string | null;
+}
+
 interface AuthContextProps {
   session: Session | null;
   user: User | null;
-  profile: any | null;
+  profile: Profile | null;
   isLoading: boolean;
   signUp: (email: string, password: string, metadata?: { full_name?: string }) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
@@ -20,7 +27,7 @@ const AuthContext = createContext<AuthContextProps | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<any | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -70,7 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      setProfile(data);
+      setProfile(data as Profile);
     } catch (error) {
       console.error('Error in fetchProfile:', error);
     }

@@ -1,53 +1,35 @@
 
 import { Button } from "@/components/ui/button";
-import { Check } from "lucide-react";
+import { CheckCircle } from "lucide-react";
 
-type TaskConfirmationProps = {
+export interface TaskConfirmationProps {
+  taskId: string | null;
   onViewTask: () => void;
-  taskId?: string | null;
-};
+}
 
-const TaskConfirmation = ({ onViewTask, taskId }: TaskConfirmationProps) => {
+const TaskConfirmation = ({ taskId, onViewTask }: TaskConfirmationProps) => {
   return (
-    <div className="flex flex-col items-center text-center space-y-6">
-      <div className="bg-teal/10 rounded-full p-6">
-        <Check className="h-16 w-16 text-teal" />
+    <div className="bg-white p-6 rounded-lg shadow-md text-center">
+      <div className="flex justify-center mb-6">
+        <CheckCircle className="h-24 w-24 text-green-500" />
       </div>
-
-      <div className="space-y-2">
-        <h1 className="text-3xl font-bold text-teal-dark">Success!</h1>
-        <p className="text-lg text-teal-dark">Your task has been posted!</p>
-        {taskId && <p className="text-sm text-teal-dark">Task ID: {taskId}</p>}
+      <h2 className="text-2xl font-bold text-teal mb-4">Task Posted Successfully!</h2>
+      <p className="text-gray-600 mb-6">
+        Your task has been created and is now visible to potential helpers.
+        You'll receive notifications when someone expresses interest.
+      </p>
+      <div className="flex flex-col space-y-4">
+        <Button onClick={onViewTask} className="bg-teal hover:bg-teal-dark text-white">
+          View Task Details
+        </Button>
+        <Button 
+          onClick={() => window.location.href = "/my-jobs"} 
+          variant="outline" 
+          className="border-teal text-teal hover:bg-teal/10"
+        >
+          Go to My Tasks
+        </Button>
       </div>
-
-      <div className="border border-teal-light/30 rounded-lg p-5 w-full bg-cream shadow-sm">
-        <h3 className="font-semibold text-teal-dark mb-4">What happens next</h3>
-        <ol className="space-y-3 text-left">
-          <li className="flex gap-3">
-            <span className="bg-teal text-cream font-bold rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0">1</span>
-            <span>Nearby service providers will now send you offers.</span>
-          </li>
-          <li className="flex gap-3">
-            <span className="bg-teal text-cream font-bold rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0">2</span>
-            <span>You choose the offer that suits you.</span>
-          </li>
-          <li className="flex gap-3">
-            <span className="bg-teal text-cream font-bold rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0">3</span>
-            <span>Chat with your service provider.</span>
-          </li>
-          <li className="flex gap-3">
-            <span className="bg-teal text-cream font-bold rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0">4</span>
-            <span>Get your task done.</span>
-          </li>
-        </ol>
-      </div>
-
-      <Button
-        onClick={onViewTask}
-        className="w-full bg-teal hover:bg-teal-dark text-cream py-6 text-lg"
-      >
-        View My Posted Task
-      </Button>
     </div>
   );
 };
