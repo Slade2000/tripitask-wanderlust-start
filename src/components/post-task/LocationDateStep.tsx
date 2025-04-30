@@ -10,26 +10,36 @@ import { format } from "date-fns";
 import { Calendar as CalendarIcon, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-type LocationDateProps = {
-  onNext: (data: {
-    location: string;
-    dueDate: Date | undefined;
-    description: string;
-  }) => void;
+export interface LocationDateFormData {
+  location: string;
+  dueDate: Date;
+  description: string;
+}
+
+export interface LocationDateProps {
   initialData: {
     location: string;
     dueDate: Date | undefined;
     description: string;
   };
-};
+  onSubmit: (data: LocationDateFormData) => void;
+  onBack: () => void;
+}
 
-const LocationDateStep = ({ onNext, initialData }: LocationDateProps) => {
+const LocationDateStep = ({ initialData, onSubmit, onBack }: LocationDateProps) => {
   const [location, setLocation] = useState(initialData.location);
   const [dueDate, setDueDate] = useState<Date | undefined>(initialData.dueDate);
   const [description, setDescription] = useState(initialData.description);
 
-  const handleNext = () => {
-    onNext({ location, dueDate, description });
+  const handleSubmit = () => {
+    if (!dueDate) {
+      // Add a default date if none selected
+      const defaultDate = new Date();
+      defaultDate.setDate(defaultDate.getDate() + 7); // Default to 7 days from now
+      onSubmit({ location, dueDate: defaultDate, description });
+      return;
+    }
+    onSubmit({ location, dueDate, description });
   };
 
   const handleCurrentLocation = () => {
@@ -110,12 +120,20 @@ const LocationDateStep = ({ onNext, initialData }: LocationDateProps) => {
         />
       </div>
 
-      <div className="pt-6">
+      <div className="flex flex-col space-y-4 pt-6">
         <Button
-          onClick={handleNext}
+          onClick={handleSubmit}
           className="w-full bg-gold hover:bg-orange text-teal-dark py-6 text-lg"
         >
           NEXT
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onBack}
+          className="w-full"
+        >
+          Back
         </Button>
       </div>
     </div>

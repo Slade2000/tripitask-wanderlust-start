@@ -3,24 +3,24 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Edit } from "lucide-react";
 import { format } from "date-fns";
+import { TaskData } from "@/services/taskService";
 
-type TaskData = {
-  title: string;
-  photos: File[];
-  budget: string;
-  location: string;
-  dueDate: Date | undefined;
-  description: string;
-};
-
-type ReviewSubmitProps = {
+interface ReviewSubmitStepProps {
   taskData: TaskData;
   onSubmit: () => void;
-  onEdit: (step: number) => void;
-  submitting: boolean;
-};
+  onBack: () => void;
+  submitting?: boolean;
+}
 
-const ReviewSubmitStep = ({ taskData, onSubmit, onEdit, submitting }: ReviewSubmitProps) => {
+const ReviewSubmitStep = ({ 
+  taskData, 
+  onSubmit, 
+  onBack, 
+  submitting = false 
+}: ReviewSubmitStepProps) => {
+  // Format dueDate from ISO string to Date for display if it exists
+  const dueDate = taskData.due_date ? new Date(taskData.due_date) : undefined;
+  
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-semibold text-teal-dark text-center">
@@ -42,7 +42,7 @@ const ReviewSubmitStep = ({ taskData, onSubmit, onEdit, submitting }: ReviewSubm
               <Button 
                 variant="ghost" 
                 className="h-8 px-2 text-teal"
-                onClick={() => onEdit(1)}
+                onClick={() => onBack()}
                 disabled={submitting}
               >
                 <Edit className="h-4 w-4 mr-1" /> Edit
@@ -63,7 +63,7 @@ const ReviewSubmitStep = ({ taskData, onSubmit, onEdit, submitting }: ReviewSubm
               <Button 
                 variant="ghost" 
                 className="h-8 px-2 text-teal"
-                onClick={() => onEdit(2)}
+                onClick={() => onBack()}
                 disabled={submitting}
               >
                 <Edit className="h-4 w-4 mr-1" /> Edit
@@ -73,7 +73,7 @@ const ReviewSubmitStep = ({ taskData, onSubmit, onEdit, submitting }: ReviewSubm
         </Card>
       )}
 
-      {taskData.photos.length > 0 && (
+      {taskData.photos && taskData.photos.length > 0 && (
         <Card className="border-teal-light">
           <CardContent className="pt-4 px-4">
             <div className="space-y-2">
@@ -82,7 +82,7 @@ const ReviewSubmitStep = ({ taskData, onSubmit, onEdit, submitting }: ReviewSubm
                 <Button 
                   variant="ghost" 
                   className="h-8 px-2 text-teal"
-                  onClick={() => onEdit(1)}
+                  onClick={() => onBack()}
                   disabled={submitting}
                 >
                   <Edit className="h-4 w-4 mr-1" /> Edit
@@ -118,7 +118,7 @@ const ReviewSubmitStep = ({ taskData, onSubmit, onEdit, submitting }: ReviewSubm
               <Button 
                 variant="ghost" 
                 className="h-8 px-2 text-teal"
-                onClick={() => onEdit(1)}
+                onClick={() => onBack()}
                 disabled={submitting}
               >
                 <Edit className="h-4 w-4 mr-1" /> Edit
@@ -139,7 +139,7 @@ const ReviewSubmitStep = ({ taskData, onSubmit, onEdit, submitting }: ReviewSubm
               <Button 
                 variant="ghost" 
                 className="h-8 px-2 text-teal"
-                onClick={() => onEdit(2)}
+                onClick={() => onBack()}
                 disabled={submitting}
               >
                 <Edit className="h-4 w-4 mr-1" /> Edit
@@ -149,18 +149,18 @@ const ReviewSubmitStep = ({ taskData, onSubmit, onEdit, submitting }: ReviewSubm
         </Card>
       )}
 
-      {taskData.dueDate && (
+      {dueDate && (
         <Card className="border-teal-light">
           <CardContent className="pt-4 px-4">
             <div className="flex justify-between items-center">
               <div>
                 <h3 className="font-medium text-teal-dark">Preferred Due Date</h3>
-                <p>{format(taskData.dueDate, "PPP")}</p>
+                <p>{format(dueDate, "PPP")}</p>
               </div>
               <Button 
                 variant="ghost" 
                 className="h-8 px-2 text-teal"
-                onClick={() => onEdit(2)}
+                onClick={() => onBack()}
                 disabled={submitting}
               >
                 <Edit className="h-4 w-4 mr-1" /> Edit

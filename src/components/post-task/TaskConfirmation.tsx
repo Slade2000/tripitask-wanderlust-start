@@ -8,6 +8,10 @@ export interface TaskConfirmationProps {
 }
 
 const TaskConfirmation = ({ taskId, onViewTask }: TaskConfirmationProps) => {
+  const handleGoToMyTasks = () => {
+    window.location.href = "/my-jobs";
+  };
+  
   return (
     <div className="bg-white p-6 rounded-lg shadow-md text-center">
       <div className="flex justify-center mb-6">
@@ -23,7 +27,7 @@ const TaskConfirmation = ({ taskId, onViewTask }: TaskConfirmationProps) => {
           View Task Details
         </Button>
         <Button 
-          onClick={() => window.location.href = "/my-jobs"} 
+          onClick={handleGoToMyTasks} 
           variant="outline" 
           className="border-teal text-teal hover:bg-teal/10"
         >

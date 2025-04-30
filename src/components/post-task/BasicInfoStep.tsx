@@ -5,20 +5,22 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Pencil, Image, Plus } from "lucide-react";
 
-type BasicInfoProps = {
-  onNext: (data: {
-    title: string;
-    photos: File[];
-    budget: string;
-  }) => void;
+export interface BasicInfoFormData {
+  title: string;
+  photos: File[];
+  budget: string;
+}
+
+export interface BasicInfoProps {
   initialData: {
     title: string;
     photos: File[];
     budget: string;
   };
-};
+  onSubmit: (data: BasicInfoFormData) => void;
+}
 
-const BasicInfoStep = ({ onNext, initialData }: BasicInfoProps) => {
+const BasicInfoStep = ({ onSubmit, initialData }: BasicInfoProps) => {
   const [title, setTitle] = useState(initialData.title);
   const [photos, setPhotos] = useState<File[]>(initialData.photos);
   const [budget, setBudget] = useState(initialData.budget);
@@ -37,12 +39,12 @@ const BasicInfoStep = ({ onNext, initialData }: BasicInfoProps) => {
     setPhotos(photos.filter((_, i) => i !== index));
   };
 
-  const handleNext = () => {
+  const handleSubmit = () => {
     if (!title.trim()) {
       setTitleError("Please enter a task title");
       return;
     }
-    onNext({ title, photos, budget });
+    onSubmit({ title, photos, budget });
   };
 
   return (
@@ -126,7 +128,7 @@ const BasicInfoStep = ({ onNext, initialData }: BasicInfoProps) => {
 
       <div className="pt-6">
         <Button
-          onClick={handleNext}
+          onClick={handleSubmit}
           className="w-full bg-gold hover:bg-orange text-teal-dark py-6 text-lg"
         >
           NEXT

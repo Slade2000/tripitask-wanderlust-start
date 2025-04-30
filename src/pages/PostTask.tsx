@@ -1,24 +1,12 @@
 
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import BasicInfoStep from "../components/post-task/BasicInfoStep";
-import LocationDateStep from "../components/post-task/LocationDateStep";
+import BasicInfoStep, { BasicInfoFormData } from "../components/post-task/BasicInfoStep";
+import LocationDateStep, { LocationDateFormData } from "../components/post-task/LocationDateStep";
 import ReviewSubmitStep from "../components/post-task/ReviewSubmitStep";
 import TaskConfirmation from "../components/post-task/TaskConfirmation";
 import { TaskData, createTask } from "../services/taskService";
 import { toast } from "sonner";
-
-interface BasicInfoFormData {
-  title: string;
-  photos: File[];
-  budget: string;
-}
-
-interface LocationDateFormData {
-  location: string;
-  dueDate: Date;
-  description: string;
-}
 
 type StepType = "basic-info" | "location-date" | "review" | "confirmation";
 
@@ -26,6 +14,7 @@ const PostTask = () => {
   const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState<StepType>("basic-info");
   const [taskId, setTaskId] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
   const [taskData, setTaskData] = useState<TaskData>({
     title: "",
     description: "",
@@ -46,7 +35,7 @@ const PostTask = () => {
     setCurrentStep("location-date");
   };
 
-  const handleLocationDateSubmit = async (data: LocationDateFormData) => {
+  const handleLocationDateSubmit = (data: LocationDateFormData) => {
     const updatedTaskData = {
       ...taskData,
       location: data.location,
@@ -63,6 +52,7 @@ const PostTask = () => {
       return;
     }
 
+    setSubmitting(true);
     try {
       const newTaskId = await createTask({
         ...taskData,
@@ -79,6 +69,8 @@ const PostTask = () => {
     } catch (error) {
       console.error("Error creating task:", error);
       toast.error("An error occurred while creating the task");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -118,6 +110,7 @@ const PostTask = () => {
             taskData={taskData}
             onSubmit={handleSubmitTask}
             onBack={() => setCurrentStep("location-date")}
+            submitting={submitting}
           />
         );
       case "confirmation":

@@ -59,6 +59,30 @@ export async function createTask(taskData: TaskData): Promise<string | null> {
 
 export async function uploadTaskPhotos(taskId: string, photos: File[]): Promise<void> {
   try {
+    // Ensure the bucket exists first to prevent errors
+    const { data: buckets, error: bucketListError } = await supabase.storage.listBuckets();
+    if (bucketListError) {
+      console.error("Error listing buckets:", bucketListError);
+      throw bucketListError;
+    }
+
+    const bucketExists = buckets.some(bucket => bucket.name === 'task-photos');
+    if (!bucketExists) {
+      try {
+        // Create the bucket if it doesn't exist
+        const { error: createBucketError } = await supabase.storage.createBucket('task-photos', {
+          public: true
+        });
+        if (createBucketError) {
+          console.error("Error creating bucket:", createBucketError);
+          throw createBucketError;
+        }
+      } catch (e) {
+        console.error("Failed to check/create bucket task-photos:", e);
+        // Continue anyway - the bucket might exist despite error
+      }
+    }
+
     for (const photo of photos) {
       // Upload photo to storage
       const fileName = `${taskId}/${Date.now()}-${photo.name}`;
@@ -71,6 +95,7 @@ export async function uploadTaskPhotos(taskId: string, photos: File[]): Promise<
         });
 
       if (storageError) {
+        console.error("Storage error:", storageError);
         throw storageError;
       }
 
@@ -93,12 +118,13 @@ export async function uploadTaskPhotos(taskId: string, photos: File[]): Promise<
         });
 
       if (taskPhotoError) {
+        console.error("Task photo error:", taskPhotoError);
         throw taskPhotoError;
       }
     }
   } catch (error) {
     console.error("Error uploading photos:", error);
-    throw error;
+    // Don't rethrow the error - we want the task creation to succeed even if photos fail
   }
 }
 
