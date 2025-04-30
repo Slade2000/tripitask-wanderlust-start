@@ -5,18 +5,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LogIn } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Login = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const { signIn, isLoading } = useAuth();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement actual login functionality
-    console.log("Login attempt with:", { email });
-    // For now, just navigate to home
-    navigate("/home");
+    await signIn(email, password);
   };
 
   return (
@@ -39,6 +38,7 @@ const Login = () => {
                 placeholder="hello@example.com"
                 required
                 className="bg-cream/50"
+                disabled={isLoading}
               />
             </div>
 
@@ -52,6 +52,7 @@ const Login = () => {
                 placeholder="••••••••"
                 required
                 className="bg-cream/50"
+                disabled={isLoading}
               />
             </div>
 
@@ -65,8 +66,12 @@ const Login = () => {
               </button>
             </div>
 
-            <Button type="submit" className="w-full bg-teal hover:bg-teal-dark">
-              <LogIn className="mr-2" /> Log In
+            <Button 
+              type="submit" 
+              className="w-full bg-teal hover:bg-teal-dark"
+              disabled={isLoading}
+            >
+              <LogIn className="mr-2" /> {isLoading ? 'Logging in...' : 'Log In'}
             </Button>
           </form>
 

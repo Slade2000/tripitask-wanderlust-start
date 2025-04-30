@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { UserPlus } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -12,13 +13,19 @@ const Signup = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [name, setName] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const { signUp, isLoading } = useAuth();
 
-  const handleSignup = (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement actual signup functionality
-    console.log("Signup attempt with:", { email, name });
-    // For now, just navigate to home
-    navigate("/home");
+    setError(null);
+    
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+    
+    await signUp(email, password, { full_name: name });
   };
 
   return (
@@ -41,6 +48,7 @@ const Signup = () => {
                 placeholder="John Doe"
                 required
                 className="bg-cream/50"
+                disabled={isLoading}
               />
             </div>
 
@@ -54,6 +62,7 @@ const Signup = () => {
                 placeholder="hello@example.com"
                 required
                 className="bg-cream/50"
+                disabled={isLoading}
               />
             </div>
 
@@ -67,6 +76,7 @@ const Signup = () => {
                 placeholder="••••••••"
                 required
                 className="bg-cream/50"
+                disabled={isLoading}
               />
             </div>
 
@@ -80,11 +90,17 @@ const Signup = () => {
                 placeholder="••••••••"
                 required
                 className="bg-cream/50"
+                disabled={isLoading}
               />
+              {error && <p className="text-red-500 text-sm">{error}</p>}
             </div>
 
-            <Button type="submit" className="w-full bg-gold hover:bg-orange text-teal-dark">
-              <UserPlus className="mr-2" /> Sign Up
+            <Button 
+              type="submit" 
+              className="w-full bg-gold hover:bg-orange text-teal-dark"
+              disabled={isLoading}
+            >
+              <UserPlus className="mr-2" /> {isLoading ? 'Creating account...' : 'Sign Up'}
             </Button>
           </form>
 
@@ -94,6 +110,7 @@ const Signup = () => {
               <button
                 onClick={() => navigate("/login")}
                 className="text-teal hover:text-teal-dark font-medium"
+                disabled={isLoading}
               >
                 Log in
               </button>

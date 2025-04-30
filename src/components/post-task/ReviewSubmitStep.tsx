@@ -17,9 +17,10 @@ type ReviewSubmitProps = {
   taskData: TaskData;
   onSubmit: () => void;
   onEdit: (step: number) => void;
+  submitting: boolean;
 };
 
-const ReviewSubmitStep = ({ taskData, onSubmit, onEdit }: ReviewSubmitProps) => {
+const ReviewSubmitStep = ({ taskData, onSubmit, onEdit, submitting }: ReviewSubmitProps) => {
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-semibold text-teal-dark text-center">
@@ -42,6 +43,7 @@ const ReviewSubmitStep = ({ taskData, onSubmit, onEdit }: ReviewSubmitProps) => 
                 variant="ghost" 
                 className="h-8 px-2 text-teal"
                 onClick={() => onEdit(1)}
+                disabled={submitting}
               >
                 <Edit className="h-4 w-4 mr-1" /> Edit
               </Button>
@@ -62,6 +64,7 @@ const ReviewSubmitStep = ({ taskData, onSubmit, onEdit }: ReviewSubmitProps) => 
                 variant="ghost" 
                 className="h-8 px-2 text-teal"
                 onClick={() => onEdit(2)}
+                disabled={submitting}
               >
                 <Edit className="h-4 w-4 mr-1" /> Edit
               </Button>
@@ -80,6 +83,7 @@ const ReviewSubmitStep = ({ taskData, onSubmit, onEdit }: ReviewSubmitProps) => 
                   variant="ghost" 
                   className="h-8 px-2 text-teal"
                   onClick={() => onEdit(1)}
+                  disabled={submitting}
                 >
                   <Edit className="h-4 w-4 mr-1" /> Edit
                 </Button>
@@ -115,6 +119,7 @@ const ReviewSubmitStep = ({ taskData, onSubmit, onEdit }: ReviewSubmitProps) => 
                 variant="ghost" 
                 className="h-8 px-2 text-teal"
                 onClick={() => onEdit(1)}
+                disabled={submitting}
               >
                 <Edit className="h-4 w-4 mr-1" /> Edit
               </Button>
@@ -135,6 +140,7 @@ const ReviewSubmitStep = ({ taskData, onSubmit, onEdit }: ReviewSubmitProps) => 
                 variant="ghost" 
                 className="h-8 px-2 text-teal"
                 onClick={() => onEdit(2)}
+                disabled={submitting}
               >
                 <Edit className="h-4 w-4 mr-1" /> Edit
               </Button>
@@ -155,6 +161,7 @@ const ReviewSubmitStep = ({ taskData, onSubmit, onEdit }: ReviewSubmitProps) => 
                 variant="ghost" 
                 className="h-8 px-2 text-teal"
                 onClick={() => onEdit(2)}
+                disabled={submitting}
               >
                 <Edit className="h-4 w-4 mr-1" /> Edit
               </Button>
@@ -167,8 +174,9 @@ const ReviewSubmitStep = ({ taskData, onSubmit, onEdit }: ReviewSubmitProps) => 
         <Button
           onClick={onSubmit}
           className="w-full bg-teal hover:bg-teal-dark text-cream py-6 text-lg"
+          disabled={submitting}
         >
-          Submit Task
+          {submitting ? 'Submitting...' : 'Submit Task'}
         </Button>
       </div>
     </div>

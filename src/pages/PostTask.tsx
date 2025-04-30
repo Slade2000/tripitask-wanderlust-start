@@ -8,20 +8,14 @@ import BasicInfoStep from "@/components/post-task/BasicInfoStep";
 import LocationDateStep from "@/components/post-task/LocationDateStep";
 import ReviewSubmitStep from "@/components/post-task/ReviewSubmitStep";
 import TaskConfirmation from "@/components/post-task/TaskConfirmation";
-
-// Define the TaskData type for our form state
-type TaskData = {
-  title: string;
-  photos: File[];
-  budget: string;
-  location: string;
-  dueDate: Date | undefined;
-  description: string;
-};
+import { createTask, TaskData } from "@/services/taskService";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "@/components/ui/sonner";
 
 const PostTask = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [taskData, setTaskData] = useState<TaskData>({
     title: "",
@@ -31,6 +25,13 @@ const PostTask = () => {
     dueDate: undefined,
     description: "",
   });
+  const [submitting, setSubmitting] = useState(false);
+  const [taskId, setTaskId] = useState<string | null>(null);
+
+  // Check if user is logged in
+  if (!user) {
+    navigate("/login", { state: { from: location.pathname } });
+  }
 
   // Handle going back to previous step or welcome screen
   const handleBack = () => {
@@ -48,10 +49,23 @@ const PostTask = () => {
   };
 
   // Handle task submission
-  const handleSubmit = () => {
-    // In a real app, we would send this data to a server
-    console.log("Submitting task:", taskData);
-    setCurrentStep(4); // Move to confirmation screen
+  const handleSubmit = async () => {
+    try {
+      setSubmitting(true);
+      
+      // Submit task data to Supabase
+      const task = await createTask(taskData);
+      setTaskId(task.id);
+      
+      // Move to confirmation screen
+      setCurrentStep(4);
+      toast.success("Task posted successfully!");
+    } catch (error) {
+      console.error("Error submitting task:", error);
+      toast.error("Failed to post task. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   // Get the current step component
@@ -67,10 +81,11 @@ const PostTask = () => {
             taskData={taskData} 
             onSubmit={handleSubmit} 
             onEdit={(step) => setCurrentStep(step)} 
+            submitting={submitting}
           />
         );
       case 4:
-        return <TaskConfirmation onViewTask={() => navigate("/my-jobs")} />;
+        return <TaskConfirmation onViewTask={() => navigate("/my-jobs")} taskId={taskId} />;
       default:
         return <BasicInfoStep onNext={handleNext} initialData={taskData} />;
     }

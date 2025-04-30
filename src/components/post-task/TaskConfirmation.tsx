@@ -4,9 +4,10 @@ import { Check } from "lucide-react";
 
 type TaskConfirmationProps = {
   onViewTask: () => void;
+  taskId?: string | null;
 };
 
-const TaskConfirmation = ({ onViewTask }: TaskConfirmationProps) => {
+const TaskConfirmation = ({ onViewTask, taskId }: TaskConfirmationProps) => {
   return (
     <div className="flex flex-col items-center text-center space-y-6">
       <div className="bg-teal/10 rounded-full p-6">
@@ -16,6 +17,7 @@ const TaskConfirmation = ({ onViewTask }: TaskConfirmationProps) => {
       <div className="space-y-2">
         <h1 className="text-3xl font-bold text-teal-dark">Success!</h1>
         <p className="text-lg text-teal-dark">Your task has been posted!</p>
+        {taskId && <p className="text-sm text-teal-dark">Task ID: {taskId}</p>}
       </div>
 
       <div className="border border-teal-light/30 rounded-lg p-5 w-full bg-cream shadow-sm">
