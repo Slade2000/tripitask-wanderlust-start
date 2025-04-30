@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import { Plus, Briefcase } from "lucide-react";
+import useEmblaCarousel from 'embla-carousel-react';
 
 const images = [
   {
@@ -27,6 +28,22 @@ const images = [
 const WelcomeAfterLogin = () => {
   const navigate = useNavigate();
   const [currentUser, setCurrentUser] = useState("Friend");
+  
+  // Initialize carousel with options
+  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true });
+  
+  // Auto-play implementation
+  useEffect(() => {
+    if (emblaApi) {
+      // Set up auto-play interval
+      const intervalId = setInterval(() => {
+        emblaApi.scrollNext();
+      }, 5000); // Advance every 5 seconds
+      
+      // Clean up interval on component unmount
+      return () => clearInterval(intervalId);
+    }
+  }, [emblaApi]);
   
   // In a real app, this would come from your auth system
   useEffect(() => {
@@ -57,20 +74,23 @@ const WelcomeAfterLogin = () => {
 
       {/* Image Carousel Background */}
       <div className="absolute inset-0 z-0">
-        <Carousel className="w-full h-screen" opts={{ loop: true }} autoPlay={true}>
-          <CarouselContent>
+        <div ref={emblaRef} className="w-full h-screen overflow-hidden">
+          <div className="flex h-full">
             {images.map((image, index) => (
-              <CarouselItem key={index} className="w-full h-screen">
+              <div 
+                key={index} 
+                className="flex-[0_0_100%] h-full"
+              >
                 <div 
                   className="w-full h-full bg-cover bg-center" 
                   style={{ backgroundImage: `url(${image.src})` }}
                 >
                   <div className="absolute inset-0 bg-black/40" />
                 </div>
-              </CarouselItem>
+              </div>
             ))}
-          </CarouselContent>
-        </Carousel>
+          </div>
+        </div>
       </div>
 
       {/* Content Overlay */}
