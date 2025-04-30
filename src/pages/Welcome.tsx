@@ -5,14 +5,11 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { LogIn, UserPlus } from "lucide-react";
 
-// Single background image with quote
+// Single background image with no quote
 const background = {
   src: "/vanlife1.jpg",
   alt: "Van parked at sunset",
-  caption: "Freedom on the road",
-  quote: "The journey is the destination.",
-  font: "font-serif",
-  color: "#f1f0ec" // Cream color for better visibility
+  caption: "Freedom on the road"
 };
 
 const WelcomePage = () => {
@@ -46,19 +43,6 @@ const WelcomePage = () => {
           }}
         >
           <div className="absolute inset-0 bg-black/40" />
-          
-          {/* Travel Quote */}
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="max-w-3xl text-center px-6 py-8 rounded-lg bg-[#073136]/70">
-              <p 
-                className={cn("text-2xl md:text-4xl mb-4", background.font)}
-                style={{ color: background.color }}
-              >
-                "{background.quote}"
-              </p>
-              <p className="text-cream text-lg md:text-xl">{background.caption}</p>
-            </div>
-          </div>
         </div>
       </div>
 
