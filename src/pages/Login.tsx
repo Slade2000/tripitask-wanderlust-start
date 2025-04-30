@@ -1,23 +1,26 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LogIn } from "lucide-react";
+
 const Login = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     // TODO: Implement actual login functionality
-    console.log("Login attempt with:", {
-      email
-    });
+    console.log("Login attempt with:", { email });
     // For now, just navigate to home
     navigate("/home");
   };
-  return <div className="min-h-screen flex flex-col justify-center items-center p-4 bg-[#073136]">
+
+  return (
+    <div className="min-h-screen bg-cream flex flex-col justify-center items-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-teal">Welcome Back</h1>
@@ -28,16 +31,36 @@ const Login = () => {
           <form onSubmit={handleLogin} className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="hello@example.com" required className="bg-cream/50" />
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="hello@example.com"
+                required
+                className="bg-cream/50"
+              />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" required className="bg-cream/50" />
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                required
+                className="bg-cream/50"
+              />
             </div>
 
             <div className="text-right">
-              <button type="button" onClick={() => navigate("/forgot-password")} className="text-teal hover:text-teal-dark text-sm">
+              <button
+                type="button"
+                onClick={() => navigate("/forgot-password")}
+                className="text-teal hover:text-teal-dark text-sm"
+              >
                 Forgot your password?
               </button>
             </div>
@@ -50,7 +73,10 @@ const Login = () => {
           <div className="mt-6 text-center">
             <p className="text-teal-dark">
               Don't have an account?{" "}
-              <button onClick={() => navigate("/signup")} className="text-teal hover:text-teal-dark font-medium">
+              <button
+                onClick={() => navigate("/signup")}
+                className="text-teal hover:text-teal-dark font-medium"
+              >
                 Sign up
               </button>
             </p>
@@ -58,11 +84,16 @@ const Login = () => {
         </div>
 
         <div className="mt-8 text-center">
-          <button onClick={() => navigate("/")} className="text-teal-dark hover:text-teal">
+          <button
+            onClick={() => navigate("/")}
+            className="text-teal-dark hover:text-teal"
+          >
             Back to home
           </button>
         </div>
       </div>
-    </div>;
+    </div>
+  );
 };
+
 export default Login;
