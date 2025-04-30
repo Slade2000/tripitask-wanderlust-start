@@ -8,8 +8,16 @@ import { initializeStorage } from './services/storageService.ts'
 // Initialize Supabase storage buckets
 initializeStorage().catch(console.error);
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-)
+// Make sure we're creating the root and rendering properly
+const rootElement = document.getElementById('root');
+
+if (!rootElement) {
+  console.error('Root element not found');
+} else {
+  const root = ReactDOM.createRoot(rootElement);
+  root.render(
+    <React.StrictMode>
+      <App />
+    </React.StrictMode>,
+  );
+}
