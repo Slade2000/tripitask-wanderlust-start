@@ -90,7 +90,7 @@ const BasicInfoStep = ({
                   <span className="text-xs text-teal-light mt-1">Add</span>
                 </div>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px] mx-0 my-0 rounded-3xl py-[20px] px-[23px]">
+              <DialogContent className="sm:max-w-[300px] mx-0 my-0 rounded-3xl py-[20px] px-[23px]">
                 <DialogHeader>
                   <DialogTitle className="text-center">Add Photo</DialogTitle>
                 </DialogHeader>
