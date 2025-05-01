@@ -44,8 +44,8 @@ const BottomNav = ({ currentPath }: BottomNavProps) => {
         <NavItem
           icon={<HelpCircle size={24} />}
           label="Post a Task"
-          to="/post-task"
-          active={currentPath === "/post-task"}
+          to="/home"
+          active={currentPath === "/home" || currentPath === "/post-task"}
         />
         <NavItem
           icon={<Briefcase size={24} />}
