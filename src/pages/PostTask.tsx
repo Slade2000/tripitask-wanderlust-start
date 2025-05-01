@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import BasicInfoStep, { BasicInfoFormData } from "../components/post-task/BasicInfoStep";
@@ -9,7 +8,6 @@ import { TaskData, createTask } from "../services/taskService";
 import { toast } from "sonner";
 import { useNavigate, useLocation } from "react-router-dom";
 import BottomNav from "@/components/BottomNav";
-import Logo from "@/components/Logo";
 
 type StepType = "basic-info" | "location-date" | "review" | "confirmation";
 
@@ -136,9 +134,6 @@ const PostTask = () => {
 
   return (
     <div className="min-h-screen bg-cream p-4 pb-20">
-      {/* Add Logo */}
-      <Logo />
-      
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold text-teal mb-6 text-center">
           Post a New Task

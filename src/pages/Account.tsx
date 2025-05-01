@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import BottomNav from "@/components/BottomNav";
 import { useAuth } from "@/contexts/AuthContext";
-import Logo from "@/components/Logo";
 import {
   CreditCard,
   Bell,
@@ -123,9 +122,6 @@ const Account = () => {
 
   return (
     <div className="min-h-screen bg-cream pb-20">
-      {/* Add Logo */}
-      <Logo />
-      
       <AccountHeader userName={userName} notificationCount={notificationCount} />
 
       <div className="pb-4">

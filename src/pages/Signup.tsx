@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -6,7 +5,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { UserPlus, Facebook, Mail } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import Logo from "@/components/Logo";
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -42,11 +40,8 @@ const Signup = () => {
   };
 
   return (
-    <div className="min-h-screen bg-cream flex flex-col justify-center items-center p-4">
-      {/* Logo Component */}
-      <Logo />
-      
-      <div className="w-full max-w-md mt-16">
+    <div className="min-h-screen bg-cream flex flex-col justify-center items-center p-4">      
+      <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-teal">Create Account</h1>
           <p className="text-teal-dark mt-2">Join the TripiTask community</p>
