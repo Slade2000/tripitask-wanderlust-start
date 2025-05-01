@@ -10,7 +10,7 @@ interface PostTaskContextType {
   taskId: string | null;
   setTaskId: (id: string | null) => void;
   taskData: TaskData;
-  setTaskData: (data: TaskData) => void;
+  setTaskData: (data: Partial<TaskData> | ((prev: TaskData) => TaskData)) => void;
   submitting: boolean;
   setSubmitting: (submitting: boolean) => void;
 }

@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,8 +7,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
-import { Calendar as CalendarIcon, MapPin } from "lucide-react";
+import { Calendar as CalendarIcon, MapPin, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 export interface LocationDateFormData {
   location: string;
@@ -30,6 +31,10 @@ const LocationDateStep = ({ initialData, onSubmit, onBack }: LocationDateProps) 
   const [location, setLocation] = useState(initialData.location);
   const [dueDate, setDueDate] = useState<Date | undefined>(initialData.dueDate);
   const [description, setDescription] = useState(initialData.description);
+  const [loadingLocation, setLoadingLocation] = useState(false);
+  const [predictions, setPredictions] = useState<{ description: string; place_id: string }[]>([]);
+  const [showPredictions, setShowPredictions] = useState(false);
+  const autocompleteRef = useRef<HTMLDivElement>(null);
 
   const handleSubmit = () => {
     if (!dueDate) {
@@ -43,9 +48,97 @@ const LocationDateStep = ({ initialData, onSubmit, onBack }: LocationDateProps) 
   };
 
   const handleCurrentLocation = () => {
-    // In a real app, this would use geolocation
-    setLocation("Current location (sample)");
+    setLoadingLocation(true);
+    
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          try {
+            const { latitude, longitude } = position.coords;
+            const response = await fetch(
+              `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=YOUR_API_KEY`
+            );
+            
+            if (response.ok) {
+              const data = await response.json();
+              if (data.results && data.results.length > 0) {
+                // Get the formatted address from the first result
+                const formattedAddress = data.results[0].formatted_address;
+                setLocation(formattedAddress);
+                toast.success("Location found successfully!");
+              }
+            } else {
+              toast.error("Could not fetch your location address.");
+            }
+          } catch (error) {
+            console.error("Error getting location:", error);
+            toast.error("Error detecting your location");
+          } finally {
+            setLoadingLocation(false);
+          }
+        },
+        (error) => {
+          console.error("Geolocation error:", error);
+          toast.error("Could not access your location");
+          setLoadingLocation(false);
+        }
+      );
+    } else {
+      toast.error("Geolocation is not supported by your browser");
+      setLoadingLocation(false);
+    }
   };
+
+  const handleLocationInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setLocation(value);
+    
+    if (value.length > 2) {
+      try {
+        const response = await fetch(
+          `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(
+            value
+          )}&key=YOUR_API_KEY&types=geocode`
+        );
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.predictions) {
+            setPredictions(data.predictions);
+            setShowPredictions(true);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching location suggestions:", error);
+      }
+    } else {
+      setPredictions([]);
+      setShowPredictions(false);
+    }
+  };
+
+  const selectPrediction = (prediction: { description: string; place_id: string }) => {
+    setLocation(prediction.description);
+    setPredictions([]);
+    setShowPredictions(false);
+  };
+
+  // Close predictions when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (autocompleteRef.current && !autocompleteRef.current.contains(event.target as Node)) {
+        setShowPredictions(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  // In a real application, we would need to use a backend proxy 
+  // for these API calls to protect the API key. This is just a placeholder.
+  // For now, this implementation will display a message about API key requirement.
 
   return (
     <div className="space-y-6">
@@ -57,24 +150,52 @@ const LocationDateStep = ({ initialData, onSubmit, onBack }: LocationDateProps) 
         <Label htmlFor="location" className="text-teal-dark">
           Location
         </Label>
-        <div className="relative">
+        <div className="relative" ref={autocompleteRef}>
           <Input
             id="location"
-            placeholder="Use current location"
+            placeholder="Enter a location"
             value={location}
-            onChange={(e) => setLocation(e.target.value)}
+            onChange={handleLocationInputChange}
             className="pl-10 text-base bg-white"
+            autoComplete="off"
           />
           <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-teal-dark h-5 w-5" />
+          
+          {/* Predictions dropdown */}
+          {showPredictions && predictions.length > 0 && (
+            <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg">
+              {predictions.map((prediction) => (
+                <div
+                  key={prediction.place_id}
+                  className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+                  onClick={() => selectPrediction(prediction)}
+                >
+                  {prediction.description}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
         <Button 
           type="button" 
           variant="outline" 
           onClick={handleCurrentLocation}
-          className="text-xs h-8 mt-1"
+          disabled={loadingLocation}
+          className="text-xs h-8 mt-1 flex items-center"
         >
-          Use current location
+          {loadingLocation ? (
+            <>
+              <Loader2 className="h-3 w-3 animate-spin mr-1" /> 
+              Detecting location...
+            </>
+          ) : (
+            "Use current location"
+          )}
         </Button>
+        <p className="text-xs text-gray-500">
+          Note: For this demo, location API calls are simulated. In a production app, 
+          proper Google API integration would be implemented.
+        </p>
       </div>
 
       <div className="space-y-3">

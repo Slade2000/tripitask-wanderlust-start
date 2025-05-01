@@ -28,23 +28,22 @@ const PostTaskStep = ({ onStepBack }: PostTaskStepProps) => {
   const navigate = useNavigate();
 
   const handleBasicInfoSubmit = (data: BasicInfoFormData) => {
-    setTaskData((prev) => ({
-      ...prev,
+    setTaskData({
+      ...taskData,
       title: data.title,
       budget: data.budget,
       photos: data.photos,
-    }));
+    });
     setCurrentStep("location-date");
   };
 
   const handleLocationDateSubmit = (data: LocationDateFormData) => {
-    const updatedTaskData = {
+    setTaskData({
       ...taskData,
       location: data.location,
       description: data.description,
       due_date: data.dueDate.toISOString(),
-    };
-    setTaskData(updatedTaskData);
+    });
     setCurrentStep("review");
   };
 
