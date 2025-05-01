@@ -10,6 +10,7 @@ import { format } from "date-fns";
 import { Calendar as CalendarIcon, MapPin, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { createClient } from "@/integrations/supabase/client";
 
 export interface LocationDateFormData {
   location: string;
@@ -35,6 +36,7 @@ const LocationDateStep = ({ initialData, onSubmit, onBack }: LocationDateProps) 
   const [predictions, setPredictions] = useState<{ description: string; place_id: string }[]>([]);
   const [showPredictions, setShowPredictions] = useState(false);
   const autocompleteRef = useRef<HTMLDivElement>(null);
+  const supabase = createClient();
 
   const handleSubmit = () => {
     if (!dueDate) {
@@ -47,7 +49,7 @@ const LocationDateStep = ({ initialData, onSubmit, onBack }: LocationDateProps) 
     onSubmit({ location, dueDate, description });
   };
 
-  const handleCurrentLocation = () => {
+  const handleCurrentLocation = async () => {
     setLoadingLocation(true);
     
     if (navigator.geolocation) {
@@ -55,20 +57,30 @@ const LocationDateStep = ({ initialData, onSubmit, onBack }: LocationDateProps) 
         async (position) => {
           try {
             const { latitude, longitude } = position.coords;
-            const response = await fetch(
-              `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=YOUR_API_KEY`
-            );
             
-            if (response.ok) {
-              const data = await response.json();
-              if (data.results && data.results.length > 0) {
-                // Get the formatted address from the first result
-                const formattedAddress = data.results[0].formatted_address;
-                setLocation(formattedAddress);
-                toast.success("Location found successfully!");
+            // Call our secure edge function instead of directly calling the Google API
+            const { data, error } = await supabase.functions.invoke('google-places', {
+              body: { 
+                action: 'geocode',
+                latitude,
+                longitude
               }
+            });
+            
+            if (error) {
+              console.error("Error calling geocode function:", error);
+              toast.error("Error detecting your location");
+              setLoadingLocation(false);
+              return;
+            }
+            
+            if (data.results && data.results.length > 0) {
+              // Get the formatted address from the first result
+              const formattedAddress = data.results[0].formatted_address;
+              setLocation(formattedAddress);
+              toast.success("Location found successfully!");
             } else {
-              toast.error("Could not fetch your location address.");
+              toast.error("Could not find your location address.");
             }
           } catch (error) {
             console.error("Error getting location:", error);
@@ -95,18 +107,22 @@ const LocationDateStep = ({ initialData, onSubmit, onBack }: LocationDateProps) 
     
     if (value.length > 2) {
       try {
-        const response = await fetch(
-          `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(
-            value
-          )}&key=YOUR_API_KEY&types=geocode`
-        );
-        
-        if (response.ok) {
-          const data = await response.json();
-          if (data.predictions) {
-            setPredictions(data.predictions);
-            setShowPredictions(true);
+        // Call our secure edge function instead of directly calling the Google API
+        const { data, error } = await supabase.functions.invoke('google-places', {
+          body: { 
+            action: 'autocomplete',
+            input: value
           }
+        });
+        
+        if (error) {
+          console.error("Error calling autocomplete function:", error);
+          return;
+        }
+        
+        if (data.predictions) {
+          setPredictions(data.predictions);
+          setShowPredictions(true);
         }
       } catch (error) {
         console.error("Error fetching location suggestions:", error);
@@ -135,10 +151,6 @@ const LocationDateStep = ({ initialData, onSubmit, onBack }: LocationDateProps) 
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
-
-  // In a real application, we would need to use a backend proxy 
-  // for these API calls to protect the API key. This is just a placeholder.
-  // For now, this implementation will display a message about API key requirement.
 
   return (
     <div className="space-y-6">
@@ -192,10 +204,6 @@ const LocationDateStep = ({ initialData, onSubmit, onBack }: LocationDateProps) 
             "Use current location"
           )}
         </Button>
-        <p className="text-xs text-gray-500">
-          Note: For this demo, location API calls are simulated. In a production app, 
-          proper Google API integration would be implemented.
-        </p>
       </div>
 
       <div className="space-y-3">
