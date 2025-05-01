@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LogIn } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import Logo from "@/components/Logo";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -20,6 +21,9 @@ const Login = () => {
 
   return (
     <div className="min-h-screen bg-cream flex flex-col justify-center items-center p-4">
+      {/* Add Logo */}
+      <Logo />
+      
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-teal">Welcome Back</h1>

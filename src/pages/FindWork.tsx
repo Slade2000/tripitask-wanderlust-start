@@ -1,12 +1,16 @@
 
 import { useLocation } from "react-router-dom";
 import BottomNav from "@/components/BottomNav";
+import Logo from "@/components/Logo";
 
 const FindWork = () => {
   const location = useLocation();
   
   return (
     <div className="min-h-screen bg-cream p-4 pb-20">
+      {/* Add Logo */}
+      <Logo />
+      
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold text-teal mb-6 text-center">
           Find Work

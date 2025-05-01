@@ -1,9 +1,11 @@
+
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Plus, Briefcase } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect } from "react";
+import Logo from "@/components/Logo";
 
 // Just use a single background image instead of a carousel
 const backgroundImage = "/vanlife1.jpg";
@@ -40,10 +42,8 @@ const WelcomeAfterLogin = () => {
     navigate("/find-work");
   };
   return <div className="relative min-h-screen w-full flex flex-col overflow-hidden pb-16">
-      {/* Top Logo */}
-      <div className="absolute top-4 right-4 z-20">
-        <img src="/lovable-uploads/4c7df92e-4d0f-44f4-b9b3-feb38a4f4b19.png" alt="TripiTask Logo" className="w-30 h-9 object-cover" />
-      </div>
+      {/* Top Logo - Now using Logo component */}
+      <Logo />
 
       {/* Static Background Image */}
       <div className="absolute inset-0 z-0">
