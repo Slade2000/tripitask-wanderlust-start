@@ -1,4 +1,3 @@
-
 import { useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import BottomNav from "@/components/BottomNav";
@@ -10,7 +9,6 @@ import { useNavigate } from "react-router-dom";
 
 // Just use a single background image instead of a carousel
 const backgroundImage = "/vanlife1.jpg";
-
 const Home = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -37,17 +35,13 @@ const Home = () => {
   user?.user_metadata?.full_name ? (user.user_metadata.full_name as string).split(' ')[0] : null) ||
   // Final fallback
   "Friend";
-
   const handlePostTask = () => {
     navigate("/post-task");
   };
-  
   const handleFindWork = () => {
     navigate("/find-work");
   };
-
-  return (
-    <div className="relative min-h-screen w-full flex flex-col overflow-hidden pb-16">
+  return <div className="relative min-h-screen w-full flex flex-col overflow-hidden pb-16">
       {/* Top Logo */}
       <Logo />
 
@@ -66,8 +60,8 @@ const Home = () => {
       <div className="relative z-10 flex flex-col min-h-screen justify-between items-center text-cream py-16 px-6">
         {/* Greeting Header */}
         <div className="text-center mt-16">
-          <h1 className="text-4xl md:text-5xl font-bold mb-3">Welcome {userFirstName}!</h1>
-          <p className="text-xl md:text-2xl text-gold">Help wherever you roll.</p>
+          <h1 className="md:text-5xl font-bold mb-3 text-[transp#0d6269arent] text-[#0d6269]">Welcome {userFirstName}!</h1>
+          <p className="text-xl md:text-2xl text-[#0d6269]">Help wherever you roll.</p>
         </div>
 
         {/* Middle Section - Empty to push content to top and bottom */}
@@ -88,8 +82,6 @@ const Home = () => {
 
       {/* Bottom Navigation */}
       <BottomNav currentPath={location.pathname} />
-    </div>
-  );
+    </div>;
 };
-
 export default Home;
