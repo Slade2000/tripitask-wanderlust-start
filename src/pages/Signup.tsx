@@ -12,7 +12,8 @@ const Signup = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [name, setName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const { signUp, isLoading } = useAuth();
 
@@ -25,7 +26,10 @@ const Signup = () => {
       return;
     }
     
-    await signUp(email, password, { full_name: name });
+    await signUp(email, password, { 
+      first_name: firstName, 
+      last_name: lastName 
+    });
   };
 
   return (
@@ -38,18 +42,34 @@ const Signup = () => {
 
         <div className="bg-white p-8 rounded-lg shadow-md">
           <form onSubmit={handleSignup} className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
-              <Input
-                id="name"
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="John Doe"
-                required
-                className="bg-cream/50"
-                disabled={isLoading}
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="firstName">First Name</Label>
+                <Input
+                  id="firstName"
+                  type="text"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  placeholder="John"
+                  required
+                  className="bg-cream/50"
+                  disabled={isLoading}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="lastName">Last Name</Label>
+                <Input
+                  id="lastName"
+                  type="text"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  placeholder="Doe"
+                  required
+                  className="bg-cream/50"
+                  disabled={isLoading}
+                />
+              </div>
             </div>
 
             <div className="space-y-2">
