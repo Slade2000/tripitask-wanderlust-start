@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -42,13 +41,9 @@ const WelcomePage = () => {
         {/* Top Section */}
         <div className="text-center mt-8">
           <div className="w-36 h-36 mx-auto mb-6">
-            <img 
-              src="/lovable-uploads/cb23f62a-5b45-42ff-b1ff-4771111c4d77.png" 
-              alt="TripiTask Logo" 
-              className="w-full h-full object-contain"
-            />
+            <img src="/lovable-uploads/cb23f62a-5b45-42ff-b1ff-4771111c4d77.png" alt="TripiTask Logo" className="w-full h-full object-contain" />
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold mb-2">TripiTask</h1>
+          
           <p className="text-xl md:text-2xl">Keep Moving, Stay Connected.</p>
         </div>
 
