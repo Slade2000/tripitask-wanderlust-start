@@ -35,6 +35,7 @@ const LocationDateStep = ({ initialData, onSubmit, onBack }: LocationDateProps) 
   const [loadingLocation, setLoadingLocation] = useState(false);
   const [predictions, setPredictions] = useState<{ description: string; place_id: string }[]>([]);
   const [showPredictions, setShowPredictions] = useState(false);
+  const [fetchingPredictions, setFetchingPredictions] = useState(false);
   const autocompleteRef = useRef<HTMLDivElement>(null);
 
   const handleSubmit = () => {
@@ -57,29 +58,34 @@ const LocationDateStep = ({ initialData, onSubmit, onBack }: LocationDateProps) 
           try {
             const { latitude, longitude } = position.coords;
             
-            // Call our secure edge function instead of directly calling the Google API
-            const { data, error } = await supabase.functions.invoke('google-places', {
-              body: { 
-                action: 'geocode',
-                latitude,
-                longitude
+            // Call our edge function with minimal auth requirements now
+            try {
+              const { data, error } = await supabase.functions.invoke('google-places', {
+                body: { 
+                  action: 'geocode',
+                  latitude,
+                  longitude
+                }
+              });
+              
+              if (error) {
+                console.error("Error calling geocode function:", error);
+                toast.error("Error detecting your location");
+                setLoadingLocation(false);
+                return;
               }
-            });
-            
-            if (error) {
-              console.error("Error calling geocode function:", error);
-              toast.error("Error detecting your location");
-              setLoadingLocation(false);
-              return;
-            }
-            
-            if (data.results && data.results.length > 0) {
-              // Get the formatted address from the first result
-              const formattedAddress = data.results[0].formatted_address;
-              setLocation(formattedAddress);
-              toast.success("Location found successfully!");
-            } else {
-              toast.error("Could not find your location address.");
+              
+              if (data.results && data.results.length > 0) {
+                // Get the formatted address from the first result
+                const formattedAddress = data.results[0].formatted_address;
+                setLocation(formattedAddress);
+                toast.success("Location found successfully!");
+              } else {
+                toast.error("Could not find your location address.");
+              }
+            } catch (error) {
+              console.error("API call error:", error);
+              toast.error("Error calling location service");
             }
           } catch (error) {
             console.error("Error getting location:", error);
@@ -106,7 +112,9 @@ const LocationDateStep = ({ initialData, onSubmit, onBack }: LocationDateProps) 
     
     if (value.length > 2) {
       try {
-        // Call our secure edge function instead of directly calling the Google API
+        setFetchingPredictions(true);
+        
+        // Call our edge function with minimal auth requirements now
         const { data, error } = await supabase.functions.invoke('google-places', {
           body: { 
             action: 'autocomplete',
@@ -125,6 +133,8 @@ const LocationDateStep = ({ initialData, onSubmit, onBack }: LocationDateProps) 
         }
       } catch (error) {
         console.error("Error fetching location suggestions:", error);
+      } finally {
+        setFetchingPredictions(false);
       }
     } else {
       setPredictions([]);
@@ -172,9 +182,16 @@ const LocationDateStep = ({ initialData, onSubmit, onBack }: LocationDateProps) 
           />
           <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-teal-dark h-5 w-5" />
           
+          {/* Loading indicator for predictions */}
+          {fetchingPredictions && (
+            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+              <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+            </div>
+          )}
+          
           {/* Predictions dropdown */}
           {showPredictions && predictions.length > 0 && (
-            <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg">
+            <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
               {predictions.map((prediction) => (
                 <div
                   key={prediction.place_id}
