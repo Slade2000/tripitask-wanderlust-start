@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, Briefcase } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
 import { useAuth } from "@/contexts/AuthContext";
+import { useEffect } from "react";
 
 // Just use a single background image instead of a carousel
 const backgroundImage = "/vanlife1.jpg";
@@ -11,10 +12,27 @@ const backgroundImage = "/vanlife1.jpg";
 const WelcomeAfterLogin = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { profile } = useAuth();
+  const { user, profile } = useAuth();
   
-  // Get user's first name or fallback to "Friend"
-  const userFirstName = profile?.full_name?.split(' ')[0] || "Friend";
+  // For debugging
+  useEffect(() => {
+    console.log("Current user:", user);
+    console.log("Current profile:", profile);
+  }, [user, profile]);
+  
+  // Get user's first name with multiple fallbacks
+  const userFirstName = 
+    // Try to get from profile first_name field
+    profile?.first_name || 
+    // Try to split full_name if available
+    (profile?.full_name ? profile.full_name.split(' ')[0] : null) || 
+    // Try user metadata
+    (user?.user_metadata?.first_name as string) ||
+    // Try splitting user metadata full_name
+    (user?.user_metadata?.full_name ? 
+      (user.user_metadata.full_name as string).split(' ')[0] : null) ||
+    // Final fallback
+    "Friend";
 
   const handlePostTask = () => {
     navigate("/post-task");

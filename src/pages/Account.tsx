@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import BottomNav from "@/components/BottomNav";
 import { useAuth } from "@/contexts/AuthContext";
@@ -22,11 +22,29 @@ import {
 const Account = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { profile, signOut } = useAuth();
+  const { user, profile, signOut } = useAuth();
   const [notificationCount] = useState(7);
 
-  // Get user's full name or fallback to a placeholder
-  const userName = profile?.full_name || "User";
+  // For debugging
+  useEffect(() => {
+    console.log("Current user:", user);
+    console.log("Current profile:", profile);
+  }, [user, profile]);
+
+  // Get user's full name with multiple fallbacks
+  const userName = 
+    // Try profile full_name first
+    profile?.full_name || 
+    // Try combining first and last name from profile
+    (profile?.first_name ? 
+      `${profile.first_name} ${profile.last_name || ''}`.trim() : null) ||
+    // Try user metadata full_name
+    (user?.user_metadata?.full_name as string) ||
+    // Try combining first and last name from user metadata
+    (user?.user_metadata?.first_name ? 
+      `${user.user_metadata.first_name as string} ${user.user_metadata.last_name || ''}`.trim() : null) ||
+    // Final fallback
+    "User";
 
   // Navigation handlers for each section
   const handleNavigation = (path: string) => {

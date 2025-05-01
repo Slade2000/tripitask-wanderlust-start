@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Session, User } from '@supabase/supabase-js';
@@ -9,6 +10,8 @@ interface Profile {
   full_name: string | null;
   avatar_url: string | null;
   created_at: string | null;
+  first_name?: string | null;
+  last_name?: string | null;
 }
 
 interface AuthContextProps {
@@ -37,18 +40,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(data.session?.user || null);
       
       if (data.session?.user) {
-        fetchProfile(data.session.user.id);
+        await fetchProfile(data.session.user.id);
       }
       
       setIsLoading(false);
       
       const { data: authListener } = supabase.auth.onAuthStateChange(
         async (event, session) => {
+          console.log("Auth state changed:", event, session?.user?.id);
           setSession(session);
           setUser(session?.user || null);
           
           if (session?.user) {
-            fetchProfile(session.user.id);
+            await fetchProfile(session.user.id);
           } else {
             setProfile(null);
           }
@@ -65,6 +69,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchProfile = async (userId: string) => {
     try {
+      console.log("Fetching profile for user:", userId);
+      
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -76,6 +82,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
+      console.log("Profile data fetched:", data);
+      
+      // If full_name is not set, but first_name and last_name are available,
+      // combine them to create full_name
+      if (!data.full_name && data.first_name) {
+        data.full_name = `${data.first_name} ${data.last_name || ''}`.trim();
+      }
+
       setProfile(data as Profile);
     } catch (error) {
       console.error('Error in fetchProfile:', error);
@@ -85,11 +99,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signUp = async (email: string, password: string, metadata?: { first_name?: string; last_name?: string }) => {
     try {
       setIsLoading(true);
+      
+      // Prepare user metadata
+      const userMetadata = { ...metadata };
+      
+      // If we have both first and last name, create a full_name
+      if (metadata?.first_name) {
+        userMetadata.full_name = `${metadata.first_name} ${metadata.last_name || ''}`.trim();
+      }
+      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          data: metadata,
+          data: userMetadata,
         },
       });
 
@@ -98,6 +121,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (data.user) {
+        // Ensure profile is created with name information
+        try {
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .upsert({
+              id: data.user.id,
+              full_name: userMetadata.full_name,
+              first_name: metadata?.first_name,
+              last_name: metadata?.last_name,
+              updated_at: new Date().toISOString(),
+            });
+
+          if (profileError) {
+            console.error("Error updating profile:", profileError);
+          }
+        } catch (profileError) {
+          console.error("Error in profile creation:", profileError);
+        }
+        
         toast.success("Account created successfully! Please verify your email.");
         navigate('/login');
       }
