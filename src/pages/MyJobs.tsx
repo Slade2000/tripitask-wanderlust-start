@@ -75,8 +75,6 @@ const MyJobs = () => {
                       </div>
                     </div>
                     
-                    <p className="mt-3 text-gray-700 line-clamp-2">{task.description}</p>
-                    
                     <div className="mt-4 flex justify-between items-center">
                       <div className="flex items-center text-gray-600">
                         <Users size={18} className="mr-2" />
