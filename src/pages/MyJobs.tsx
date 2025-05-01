@@ -73,16 +73,16 @@ const MyJobs = () => {
                         <MapPin size={18} className="mr-2" />
                         <span>{task.location}</span>
                       </div>
-                      
-                      <div className="flex items-center text-gray-600">
-                        <Users size={18} className="mr-2" />
-                        <span>{Math.floor(Math.random() * 5)} offers</span>
-                      </div>
                     </div>
                     
                     <p className="mt-3 text-gray-700 line-clamp-2">{task.description}</p>
                     
-                    <div className="mt-4 flex justify-end">
+                    <div className="mt-4 flex justify-between items-center">
+                      <div className="flex items-center text-gray-600">
+                        <Users size={18} className="mr-2" />
+                        <span>{Math.floor(Math.random() * 5)} offers</span>
+                      </div>
+                      
                       <button className="text-teal bg-white border border-teal rounded px-4 py-2 hover:bg-teal hover:text-white transition-colors">
                         View Details
                       </button>
