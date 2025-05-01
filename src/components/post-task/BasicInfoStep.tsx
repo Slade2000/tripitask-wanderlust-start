@@ -16,10 +16,12 @@ export interface BasicInfoProps {
     budget: string;
   };
   onSubmit: (data: BasicInfoFormData) => void;
+  onBack?: () => void; // Added optional back handler
 }
 const BasicInfoStep = ({
   onSubmit,
-  initialData
+  initialData,
+  onBack
 }: BasicInfoProps) => {
   const [title, setTitle] = useState(initialData.title);
   const [photos, setPhotos] = useState<File[]>(initialData.photos);
@@ -121,10 +123,22 @@ const BasicInfoStep = ({
         <Input id="budget" type="number" placeholder="Enter amount" value={budget} onChange={e => setBudget(e.target.value)} className="text-base" />
       </div>
 
-      <div className="pt-6">
+      <div className="pt-6 space-y-4">
         <Button onClick={handleSubmit} className="w-full bg-gold hover:bg-orange text-teal-dark py-6 text-lg">
           NEXT
         </Button>
+
+        {/* Only render back button if onBack handler is provided */}
+        {onBack && (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onBack}
+            className="w-full"
+          >
+            Back
+          </Button>
+        )}
       </div>
     </div>;
 };

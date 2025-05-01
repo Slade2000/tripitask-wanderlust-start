@@ -7,11 +7,13 @@ import ReviewSubmitStep from "../components/post-task/ReviewSubmitStep";
 import TaskConfirmation from "../components/post-task/TaskConfirmation";
 import { TaskData, createTask } from "../services/taskService";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 type StepType = "basic-info" | "location-date" | "review" | "confirmation";
 
 const PostTask = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState<StepType>("basic-info");
   const [taskId, setTaskId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -74,9 +76,17 @@ const PostTask = () => {
     }
   };
 
+  const handleBack = (step: StepType) => {
+    setCurrentStep(step);
+  };
+
   const handleViewTask = () => {
     // Navigate to task details page
     window.location.href = `/tasks/${taskId}`;
+  };
+
+  const handleBackToHome = () => {
+    navigate("/welcome-after-login");
   };
 
   const renderCurrentStep = () => {
@@ -90,6 +100,7 @@ const PostTask = () => {
               budget: taskData.budget,
             }}
             onSubmit={handleBasicInfoSubmit}
+            onBack={handleBackToHome} // Back to home from the first step
           />
         );
       case "location-date":
@@ -101,7 +112,7 @@ const PostTask = () => {
               description: taskData.description,
             }}
             onSubmit={handleLocationDateSubmit}
-            onBack={() => setCurrentStep("basic-info")}
+            onBack={() => handleBack("basic-info")}
           />
         );
       case "review":
@@ -109,7 +120,7 @@ const PostTask = () => {
           <ReviewSubmitStep
             taskData={taskData}
             onSubmit={handleSubmitTask}
-            onBack={() => setCurrentStep("location-date")}
+            onBack={() => handleBack("location-date")}
             submitting={submitting}
           />
         );
