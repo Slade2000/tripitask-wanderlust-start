@@ -1,9 +1,9 @@
 
-import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Plus, Briefcase } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Just use a single background image instead of a carousel
 const backgroundImage = "/vanlife1.jpg";
@@ -11,17 +11,10 @@ const backgroundImage = "/vanlife1.jpg";
 const WelcomeAfterLogin = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [currentUser, setCurrentUser] = useState("Friend");
+  const { profile } = useAuth();
   
-  // In a real app, this would come from your auth system
-  useEffect(() => {
-    // Placeholder for getting user data from authentication
-    // Replace with actual user data retrieval
-    const mockUser = {
-      firstName: "Martin"
-    };
-    setCurrentUser(mockUser.firstName);
-  }, []);
+  // Get user's first name or fallback to "Friend"
+  const userFirstName = profile?.full_name?.split(' ')[0] || "Friend";
 
   const handlePostTask = () => {
     navigate("/post-task");
@@ -56,7 +49,7 @@ const WelcomeAfterLogin = () => {
       <div className="relative z-10 flex flex-col min-h-screen justify-between items-center text-cream py-16 px-6">
         {/* Greeting Header */}
         <div className="text-center mt-16">
-          <h1 className="text-4xl md:text-5xl font-bold mb-3">Welcome {currentUser}!</h1>
+          <h1 className="text-4xl md:text-5xl font-bold mb-3">Welcome {userFirstName}!</h1>
           <p className="text-xl md:text-2xl text-gold">Help wherever you roll.</p>
         </div>
 

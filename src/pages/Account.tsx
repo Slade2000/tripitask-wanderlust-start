@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import BottomNav from "@/components/BottomNav";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   CreditCard,
   Bell,
@@ -17,17 +18,25 @@ import {
   ContactIcon,
   LogOut
 } from "lucide-react";
-import { Separator } from "@/components/ui/separator";
 
 const Account = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { profile, signOut } = useAuth();
   const [notificationCount] = useState(7);
+
+  // Get user's full name or fallback to a placeholder
+  const userName = profile?.full_name || "User";
 
   // Navigation handlers for each section
   const handleNavigation = (path: string) => {
     // This would navigate to specific pages in a real app
     console.log(`Navigating to: ${path}`);
+  };
+  
+  // Handle logout
+  const handleLogout = async () => {
+    await signOut();
   };
 
   return (
@@ -35,7 +44,7 @@ const Account = () => {
       {/* Header */}
       <div className="bg-white px-4 py-6">
         <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-[#1A1F2C]">Martin N.</h1>
+          <h1 className="text-2xl font-bold text-[#1A1F2C]">{userName}</h1>
           <div className="relative">
             <Bell size={24} className="text-[#1A1F2C]" />
             {notificationCount > 0 && (
@@ -177,7 +186,7 @@ const Account = () => {
         {/* Log Out Button */}
         <div className="mt-6 px-4">
           <button 
-            onClick={() => handleNavigation('/logout')}
+            onClick={handleLogout}
             className="flex items-center w-full px-4 py-4 bg-white rounded-lg shadow-sm"
           >
             <LogOut size={22} className="text-red-500 mr-4" />
