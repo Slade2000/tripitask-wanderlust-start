@@ -43,10 +43,10 @@ const Signup = () => {
 
   return (
     <div className="min-h-screen bg-cream flex flex-col justify-center items-center p-4">
-      {/* Add Logo */}
+      {/* Logo Component */}
       <Logo />
       
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-md mt-16">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-teal">Create Account</h1>
           <p className="text-teal-dark mt-2">Join the TripiTask community</p>
