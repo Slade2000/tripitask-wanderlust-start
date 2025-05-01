@@ -10,6 +10,8 @@ import { toast } from "sonner";
 import { useNavigate, useLocation } from "react-router-dom";
 import BottomNav from "@/components/BottomNav";
 import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
 
 type StepType = "basic-info" | "location-date" | "review" | "confirmation";
 
@@ -99,6 +101,21 @@ const PostTask = () => {
     setCurrentStep(step);
   };
 
+  const handleStepBack = () => {
+    switch (currentStep) {
+      case "location-date":
+        setCurrentStep("basic-info");
+        break;
+      case "review":
+        setCurrentStep("location-date");
+        break;
+      default:
+        // For basic-info, navigate back to home
+        navigate("/welcome-after-login");
+        break;
+    }
+  };
+
   const handleViewTask = () => {
     // Navigate to task details page
     window.location.href = `/tasks/${taskId}`;
@@ -157,13 +174,23 @@ const PostTask = () => {
           Post a New Task
         </h1>
 
-        {/* Step indicator - only show for steps 1-3, not confirmation */}
+        {/* Step indicator with back button - only show for steps 1-3, not confirmation */}
         {currentStep !== "confirmation" && (
           <div className="mb-6">
             <div className="flex justify-between items-center mb-2">
-              <span className="text-teal-dark font-medium">
-                Step {step} of {total}
-              </span>
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={handleStepBack} 
+                  className="h-8 w-8 text-teal-dark"
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                </Button>
+                <span className="text-teal-dark font-medium">
+                  Step {step} of {total}
+                </span>
+              </div>
               <span className="text-teal-dark font-medium">
                 {progress}%
               </span>
