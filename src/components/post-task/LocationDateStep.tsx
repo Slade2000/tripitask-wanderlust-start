@@ -63,7 +63,7 @@ const LocationDateStep = ({ initialData, onSubmit, onBack }: LocationDateProps) 
             placeholder="Use current location"
             value={location}
             onChange={(e) => setLocation(e.target.value)}
-            className="pl-10 text-base"
+            className="pl-10 text-base bg-white"
           />
           <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-teal-dark h-5 w-5" />
         </div>
@@ -84,7 +84,7 @@ const LocationDateStep = ({ initialData, onSubmit, onBack }: LocationDateProps) 
             <Button
               variant="outline"
               className={cn(
-                "w-full justify-start text-left font-normal",
+                "w-full justify-start text-left font-normal bg-white",
                 !dueDate && "text-muted-foreground"
               )}
             >
@@ -116,24 +116,16 @@ const LocationDateStep = ({ initialData, onSubmit, onBack }: LocationDateProps) 
           placeholder="Summarize key details"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          className="min-h-[120px] text-base"
+          className="min-h-[120px] text-base bg-white"
         />
       </div>
 
-      <div className="flex flex-col space-y-4 pt-6">
+      <div className="flex flex-col pt-6">
         <Button
           onClick={handleSubmit}
           className="w-full bg-gold hover:bg-orange text-teal-dark py-6 text-lg"
         >
           NEXT
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onBack}
-          className="w-full"
-        >
-          Back
         </Button>
       </div>
     </div>
