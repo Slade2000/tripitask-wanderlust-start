@@ -1,9 +1,16 @@
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Pencil, Image, Plus } from "lucide-react";
+import { Pencil, Image, Camera, Upload, Plus } from "lucide-react";
+import { 
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 export interface BasicInfoFormData {
   title: string;
@@ -25,6 +32,9 @@ const BasicInfoStep = ({ onSubmit, initialData }: BasicInfoProps) => {
   const [photos, setPhotos] = useState<File[]>(initialData.photos);
   const [budget, setBudget] = useState(initialData.budget);
   const [titleError, setTitleError] = useState("");
+  const [openPhotoDialog, setOpenPhotoDialog] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -32,6 +42,7 @@ const BasicInfoStep = ({ onSubmit, initialData }: BasicInfoProps) => {
       // Limit to 5 photos max
       const newPhotos = [...photos, ...fileArray].slice(0, 5);
       setPhotos(newPhotos);
+      setOpenPhotoDialog(false);
     }
   };
 
@@ -45,6 +56,14 @@ const BasicInfoStep = ({ onSubmit, initialData }: BasicInfoProps) => {
       return;
     }
     onSubmit({ title, photos, budget });
+  };
+
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleCameraClick = () => {
+    cameraInputRef.current?.click();
   };
 
   return (
@@ -92,19 +111,56 @@ const BasicInfoStep = ({ onSubmit, initialData }: BasicInfoProps) => {
             </div>
           ))}
           
-          {/* Add photo button */}
+          {/* Add photo dialog */}
           {photos.length < 5 && (
-            <label className="w-20 h-20 border-2 border-dashed border-teal-light rounded-md flex flex-col items-center justify-center cursor-pointer">
-              <Image className="w-6 h-6 text-teal-light" />
-              <span className="text-xs text-teal-light mt-1">Add</span>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleFileChange}
-                className="hidden"
-                multiple
-              />
-            </label>
+            <Dialog open={openPhotoDialog} onOpenChange={setOpenPhotoDialog}>
+              <DialogTrigger asChild>
+                <div className="w-20 h-20 border-2 border-dashed border-teal-light rounded-md flex flex-col items-center justify-center cursor-pointer">
+                  <Plus className="w-6 h-6 text-teal-light" />
+                  <span className="text-xs text-teal-light mt-1">Add</span>
+                </div>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle className="text-center">Add Photo</DialogTitle>
+                </DialogHeader>
+                <div className="grid grid-cols-2 gap-4 py-4">
+                  <Button 
+                    onClick={handleUploadClick}
+                    className="flex flex-col items-center justify-center p-6 h-auto"
+                    variant="outline"
+                  >
+                    <Upload className="h-10 w-10 mb-2 text-teal-dark" />
+                    <span>Upload Photo</span>
+                  </Button>
+                  <Button 
+                    onClick={handleCameraClick}
+                    className="flex flex-col items-center justify-center p-6 h-auto"
+                    variant="outline"
+                  >
+                    <Camera className="h-10 w-10 mb-2 text-teal-dark" />
+                    <span>Take Photo</span>
+                  </Button>
+                </div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="hidden"
+                  multiple
+                />
+                <input
+                  ref={cameraInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="hidden"
+                  capture="environment"
+                />
+              </div>
+            </DialogContent>
+          </Dialog>
           )}
         </div>
         <p className="text-xs text-teal-dark/70">
