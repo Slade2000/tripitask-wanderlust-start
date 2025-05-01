@@ -67,6 +67,15 @@ const PostTaskStep = ({ onStepBack }: PostTaskStepProps) => {
     }
   };
 
+  // Navigate directly to specific step based on field
+  const handleEditField = (field: string) => {
+    if (["title", "photos", "budget"].includes(field)) {
+      setCurrentStep("basic-info");
+    } else if (["location", "due_date", "description"].includes(field)) {
+      setCurrentStep("location-date");
+    }
+  };
+
   const handleBack = (step: "basic-info" | "location-date") => {
     setCurrentStep(step);
   };
@@ -90,7 +99,7 @@ const PostTaskStep = ({ onStepBack }: PostTaskStepProps) => {
             budget: taskData.budget,
           }}
           onSubmit={handleBasicInfoSubmit}
-          onBack={handleBackToHome} // Back to home from the first step
+          onBack={onStepBack} // Use the passed onStepBack function
         />
       );
     case "location-date":
@@ -111,6 +120,7 @@ const PostTaskStep = ({ onStepBack }: PostTaskStepProps) => {
           taskData={taskData}
           onSubmit={handleSubmitTask}
           onBack={() => handleBack("location-date")}
+          onEditField={handleEditField}
           submitting={submitting}
         />
       );

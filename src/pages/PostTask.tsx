@@ -8,7 +8,7 @@ import StepIndicator from "@/components/post-task/StepIndicator";
 
 // This component manages the step info and navigation
 const PostTaskStepManager = () => {
-  const { currentStep } = usePostTask();
+  const { currentStep, setCurrentStep } = usePostTask();
   const navigate = useNavigate();
 
   // Determine current step number for progress indicator
@@ -30,10 +30,10 @@ const PostTaskStepManager = () => {
   const handleStepBack = () => {
     switch (currentStep) {
       case "location-date":
-        navigate("/post-task", { state: { step: "basic-info" } });
+        setCurrentStep("basic-info");
         break;
       case "review":
-        navigate("/post-task", { state: { step: "location-date" } });
+        setCurrentStep("location-date");
         break;
       default:
         // For basic-info, navigate back to home
