@@ -1,19 +1,17 @@
-
 import { Button } from "@/components/ui/button";
 import { CheckCircle } from "lucide-react";
-
 export interface TaskConfirmationProps {
   taskId: string | null;
   onViewTask: () => void;
 }
-
-const TaskConfirmation = ({ taskId, onViewTask }: TaskConfirmationProps) => {
+const TaskConfirmation = ({
+  taskId,
+  onViewTask
+}: TaskConfirmationProps) => {
   const handleGoToMyTasks = () => {
     window.location.href = "/my-jobs";
   };
-  
-  return (
-    <div className="bg-white p-6 rounded-lg shadow-md text-center">
+  return <div className="bg-white p-6 rounded-lg shadow-md text-center">
       <div className="flex justify-center mb-6">
         <CheckCircle className="h-24 w-24 text-green-500" />
       </div>
@@ -23,19 +21,11 @@ const TaskConfirmation = ({ taskId, onViewTask }: TaskConfirmationProps) => {
         You'll receive notifications when someone expresses interest.
       </p>
       <div className="flex flex-col space-y-4">
-        <Button onClick={onViewTask} className="bg-teal hover:bg-teal-dark text-white">
-          View Task Details
-        </Button>
-        <Button 
-          onClick={handleGoToMyTasks} 
-          variant="outline" 
-          className="border-teal text-teal hover:bg-teal/10"
-        >
+        
+        <Button onClick={handleGoToMyTasks} variant="outline" className="border-teal text-inherit bg-[#0d6269]">
           Go to My Tasks
         </Button>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default TaskConfirmation;
