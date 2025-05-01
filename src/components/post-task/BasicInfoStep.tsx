@@ -158,9 +158,8 @@ const BasicInfoStep = ({ onSubmit, initialData }: BasicInfoProps) => {
                   className="hidden"
                   capture="environment"
                 />
-              </div>
-            </DialogContent>
-          </Dialog>
+              </DialogContent>
+            </Dialog>
           )}
         </div>
         <p className="text-xs text-teal-dark/70">
