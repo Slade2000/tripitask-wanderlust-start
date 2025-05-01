@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Edit, FileText, Clock, MapPin, DollarSign, Camera } from "lucide-react";
@@ -111,7 +112,7 @@ const ReviewSubmitStep = ({
       </Card>
 
       <div className="pt-6">
-        <Button onClick={onSubmit} disabled={submitting} className="w-full hover:bg-teal-dark text-cream py-6 text-lg bg-[#f6c254]">
+        <Button onClick={onSubmit} disabled={submitting} className="w-full bg-teal hover:bg-teal-dark text-white">
           {submitting ? 'Submitting...' : 'Submit Task'}
         </Button>
       </div>
