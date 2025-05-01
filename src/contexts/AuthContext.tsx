@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Session, User } from '@supabase/supabase-js';
@@ -13,12 +14,18 @@ interface Profile {
   last_name?: string | null;
 }
 
+interface UserMetadata {
+  first_name?: string;
+  last_name?: string;
+  full_name?: string;
+}
+
 interface AuthContextProps {
   session: Session | null;
   user: User | null;
   profile: Profile | null;
   isLoading: boolean;
-  signUp: (email: string, password: string, metadata?: { first_name?: string; last_name?: string }) => Promise<void>;
+  signUp: (email: string, password: string, metadata?: UserMetadata) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
@@ -96,17 +103,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const signUp = async (email: string, password: string, metadata?: { first_name?: string; last_name?: string }) => {
+  const signUp = async (email: string, password: string, metadata?: UserMetadata) => {
     try {
       setIsLoading(true);
       
       // Prepare user metadata
-      const userMetadata = { ...metadata };
+      const userMetadata: UserMetadata = { ...metadata };
       
       // If we have both first and last name, create a full_name
       if (metadata?.first_name) {
-        const fullName = `${metadata.first_name} ${metadata.last_name || ''}`.trim();
-        userMetadata.full_name = fullName;
+        userMetadata.full_name = `${metadata.first_name} ${metadata.last_name || ''}`.trim();
       }
       
       const { data, error } = await supabase.auth.signUp({
