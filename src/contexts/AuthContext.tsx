@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Session, User } from '@supabase/supabase-js';
@@ -86,11 +85,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       // If full_name is not set, but first_name and last_name are available,
       // combine them to create full_name
-      if (!data.full_name && data.first_name) {
-        data.full_name = `${data.first_name} ${data.last_name || ''}`.trim();
+      const profileData = data as Profile;
+      if (!profileData.full_name && profileData.first_name) {
+        profileData.full_name = `${profileData.first_name} ${profileData.last_name || ''}`.trim();
       }
 
-      setProfile(data as Profile);
+      setProfile(profileData);
     } catch (error) {
       console.error('Error in fetchProfile:', error);
     }
@@ -105,7 +105,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       // If we have both first and last name, create a full_name
       if (metadata?.first_name) {
-        userMetadata.full_name = `${metadata.first_name} ${metadata.last_name || ''}`.trim();
+        const fullName = `${metadata.first_name} ${metadata.last_name || ''}`.trim();
+        userMetadata.full_name = fullName;
       }
       
       const { data, error } = await supabase.auth.signUp({
