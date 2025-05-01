@@ -41,8 +41,12 @@ const WelcomePage = () => {
       <div className="relative z-10 flex flex-col min-h-screen justify-between items-center text-cream py-16 px-6 bg-[#073136]">
         {/* Top Section */}
         <div className="text-center mt-8">
-          <div className="w-36 h-36 rounded-full bg-teal flex items-center justify-center mx-auto mb-6">
-            <h1 className="text-5xl font-bold text-cream">TT</h1>
+          <div className="w-36 h-36 mx-auto mb-6">
+            <img 
+              src="/lovable-uploads/cb23f62a-5b45-42ff-b1ff-4771111c4d77.png" 
+              alt="TripiTask Logo" 
+              className="w-full h-full object-contain"
+            />
           </div>
           <h1 className="text-4xl md:text-5xl font-bold mb-2">TripiTask</h1>
           <p className="text-xl md:text-2xl">Keep Moving, Stay Connected.</p>
