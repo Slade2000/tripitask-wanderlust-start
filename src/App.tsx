@@ -22,7 +22,7 @@ import MyJobs from "./pages/MyJobs";
 import Messages from "./pages/Messages";
 import Account from "./pages/Account";
 
-// Create a new QueryClient instance
+// Create a new QueryClient instance outside of the component
 const queryClient = new QueryClient();
 
 const App = () => {
