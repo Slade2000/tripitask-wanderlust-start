@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,6 +36,7 @@ const LocationDateStep = ({ initialData, onSubmit, onBack }: LocationDateProps) 
   const [showPredictions, setShowPredictions] = useState(false);
   const [fetchingPredictions, setFetchingPredictions] = useState(false);
   const autocompleteRef = useRef<HTMLDivElement>(null);
+  const [calendarOpen, setCalendarOpen] = useState(false);
 
   const handleSubmit = () => {
     if (!dueDate) {
@@ -47,6 +47,11 @@ const LocationDateStep = ({ initialData, onSubmit, onBack }: LocationDateProps) 
       return;
     }
     onSubmit({ location, dueDate, description });
+  };
+
+  const handleDateSelect = (date: Date | undefined) => {
+    setDueDate(date);
+    setCalendarOpen(false); // Close calendar when date is selected
   };
 
   const handleCurrentLocation = async () => {
@@ -224,7 +229,7 @@ const LocationDateStep = ({ initialData, onSubmit, onBack }: LocationDateProps) 
 
       <div className="space-y-3">
         <Label className="text-teal-dark">Preferred Due Date</Label>
-        <Popover>
+        <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
           <PopoverTrigger asChild>
             <Button
               variant="outline"
@@ -241,7 +246,7 @@ const LocationDateStep = ({ initialData, onSubmit, onBack }: LocationDateProps) 
             <Calendar
               mode="single"
               selected={dueDate}
-              onSelect={setDueDate}
+              onSelect={handleDateSelect}
               initialFocus
               className={cn("p-3 pointer-events-auto")}
               disabled={(date) =>
