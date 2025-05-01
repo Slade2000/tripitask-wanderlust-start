@@ -42,7 +42,7 @@ const WelcomeAfterLogin = () => {
   return <div className="relative min-h-screen w-full flex flex-col overflow-hidden pb-16">
       {/* Top Logo */}
       <div className="absolute top-4 right-4 z-20">
-        <img src="/lovable-uploads/4c7df92e-4d0f-44f4-b9b3-feb38a4f4b19.png" alt="TripiTask Logo" className="w-200 h-12 object-cover" />
+        <img src="/lovable-uploads/4c7df92e-4d0f-44f4-b9b3-feb38a4f4b19.png" alt="TripiTask Logo" className="w-100 h-12 object-cover" />
       </div>
 
       {/* Static Background Image */}
