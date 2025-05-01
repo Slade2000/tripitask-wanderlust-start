@@ -172,7 +172,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (data.user) {
         toast.success("Welcome back!");
-        navigate('/welcome-after-login');
+        navigate('/home');
       }
     } catch (error: any) {
       toast.error(error.message || 'Invalid login credentials');
