@@ -10,13 +10,11 @@ import { Calendar as CalendarIcon, MapPin, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-
 export interface LocationDateFormData {
   location: string;
   dueDate: Date;
   description: string;
 }
-
 export interface LocationDateProps {
   initialData: {
     location: string;
@@ -26,112 +24,122 @@ export interface LocationDateProps {
   onSubmit: (data: LocationDateFormData) => void;
   onBack: () => void;
 }
-
-const LocationDateStep = ({ initialData, onSubmit, onBack }: LocationDateProps) => {
+const LocationDateStep = ({
+  initialData,
+  onSubmit,
+  onBack
+}: LocationDateProps) => {
   const [location, setLocation] = useState(initialData.location);
   const [dueDate, setDueDate] = useState<Date | undefined>(initialData.dueDate);
   const [description, setDescription] = useState(initialData.description);
   const [loadingLocation, setLoadingLocation] = useState(false);
-  const [predictions, setPredictions] = useState<{ description: string; place_id: string }[]>([]);
+  const [predictions, setPredictions] = useState<{
+    description: string;
+    place_id: string;
+  }[]>([]);
   const [showPredictions, setShowPredictions] = useState(false);
   const [fetchingPredictions, setFetchingPredictions] = useState(false);
   const autocompleteRef = useRef<HTMLDivElement>(null);
   const [calendarOpen, setCalendarOpen] = useState(false);
-
   const handleSubmit = () => {
     if (!dueDate) {
       // Add a default date if none selected
       const defaultDate = new Date();
       defaultDate.setDate(defaultDate.getDate() + 7); // Default to 7 days from now
-      onSubmit({ location, dueDate: defaultDate, description });
+      onSubmit({
+        location,
+        dueDate: defaultDate,
+        description
+      });
       return;
     }
-    onSubmit({ location, dueDate, description });
+    onSubmit({
+      location,
+      dueDate,
+      description
+    });
   };
-
   const handleDateSelect = (date: Date | undefined) => {
     setDueDate(date);
     setCalendarOpen(false); // Close calendar when date is selected
   };
-
   const handleCurrentLocation = async () => {
     setLoadingLocation(true);
-    
     if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
+      navigator.geolocation.getCurrentPosition(async position => {
+        try {
+          const {
+            latitude,
+            longitude
+          } = position.coords;
+
+          // Call our edge function with minimal auth requirements now
           try {
-            const { latitude, longitude } = position.coords;
-            
-            // Call our edge function with minimal auth requirements now
-            try {
-              const { data, error } = await supabase.functions.invoke('google-places', {
-                body: { 
-                  action: 'geocode',
-                  latitude,
-                  longitude
-                }
-              });
-              
-              if (error) {
-                console.error("Error calling geocode function:", error);
-                toast.error("Error detecting your location");
-                setLoadingLocation(false);
-                return;
+            const {
+              data,
+              error
+            } = await supabase.functions.invoke('google-places', {
+              body: {
+                action: 'geocode',
+                latitude,
+                longitude
               }
-              
-              if (data.results && data.results.length > 0) {
-                // Get the formatted address from the first result
-                const formattedAddress = data.results[0].formatted_address;
-                setLocation(formattedAddress);
-                toast.success("Location found successfully!");
-              } else {
-                toast.error("Could not find your location address.");
-              }
-            } catch (error) {
-              console.error("API call error:", error);
-              toast.error("Error calling location service");
+            });
+            if (error) {
+              console.error("Error calling geocode function:", error);
+              toast.error("Error detecting your location");
+              setLoadingLocation(false);
+              return;
+            }
+            if (data.results && data.results.length > 0) {
+              // Get the formatted address from the first result
+              const formattedAddress = data.results[0].formatted_address;
+              setLocation(formattedAddress);
+              toast.success("Location found successfully!");
+            } else {
+              toast.error("Could not find your location address.");
             }
           } catch (error) {
-            console.error("Error getting location:", error);
-            toast.error("Error detecting your location");
-          } finally {
-            setLoadingLocation(false);
+            console.error("API call error:", error);
+            toast.error("Error calling location service");
           }
-        },
-        (error) => {
-          console.error("Geolocation error:", error);
-          toast.error("Could not access your location");
+        } catch (error) {
+          console.error("Error getting location:", error);
+          toast.error("Error detecting your location");
+        } finally {
           setLoadingLocation(false);
         }
-      );
+      }, error => {
+        console.error("Geolocation error:", error);
+        toast.error("Could not access your location");
+        setLoadingLocation(false);
+      });
     } else {
       toast.error("Geolocation is not supported by your browser");
       setLoadingLocation(false);
     }
   };
-
   const handleLocationInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setLocation(value);
-    
     if (value.length > 2) {
       try {
         setFetchingPredictions(true);
-        
+
         // Call our edge function with minimal auth requirements now
-        const { data, error } = await supabase.functions.invoke('google-places', {
-          body: { 
+        const {
+          data,
+          error
+        } = await supabase.functions.invoke('google-places', {
+          body: {
             action: 'autocomplete',
             input: value
           }
         });
-        
         if (error) {
           console.error("Error calling autocomplete function:", error);
           return;
         }
-        
         if (data.predictions) {
           setPredictions(data.predictions);
           setShowPredictions(true);
@@ -146,8 +154,10 @@ const LocationDateStep = ({ initialData, onSubmit, onBack }: LocationDateProps) 
       setShowPredictions(false);
     }
   };
-
-  const selectPrediction = (prediction: { description: string; place_id: string }) => {
+  const selectPrediction = (prediction: {
+    description: string;
+    place_id: string;
+  }) => {
     setLocation(prediction.description);
     setPredictions([]);
     setShowPredictions(false);
@@ -165,9 +175,7 @@ const LocationDateStep = ({ initialData, onSubmit, onBack }: LocationDateProps) 
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
-
-  return (
-    <div className="space-y-6">
+  return <div className="space-y-6">
       <h2 className="text-2xl font-semibold text-teal-dark text-center">
         Where and When?
       </h2>
@@ -177,53 +185,26 @@ const LocationDateStep = ({ initialData, onSubmit, onBack }: LocationDateProps) 
           Location
         </Label>
         <div className="relative" ref={autocompleteRef}>
-          <Input
-            id="location"
-            placeholder="Enter a location"
-            value={location}
-            onChange={handleLocationInputChange}
-            className="pl-10 text-base bg-white"
-            autoComplete="off"
-          />
+          <Input id="location" placeholder="Enter a location" value={location} onChange={handleLocationInputChange} className="pl-10 text-base bg-white" autoComplete="off" />
           <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-teal-dark h-5 w-5" />
           
           {/* Loading indicator for predictions */}
-          {fetchingPredictions && (
-            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+          {fetchingPredictions && <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
               <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
-            </div>
-          )}
+            </div>}
           
           {/* Predictions dropdown */}
-          {showPredictions && predictions.length > 0 && (
-            <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
-              {predictions.map((prediction) => (
-                <div
-                  key={prediction.place_id}
-                  className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
-                  onClick={() => selectPrediction(prediction)}
-                >
+          {showPredictions && predictions.length > 0 && <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
+              {predictions.map(prediction => <div key={prediction.place_id} className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm" onClick={() => selectPrediction(prediction)}>
                   {prediction.description}
-                </div>
-              ))}
-            </div>
-          )}
+                </div>)}
+            </div>}
         </div>
-        <Button 
-          type="button" 
-          variant="outline" 
-          onClick={handleCurrentLocation}
-          disabled={loadingLocation}
-          className="text-xs h-8 mt-1 flex items-center"
-        >
-          {loadingLocation ? (
-            <>
+        <Button type="button" variant="outline" onClick={handleCurrentLocation} disabled={loadingLocation} className="text-xs h-8 mt-1 flex items-center">
+          {loadingLocation ? <>
               <Loader2 className="h-3 w-3 animate-spin mr-1" /> 
               Detecting location...
-            </>
-          ) : (
-            "Use current location"
-          )}
+            </> : "Use current location"}
         </Button>
       </div>
 
@@ -231,28 +212,13 @@ const LocationDateStep = ({ initialData, onSubmit, onBack }: LocationDateProps) 
         <Label className="text-teal-dark">Preferred Due Date</Label>
         <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
           <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              className={cn(
-                "w-full justify-start text-left font-normal bg-white",
-                !dueDate && "text-muted-foreground"
-              )}
-            >
+            <Button variant="outline" className={cn("w-full justify-start text-left font-normal bg-white", !dueDate && "text-muted-foreground")}>
               <CalendarIcon className="mr-2 h-4 w-4" />
               {dueDate ? format(dueDate, "PPP") : <span>Pick a date</span>}
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="start">
-            <Calendar
-              mode="single"
-              selected={dueDate}
-              onSelect={handleDateSelect}
-              initialFocus
-              className={cn("p-3 pointer-events-auto")}
-              disabled={(date) =>
-                date < new Date(new Date().setHours(0, 0, 0, 0))
-              }
-            />
+            <Calendar mode="single" selected={dueDate} onSelect={handleDateSelect} initialFocus className={cn("p-3 pointer-events-auto")} disabled={date => date < new Date(new Date().setHours(0, 0, 0, 0))} />
           </PopoverContent>
         </Popover>
       </div>
@@ -261,25 +227,12 @@ const LocationDateStep = ({ initialData, onSubmit, onBack }: LocationDateProps) 
         <Label htmlFor="description" className="text-teal-dark">
           Describe the Task
         </Label>
-        <Textarea
-          id="description"
-          placeholder="Summarize key details"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          className="min-h-[120px] text-base bg-white"
-        />
+        <Textarea id="description" placeholder="Summarize key details" value={description} onChange={e => setDescription(e.target.value)} className="min-h-[120px] text-base bg-white" />
       </div>
 
       <div className="flex flex-col pt-6">
-        <Button
-          onClick={handleSubmit}
-          className="w-full bg-gold hover:bg-orange text-teal-dark py-6 text-lg"
-        >
-          NEXT
-        </Button>
+        <Button onClick={handleSubmit} className="w-full bg-gold hover:bg-orange text-teal-dark py-6 text-lg">Next</Button>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default LocationDateStep;
