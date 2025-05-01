@@ -7,13 +7,15 @@ import ReviewSubmitStep from "../components/post-task/ReviewSubmitStep";
 import TaskConfirmation from "../components/post-task/TaskConfirmation";
 import { TaskData, createTask } from "../services/taskService";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import BottomNav from "@/components/BottomNav";
 
 type StepType = "basic-info" | "location-date" | "review" | "confirmation";
 
 const PostTask = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [currentStep, setCurrentStep] = useState<StepType>("basic-info");
   const [taskId, setTaskId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -132,13 +134,14 @@ const PostTask = () => {
   };
 
   return (
-    <div className="min-h-screen bg-cream p-4">
+    <div className="min-h-screen bg-cream p-4 pb-20">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold text-teal mb-6 text-center">
           Post a New Task
         </h1>
         {renderCurrentStep()}
       </div>
+      <BottomNav currentPath={location.pathname} />
     </div>
   );
 };
