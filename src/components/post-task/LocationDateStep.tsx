@@ -10,7 +10,7 @@ import { format } from "date-fns";
 import { Calendar as CalendarIcon, MapPin, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { createClient } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface LocationDateFormData {
   location: string;
@@ -36,7 +36,6 @@ const LocationDateStep = ({ initialData, onSubmit, onBack }: LocationDateProps) 
   const [predictions, setPredictions] = useState<{ description: string; place_id: string }[]>([]);
   const [showPredictions, setShowPredictions] = useState(false);
   const autocompleteRef = useRef<HTMLDivElement>(null);
-  const supabase = createClient();
 
   const handleSubmit = () => {
     if (!dueDate) {
