@@ -71,7 +71,7 @@ const BasicInfoStep = ({ onSubmit, initialData }: BasicInfoProps) => {
 
       <div className="space-y-3">
         <Label className="text-teal-dark">Upload Photos (Optional)</Label>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 justify-center">
           {/* Display photo previews */}
           {photos.map((photo, index) => (
             <div
