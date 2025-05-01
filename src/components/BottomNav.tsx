@@ -43,13 +43,13 @@ const BottomNav = ({ currentPath }: BottomNavProps) => {
       <div className="flex justify-around items-center max-w-md mx-auto">
         <NavItem
           icon={<HelpCircle size={24} />}
-          label="Get it done"
+          label="Post a Task"
           to="/post-task"
           active={currentPath === "/post-task"}
         />
         <NavItem
           icon={<Briefcase size={24} />}
-          label="Browse"
+          label="Find Work"
           to="/find-work"
           active={currentPath === "/find-work"}
         />
