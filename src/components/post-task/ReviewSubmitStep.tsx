@@ -112,7 +112,11 @@ const ReviewSubmitStep = ({
       </Card>
 
       <div className="pt-6">
-        <Button onClick={onSubmit} disabled={submitting} className="w-full bg-teal hover:bg-teal-dark text-white">
+        <Button 
+          onClick={onSubmit} 
+          disabled={submitting} 
+          className="w-full bg-gold hover:bg-orange text-teal-dark py-6 text-lg"
+        >
           {submitting ? 'Submitting...' : 'Submit Task'}
         </Button>
       </div>
