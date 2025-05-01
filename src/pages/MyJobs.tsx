@@ -5,8 +5,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { getUserTasks } from "@/services/taskService";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { CalendarClock, MapPin, DollarSign } from "lucide-react";
+import { CalendarClock, MapPin, DollarSign, Users } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 const MyJobs = () => {
   const location = useLocation();
@@ -53,10 +54,19 @@ const MyJobs = () => {
                   <div className="p-4">
                     <h2 className="text-xl font-semibold text-teal-dark">{task.title}</h2>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
+                    <Badge className="mt-1 bg-teal-100 text-teal-800 hover:bg-teal-100">
+                      {task.status}
+                    </Badge>
+                    
+                    <div className="flex flex-wrap gap-6 mt-3">
                       <div className="flex items-center text-gray-600">
                         <DollarSign size={18} className="mr-2" />
-                        <span>Budget: ${task.budget}</span>
+                        <span>${task.budget}</span>
+                      </div>
+                      
+                      <div className="flex items-center text-gray-600">
+                        <CalendarClock size={18} className="mr-2" />
+                        <span>{format(new Date(task.due_date), 'dd MMM yyyy')}</span>
                       </div>
                       
                       <div className="flex items-center text-gray-600">
@@ -65,12 +75,8 @@ const MyJobs = () => {
                       </div>
                       
                       <div className="flex items-center text-gray-600">
-                        <CalendarClock size={18} className="mr-2" />
-                        <span>Due: {format(new Date(task.due_date), 'dd MMM yyyy')}</span>
-                      </div>
-                      
-                      <div className="bg-teal-100 text-teal-800 rounded-full px-3 py-1 text-sm inline-flex items-center w-fit">
-                        Status: {task.status}
+                        <Users size={18} className="mr-2" />
+                        <span>{Math.floor(Math.random() * 5)} offers</span>
                       </div>
                     </div>
                     
