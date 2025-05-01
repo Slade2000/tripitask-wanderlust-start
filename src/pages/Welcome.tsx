@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -45,7 +44,7 @@ const WelcomePage = () => {
             <img src="/lovable-uploads/cb23f62a-5b45-42ff-b1ff-4771111c4d77.png" alt="TripiTask Logo" className="w-full h-full object-contain" />
           </div>
           
-          <p className="text-xl md:text-2xl">Keep Moving, Stay Connected.</p>
+          <p className="text-xl md:text-2xl mx-0 px-[87px] py-[11px] font-semibold">Keep Moving, Stay Connected</p>
         </div>
 
         {/* Middle Section - Intentionally Empty */}
