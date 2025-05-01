@@ -22,7 +22,7 @@ const TaskConfirmation = ({
       </p>
       <div className="flex flex-col space-y-4">
         
-        <Button onClick={handleGoToMyTasks} variant="outline" className="border-teal text-inherit bg-[#0d6269]">
+        <Button onClick={handleGoToMyTasks} variant="outline" className="border-teal bg-[#0d6269] text-white">
           Go to My Tasks
         </Button>
       </div>
