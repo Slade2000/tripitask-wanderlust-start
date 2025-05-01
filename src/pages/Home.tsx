@@ -3,22 +3,18 @@ import { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import BottomNav from "@/components/BottomNav";
-import Logo from "@/components/Logo";
 
 const Home = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // After login, redirect to the post task page
+  // After login, redirect to the welcome page
   useEffect(() => {
-    navigate("/post-task");
+    navigate("/welcome-after-login");
   }, [navigate]);
 
   return (
     <div className="min-h-screen bg-cream p-4 pb-20">
-      {/* Add Logo */}
-      <Logo />
-      
       <header className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-teal">TripiTask</h1>
       </header>
@@ -28,7 +24,7 @@ const Home = () => {
           Welcome to TripiTask Home!
         </h2>
         <p className="text-teal-dark">
-          Redirecting to post task page...
+          Redirecting to welcome page...
         </p>
       </div>
       
