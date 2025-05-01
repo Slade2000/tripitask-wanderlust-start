@@ -54,6 +54,77 @@ export type Database = {
         }
         Relationships: []
       }
+      task_photos: {
+        Row: {
+          created_at: string
+          id: string
+          photo_url: string
+          task_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          photo_url: string
+          task_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          photo_url?: string
+          task_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_photos_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tasks: {
+        Row: {
+          budget: string
+          created_at: string
+          description: string
+          due_date: string
+          id: string
+          latitude: number | null
+          location: string
+          longitude: number | null
+          status: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          budget: string
+          created_at?: string
+          description: string
+          due_date: string
+          id?: string
+          latitude?: number | null
+          location: string
+          longitude?: number | null
+          status?: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          budget?: string
+          created_at?: string
+          description?: string
+          due_date?: string
+          id?: string
+          latitude?: number | null
+          location?: string
+          longitude?: number | null
+          status?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_interests: {
         Row: {
           created_at: string | null
