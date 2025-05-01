@@ -41,7 +41,7 @@ const WelcomePage = () => {
       <div className="relative z-10 flex flex-col min-h-screen justify-between items-center text-cream py-16 px-6 bg-[#073136]">
         {/* Top Section */}
         <div className="text-center mt-8">
-          <div className="w-48 h-48 mx-auto mb-6">
+          <div className="w-64 h-64 mx-auto mb-6">
             <img src="/lovable-uploads/cb23f62a-5b45-42ff-b1ff-4771111c4d77.png" alt="TripiTask Logo" className="w-full h-full object-contain" />
           </div>
           
