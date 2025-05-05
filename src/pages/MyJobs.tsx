@@ -31,13 +31,16 @@ const MyJobs = () => {
     retry: 2,
     // Add staleTime to prevent too frequent refetches
     staleTime: 1000 * 60 * 5, // 5 minutes
-    onError: (err) => {
-      console.error("Error in tasks query:", err);
-      toast({
-        title: "Error loading tasks",
-        description: err instanceof Error ? err.message : "Unknown error, please try again later",
-        variant: "destructive",
-      });
+    // Use onSettled in React Query v5 instead of onError
+    meta: {
+      onError: (err: Error) => {
+        console.error("Error in tasks query:", err);
+        toast({
+          title: "Error loading tasks",
+          description: err.message || "Unknown error, please try again later",
+          variant: "destructive",
+        });
+      }
     }
   });
 
