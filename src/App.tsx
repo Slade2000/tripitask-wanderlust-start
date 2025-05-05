@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { useState } from "react";
 
 // Import pages
 import WelcomePage from "./pages/Welcome";
@@ -24,10 +25,10 @@ import TaskOffers from "./pages/TaskOffers";
 import TaskDetail from "./pages/TaskDetail";
 import SubmitOffer from "./pages/SubmitOffer";
 
-// Create a new QueryClient instance outside of the component
-const queryClient = new QueryClient();
-
 const App = () => {
+  // Create a new QueryClient instance inside the component
+  const [queryClient] = useState(() => new QueryClient());
+
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange>
