@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 export interface TaskData {
@@ -6,15 +5,14 @@ export interface TaskData {
   title: string;
   description: string;
   budget: string;
-  category_id?: string | null;
   location: string;
-  created_at?: string;
   user_id: string;
   due_date: string;
   status?: string;
+  category_id: string;
+  photos: File[];
   latitude?: number | null;
   longitude?: number | null;
-  photos?: File[];
 }
 
 export async function createTask(taskData: TaskData): Promise<string | null> {

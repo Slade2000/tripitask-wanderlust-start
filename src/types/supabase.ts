@@ -39,6 +39,30 @@ export interface Database {
           }
         ]
       }
+      categories: {
+        Row: {
+          id: string
+          name: string
+          description: string | null
+          active: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          description?: string | null
+          active?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          description?: string | null
+          active?: boolean
+          created_at?: string
+        }
+        Relationships: []
+      }
       tasks: {
         Row: {
           id: string
@@ -52,6 +76,7 @@ export interface Database {
           status: string
           latitude: number | null
           longitude: number | null
+          category_id: string | null
         }
         Insert: {
           id?: string
@@ -65,6 +90,7 @@ export interface Database {
           status?: string
           latitude?: number | null
           longitude?: number | null
+          category_id?: string | null
         }
         Update: {
           id?: string
@@ -78,6 +104,7 @@ export interface Database {
           status?: string
           latitude?: number | null
           longitude?: number | null
+          category_id?: string | null
         }
         Relationships: [
           {
@@ -85,6 +112,13 @@ export interface Database {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
             referencedColumns: ["id"]
           }
         ]
