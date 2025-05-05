@@ -44,6 +44,7 @@ export const PostTaskProvider = ({
       title: "",
       description: "",
       budget: "",
+      category_id: "",
       location: "",
       user_id: userId,
       due_date: new Date().toISOString(),

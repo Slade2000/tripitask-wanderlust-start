@@ -6,6 +6,7 @@ export interface TaskData {
   title: string;
   description: string;
   budget: string;
+  category_id?: string | null;
   location: string;
   created_at?: string;
   user_id: string;
@@ -25,6 +26,7 @@ export async function createTask(taskData: TaskData): Promise<string | null> {
         title: taskData.title,
         description: taskData.description,
         budget: taskData.budget,
+        category_id: taskData.category_id,
         location: taskData.location,
         user_id: taskData.user_id,
         due_date: taskData.due_date,

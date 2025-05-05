@@ -9,6 +9,30 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      categories: {
+        Row: {
+          active: boolean
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -86,6 +110,7 @@ export type Database = {
       tasks: {
         Row: {
           budget: string
+          category_id: string | null
           created_at: string
           description: string
           due_date: string
@@ -99,6 +124,7 @@ export type Database = {
         }
         Insert: {
           budget: string
+          category_id?: string | null
           created_at?: string
           description: string
           due_date: string
@@ -112,6 +138,7 @@ export type Database = {
         }
         Update: {
           budget?: string
+          category_id?: string | null
           created_at?: string
           description?: string
           due_date?: string
@@ -123,7 +150,15 @@ export type Database = {
           title?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "tasks_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_interests: {
         Row: {

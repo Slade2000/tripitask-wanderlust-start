@@ -31,6 +31,7 @@ const PostTaskStep = ({ onStepBack }: PostTaskStepProps) => {
     setTaskData({
       ...taskData,
       title: data.title,
+      category_id: data.category_id,
       budget: data.budget,
       photos: data.photos,
     });
@@ -69,7 +70,7 @@ const PostTaskStep = ({ onStepBack }: PostTaskStepProps) => {
 
   // Navigate directly to specific step based on field
   const handleEditField = (field: string) => {
-    if (["title", "photos", "budget"].includes(field)) {
+    if (["title", "category_id", "photos", "budget"].includes(field)) {
       setCurrentStep("basic-info");
     } else if (["location", "due_date", "description"].includes(field)) {
       setCurrentStep("location-date");
@@ -95,6 +96,7 @@ const PostTaskStep = ({ onStepBack }: PostTaskStepProps) => {
         <BasicInfoStep
           initialData={{
             title: taskData.title,
+            category_id: taskData.category_id,
             photos: taskData.photos || [],
             budget: taskData.budget,
           }}

@@ -1,33 +1,51 @@
+
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Camera, Image, Upload, Plus } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useCategories, Category } from "@/hooks/useCategories";
+
 export interface BasicInfoFormData {
   title: string;
+  category_id: string;
   photos: File[];
   budget: string;
 }
+
 export interface BasicInfoProps {
   initialData: {
     title: string;
+    category_id?: string;
     photos: File[];
     budget: string;
   };
   onSubmit: (data: BasicInfoFormData) => void;
   onBack?: () => void; // Added optional back handler
 }
+
 const BasicInfoStep = ({
   onSubmit,
   initialData,
   onBack
 }: BasicInfoProps) => {
   const [title, setTitle] = useState(initialData.title);
+  const [categoryId, setCategoryId] = useState(initialData.category_id || "");
   const [photos, setPhotos] = useState<File[]>(initialData.photos);
   const [budget, setBudget] = useState(initialData.budget);
   const [titleError, setTitleError] = useState("");
+  const [categoryError, setCategoryError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  const { categories, loading: categoriesLoading } = useCategories();
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const fileArray = Array.from(e.target.files);
@@ -36,38 +54,86 @@ const BasicInfoStep = ({
       setPhotos(newPhotos);
     }
   };
+
   const removePhoto = (index: number) => {
     setPhotos(photos.filter((_, i) => i !== index));
   };
+
   const handleSubmit = () => {
+    let hasError = false;
+    
     if (!title.trim()) {
       setTitleError("Please enter a task title");
-      return;
+      hasError = true;
     }
+    
+    if (!categoryId) {
+      setCategoryError("Please select a category");
+      hasError = true;
+    }
+    
+    if (hasError) return;
+
     onSubmit({
       title,
+      category_id: categoryId,
       photos,
       budget
     });
   };
+
   const handleUploadClick = () => {
     fileInputRef.current?.click();
   };
+
   const handleCameraClick = () => {
     cameraInputRef.current?.click();
   };
+
   return <div className="space-y-6">
       <div className="space-y-2">
         <h2 className="text-xl font-semibold text-teal-dark">
           What do you need help with?
         </h2>
         <div>
-          <Input placeholder="Give your task a title" value={title} onChange={e => {
-          setTitle(e.target.value);
-          setTitleError("");
-        }} className={`text-base bg-white ${titleError ? "border-red" : ""}`} />
+          <Input placeholder="Give your task a title" 
+            value={title} 
+            onChange={e => {
+              setTitle(e.target.value);
+              setTitleError("");
+            }} 
+            className={`text-base bg-white ${titleError ? "border-red" : ""}`} 
+          />
           {titleError && <p className="text-sm text-red-500 mt-1">{titleError}</p>}
         </div>
+      </div>
+
+      {/* Category selection */}
+      <div className="space-y-2">
+        <Label htmlFor="category" className="text-teal-dark">Category</Label>
+        <Select 
+          value={categoryId}
+          onValueChange={(value) => {
+            setCategoryId(value);
+            setCategoryError("");
+          }}
+        >
+          <SelectTrigger className={`bg-white ${categoryError ? "border-red-500" : ""}`}>
+            <SelectValue placeholder="Select a category" />
+          </SelectTrigger>
+          <SelectContent>
+            {categoriesLoading ? (
+              <SelectItem value="loading" disabled>Loading categories...</SelectItem>
+            ) : (
+              categories.map((category: Category) => (
+                <SelectItem key={category.id} value={category.id}>
+                  {category.name}
+                </SelectItem>
+              ))
+            )}
+          </SelectContent>
+        </Select>
+        {categoryError && <p className="text-sm text-red-500">{categoryError}</p>}
       </div>
 
       <div className="space-y-3">
@@ -114,4 +180,5 @@ const BasicInfoStep = ({
       </div>
     </div>;
 };
+
 export default BasicInfoStep;
