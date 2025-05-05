@@ -1,27 +1,36 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { TaskFilterParams } from "./types";
 import { calculateDistance } from "../locationService";
 
 export async function getUserTasks(userId: string) {
   try {
+    console.log("Fetching tasks for user:", userId);
+    
+    if (!userId) {
+      console.error("No user ID provided to getUserTasks");
+      throw new Error("User ID is required to fetch tasks");
+    }
+    
     const { data, error } = await supabase
       .from('tasks')
       .select(`
         *,
-        task_photos(*)
+        task_photos(*),
+        categories(name, description)
       `)
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
 
     if (error) {
+      console.error("Supabase error fetching user tasks:", error);
       throw error;
     }
-
+    
+    console.log(`Found ${data?.length || 0} tasks for user ${userId}`);
     return data || [];
   } catch (error) {
     console.error("Error fetching user tasks:", error);
-    return [];
+    throw error; // Re-throw the error so React Query can handle it
   }
 }
 
