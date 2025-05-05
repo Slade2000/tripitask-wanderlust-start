@@ -32,11 +32,17 @@ export async function getUserTasks(userId: string) {
     
     // Process the data to extract the offer count from the aggregation
     const processedData = data?.map(task => {
-      // If offers table doesn't exist yet, we'll use a default count of 0
-      // Using type assertion to handle the unknown structure
-      const offerCount = task.offer_count && Array.isArray(task.offer_count) && task.offer_count[0] 
-        ? Number(task.offer_count[0].count) || 0 
-        : 0;
+      // Handle the offer count safely
+      let offerCount = 0;
+      
+      // Check if offer_count exists and is an array with data
+      if (task.offer_count && 
+          Array.isArray(task.offer_count) && 
+          task.offer_count.length > 0 && 
+          task.offer_count[0] !== null) {
+        // Extract count, ensuring it's converted to a number
+        offerCount = Number(task.offer_count[0].count) || 0;
+      }
       
       return {
         ...task,

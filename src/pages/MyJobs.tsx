@@ -10,11 +10,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/hooks/use-toast";
 
 const MyJobs = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { toast } = useToast();
   
   const {
     data: tasks,
@@ -29,6 +31,14 @@ const MyJobs = () => {
     retry: 2,
     // Add staleTime to prevent too frequent refetches
     staleTime: 1000 * 60 * 5, // 5 minutes
+    onError: (err) => {
+      console.error("Error in tasks query:", err);
+      toast({
+        title: "Error loading tasks",
+        description: err instanceof Error ? err.message : "Unknown error, please try again later",
+        variant: "destructive",
+      });
+    }
   });
 
   const handleViewTask = (taskId: string) => {
@@ -36,6 +46,10 @@ const MyJobs = () => {
   };
 
   const handleRefresh = () => {
+    toast({
+      title: "Refreshing tasks...",
+      duration: 2000,
+    });
     refetch();
   };
   
@@ -91,7 +105,7 @@ const MyJobs = () => {
           </div>
         )}
         
-        {!isLoading && tasks && tasks.length > 0 && (
+        {!isLoading && !error && tasks && tasks.length > 0 && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <p className="text-sm text-gray-600">{tasks.length} task{tasks.length !== 1 ? 's' : ''} found</p>
