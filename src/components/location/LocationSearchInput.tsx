@@ -2,6 +2,7 @@
 import React from "react";
 import { Input } from "@/components/ui/input";
 import { PlacePrediction } from "@/services/locationService";
+import { Loader2 } from "lucide-react";
 
 interface LocationSearchInputProps {
   searchTerm: string;
@@ -49,10 +50,15 @@ const LocationSearchInput: React.FC<LocationSearchInputProps> = ({
           disabled={disabled}
           className="w-full"
         />
-        {showSuggestions && searchTerm !== "" && (
+        {isLoading && (
+          <div className="absolute right-3 top-2.5">
+            <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+          </div>
+        )}
+        {showSuggestions && searchTerm.trim() !== "" && (
           <div className="absolute z-10 w-full bg-white border rounded-md shadow-lg mt-1 max-h-60 overflow-auto">
             {isLoading ? (
-              <div className="p-2 text-gray-500">Loading...</div>
+              <div className="p-2 text-gray-500">Looking for locations...</div>
             ) : suggestions.length > 0 ? (
               suggestions.map((suggestion) => (
                 <div
@@ -68,7 +74,7 @@ const LocationSearchInput: React.FC<LocationSearchInputProps> = ({
                 </div>
               ))
             ) : (
-              <div className="p-2 text-gray-500">No results found</div>
+              <div className="p-2 text-gray-500">No locations found</div>
             )}
           </div>
         )}

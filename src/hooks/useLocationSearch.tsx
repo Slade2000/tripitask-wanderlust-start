@@ -12,7 +12,7 @@ interface UseLocationSearchOptions {
  * Custom hook for location search with debounce
  */
 export const useLocationSearch = (options: UseLocationSearchOptions = {}) => {
-  const { debounceTime = 500, initialTerm = "" } = options;
+  const { debounceTime = 300, initialTerm = "" } = options; // Reduced debounce time for better UX
   const [searchTerm, setSearchTerm] = useState<string>(initialTerm);
   const [suggestions, setSuggestions] = useState<PlacePrediction[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -32,7 +32,9 @@ export const useLocationSearch = (options: UseLocationSearchOptions = {}) => {
       setError(null);
       
       try {
+        console.log("Fetching suggestions for:", debouncedSearchTerm);
         const results = await getLocationSuggestions(debouncedSearchTerm);
+        console.log("Got suggestions:", results);
         setSuggestions(results);
       } catch (error) {
         console.error("Error fetching location suggestions:", error);
