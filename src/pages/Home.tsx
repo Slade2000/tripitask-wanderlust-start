@@ -47,13 +47,13 @@ const Home = () => {
   };
 
   return (
-    <div className="relative h-full w-full flex flex-col pb-16">
+    <div className="relative min-h-screen w-full flex flex-col overflow-hidden pb-16">
       {/* Top Logo */}
       <Logo />
 
       {/* Static Background Image */}
       <div className="absolute inset-0 z-0">
-        <div className="w-full h-full">
+        <div className="w-full h-screen">
           <div className="w-full h-full bg-cover bg-center" style={{
           backgroundImage: `url(${backgroundImage})`
         }}>
@@ -63,9 +63,9 @@ const Home = () => {
       </div>
 
       {/* Content Overlay */}
-      <div className="relative z-10 flex flex-col h-full justify-between items-center text-cream py-8 px-6">
+      <div className="relative z-10 flex flex-col min-h-screen justify-between items-center text-cream py-16 px-6">
         {/* Greeting Header */}
-        <div className="text-center mt-8">
+        <div className="text-center mt-16">
           <h1 className="text-4xl md:text-5xl font-bold mb-3">Welcome {userFirstName}!</h1>
           <p className="text-xl md:text-2xl text-gold">Help wherever you roll.</p>
         </div>
@@ -74,7 +74,7 @@ const Home = () => {
         <div className="flex-1" />
 
         {/* Action Buttons */}
-        <div className="w-full max-w-md mb-4">
+        <div className="w-full max-w-md mb-8">
           <div className="flex flex-col gap-4">
             <Button onClick={handlePostTask} className="w-full bg-gold hover:bg-orange text-teal-dark py-8 text-xl">
               <Plus className="mr-2 h-6 w-6" /> Post a Task
