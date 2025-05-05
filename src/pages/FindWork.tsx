@@ -26,7 +26,7 @@ const FindWork = () => {
   // Filter states
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
-  const [distanceRadius, setDistanceRadius] = useState([25]); // km
+  const [distanceRadius, setDistanceRadius] = useState([100]); // Changed from 25km to 100km
   const [budgetRange, setBudgetRange] = useState([500]); // dollars
   const [filterOpen, setFilterOpen] = useState(false);
   

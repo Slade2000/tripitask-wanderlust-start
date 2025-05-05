@@ -19,9 +19,14 @@ const DistanceSlider: React.FC<DistanceSliderProps> = ({
       <Slider 
         value={distanceRadius}
         onValueChange={setDistanceRadius}
-        max={100}
-        step={5}
+        max={500}
+        step={10}
       />
+      <div className="flex justify-between text-xs text-gray-500 mt-1">
+        <span>0 km</span>
+        <span>250 km</span>
+        <span>500 km</span>
+      </div>
     </div>
   );
 };
