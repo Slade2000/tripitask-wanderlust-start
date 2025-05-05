@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { TaskFilterParams } from "./types";
 import { calculateDistance } from "../locationService";
@@ -12,36 +11,40 @@ export async function getUserTasks(userId: string) {
       throw new Error("User ID is required to fetch tasks");
     }
     
-    // Let's adjust the query to include a count of offers for each task
-    // We'll use Supabase's built-in count function to get this information
+    // Improved query with error handling and safe offer count calculation
     const { data, error } = await supabase
       .from('tasks')
       .select(`
         *,
         task_photos(*),
         categories(name, description),
-        offer_count:offers(count)
+        offers(count)
       `)
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
 
     if (error) {
       console.error("Supabase error fetching user tasks:", error);
-      throw error;
+      throw new Error(error.message || "Failed to fetch tasks from database");
     }
     
-    // Process the data to extract the offer count from the aggregation
-    const processedData = data?.map(task => {
-      // Handle the offer count safely
+    if (!data) {
+      console.log("No tasks found for user:", userId);
+      return [];
+    }
+    
+    // Process the data to extract the offer count safely
+    const processedData = data.map(task => {
+      // Default offer count to 0
       let offerCount = 0;
       
-      // Check if offer_count exists and is an array with data
-      if (task.offer_count && 
-          Array.isArray(task.offer_count) && 
-          task.offer_count.length > 0 && 
-          task.offer_count[0] !== null) {
-        // Extract count, ensuring it's converted to a number
-        offerCount = Number(task.offer_count[0].count) || 0;
+      // Safely extract the offer count from Supabase response
+      if (task.offers && Array.isArray(task.offers)) {
+        // If offers exists and is an array, get the first element's count
+        const countObj = task.offers[0];
+        if (countObj && typeof countObj.count !== 'undefined') {
+          offerCount = Number(countObj.count);
+        }
       }
       
       return {
@@ -50,11 +53,16 @@ export async function getUserTasks(userId: string) {
       };
     });
     
-    console.log(`Found ${processedData?.length || 0} tasks for user ${userId}`);
-    return processedData || [];
+    console.log(`Found ${processedData.length} tasks for user ${userId}`);
+    return processedData;
   } catch (error) {
-    console.error("Error fetching user tasks:", error);
-    throw error; // Re-throw the error so React Query can handle it
+    console.error("Error in getUserTasks:", error);
+    // Rethrow with a more informative message
+    if (error instanceof Error) {
+      throw error;
+    } else {
+      throw new Error("An unexpected error occurred while fetching your tasks");
+    }
   }
 }
 
