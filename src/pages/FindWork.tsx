@@ -5,6 +5,7 @@ import { Search, Filter } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
 import BottomNav from "@/components/BottomNav";
 import FilterPanel from "@/components/find-work/FilterPanel";
 import TaskList from "@/components/find-work/TaskList";
@@ -20,6 +21,7 @@ interface TaskLocation {
 
 const FindWork = () => {
   const location = useLocation();
+  const { toast } = useToast();
   
   // Filter states
   const [searchQuery, setSearchQuery] = useState("");
@@ -58,6 +60,11 @@ const FindWork = () => {
         },
         (error) => {
           console.error("Error getting geolocation:", error);
+          toast({
+            title: "Location Error",
+            description: "Could not get your location. Using default location.",
+            variant: "destructive",
+          });
           // Set default location if geolocation fails
           setCurrentUserLocation({
             name: "Sydney",
@@ -77,7 +84,7 @@ const FindWork = () => {
   }, []);
 
   // Fetch available tasks
-  const { data: tasks = [], isLoading: tasksLoading } = useQuery({
+  const { data: tasks = [], isLoading: tasksLoading, error } = useQuery({
     queryKey: ["availableTasks", searchQuery, selectedCategory, distanceRadius, budgetRange, currentUserLocation, futureLocation],
     queryFn: () => getAllAvailableTasks({
       searchQuery,
@@ -92,6 +99,7 @@ const FindWork = () => {
     }),
     // Only run the query when we have user's location
     enabled: !!currentUserLocation,
+    keepPreviousData: true,
   });
 
   // Filter toggle
@@ -146,6 +154,7 @@ const FindWork = () => {
         <TaskList 
           tasks={tasks} 
           tasksLoading={tasksLoading}
+          error={error}
           futureLocation={futureLocation} 
         />
       </div>

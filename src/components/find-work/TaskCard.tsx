@@ -4,6 +4,7 @@ import { format } from "date-fns";
 import { DollarSign, MapPin, Calendar } from "lucide-react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 interface TaskCardProps {
   task: {
@@ -12,6 +13,9 @@ interface TaskCardProps {
     budget: string;
     location: string;
     due_date: string;
+    categories?: {
+      name: string;
+    } | null;
   };
   futureLocation?: {
     name: string;
@@ -46,12 +50,20 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, futureLocation }) => {
             <Calendar className="h-4 w-4 mr-1" />
             <span>Due: {format(new Date(task.due_date), "PP")}</span>
           </div>
+          
+          {task.categories && (
+            <div className="flex items-center w-1/2">
+              <span className="px-2 py-1 bg-teal-100 text-teal-800 text-xs rounded-full">
+                {task.categories.name}
+              </span>
+            </div>
+          )}
         </div>
       </CardContent>
       
       <CardFooter className="p-4 pt-0">
-        <Button variant="outline" className="w-full">
-          View Details
+        <Button variant="outline" className="w-full" asChild>
+          <Link to={`/tasks/${task.id}`}>View Details</Link>
         </Button>
       </CardFooter>
     </Card>

@@ -5,17 +5,29 @@ import TaskCard from "./TaskCard";
 interface TaskListProps {
   tasks: any[];
   tasksLoading: boolean;
+  error?: Error | null;
   futureLocation: {
     name: string;
   };
 }
 
-const TaskList: React.FC<TaskListProps> = ({ tasks, tasksLoading, futureLocation }) => {
+const TaskList: React.FC<TaskListProps> = ({ tasks, tasksLoading, error, futureLocation }) => {
   if (tasksLoading) {
     return (
       <div className="text-center py-8">
         <div className="animate-spin h-8 w-8 border-4 border-teal border-t-transparent rounded-full mx-auto mb-2"></div>
         <p>Loading tasks...</p>
+      </div>
+    );
+  }
+  
+  if (error) {
+    return (
+      <div className="text-center py-8 bg-red-50 rounded-lg shadow-sm border border-red-100">
+        <p className="text-red-600 mb-2">Error loading tasks</p>
+        <p className="text-gray-500 text-sm">
+          {error instanceof Error ? error.message : "An unknown error occurred"}
+        </p>
       </div>
     );
   }
