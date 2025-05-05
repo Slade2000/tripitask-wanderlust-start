@@ -57,6 +57,8 @@ const FindWork = () => {
             name: "Current Location",
             ...coords,
           });
+          
+          console.log("Set user location to:", coords);
         },
         (error) => {
           console.error("Error getting geolocation:", error);
@@ -84,7 +86,7 @@ const FindWork = () => {
   }, []);
 
   // Fetch available tasks
-  const { data: tasks = [], isLoading: tasksLoading, error } = useQuery({
+  const { data: tasks = [], isLoading: tasksLoading, error, refetch } = useQuery({
     queryKey: ["availableTasks", searchQuery, selectedCategory, distanceRadius[0], budgetRange[0], currentUserLocation?.latitude, currentUserLocation?.longitude, futureLocation.name],
     queryFn: async () => {
       try {
@@ -97,6 +99,11 @@ const FindWork = () => {
           latitude: currentUserLocation?.latitude,
           longitude: currentUserLocation?.longitude,
         });
+
+        // Add mock data if no location for testing only
+        if (!currentUserLocation) {
+          console.log("No location available yet, using default");
+        }
 
         const result = await getAllAvailableTasks({
           searchQuery,
@@ -117,11 +124,15 @@ const FindWork = () => {
         throw err;
       }
     },
-    // Enable the query as soon as we have location data or after a timeout
-    enabled: !!currentUserLocation || true,
-    staleTime: 60000, // 1 minute before refetch
-    placeholderData: [], // Empty array as placeholder instead of mock data
+    // Enable the query as soon as we have location data
+    enabled: !!currentUserLocation,
+    staleTime: 30000, // 30 seconds before refetch
   });
+
+  // Manual refetch button handler
+  const handleRefresh = () => {
+    refetch();
+  };
 
   // Filter toggle
   const toggleFilters = () => setFilterOpen(!filterOpen);
@@ -153,6 +164,14 @@ const FindWork = () => {
           >
             <Filter className="h-4 w-4" />
           </Button>
+          <Button 
+            variant="outline"
+            size="sm"
+            onClick={handleRefresh}
+            className="flex-shrink-0 hidden md:flex"
+          >
+            Refresh
+          </Button>
         </div>
 
         {/* Advanced filters panel */}
@@ -176,7 +195,8 @@ const FindWork = () => {
           tasks={tasks} 
           tasksLoading={tasksLoading}
           error={error}
-          futureLocation={futureLocation} 
+          futureLocation={futureLocation}
+          onRefresh={handleRefresh}
         />
       </div>
       <BottomNav currentPath={location.pathname} />

@@ -1,6 +1,8 @@
 
 import React from "react";
 import TaskCard from "./TaskCard";
+import { Button } from "@/components/ui/button";
+import { RefreshCw } from "lucide-react";
 
 interface TaskListProps {
   tasks: any[];
@@ -9,9 +11,10 @@ interface TaskListProps {
   futureLocation: {
     name: string;
   };
+  onRefresh?: () => void;
 }
 
-const TaskList: React.FC<TaskListProps> = ({ tasks, tasksLoading, error, futureLocation }) => {
+const TaskList: React.FC<TaskListProps> = ({ tasks, tasksLoading, error, futureLocation, onRefresh }) => {
   console.log("TaskList render - loading:", tasksLoading, "tasks length:", tasks?.length);
   
   if (tasksLoading) {
@@ -19,7 +22,7 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, tasksLoading, error, futureL
       <div className="text-center py-8">
         <div className="animate-spin h-8 w-8 border-4 border-teal border-t-transparent rounded-full mx-auto mb-2"></div>
         <p className="font-medium">Loading available tasks...</p>
-        <p className="text-xs text-gray-500 mt-1">Fetching the latest opportunities</p>
+        <p className="text-xs text-gray-500 mt-1">This might take a moment to connect to the database</p>
       </div>
     );
   }
@@ -31,7 +34,14 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, tasksLoading, error, futureL
         <p className="text-gray-500 text-sm">
           {error instanceof Error ? error.message : "An unknown error occurred"}
         </p>
-        <p className="text-xs text-gray-400 mt-2">Please try refreshing the page</p>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={onRefresh} 
+          className="mt-3 flex items-center gap-2"
+        >
+          <RefreshCw className="h-4 w-4" /> Try Again
+        </Button>
       </div>
     );
   }
@@ -42,15 +52,42 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, tasksLoading, error, futureL
         <p className="text-gray-600 mb-2 font-medium">
           No tasks found in the database
         </p>
-        <p className="text-gray-500 text-sm">
+        <p className="text-gray-500 text-sm mb-4">
           Try adjusting your search filters or check back later for new opportunities
         </p>
+        
+        <div className="flex flex-col gap-3 max-w-xs mx-auto text-left text-sm text-gray-500">
+          <p>Possible solutions:</p>
+          <ul className="list-disc pl-5 space-y-1 text-xs">
+            <li>Increase the distance radius</li>  
+            <li>Adjust your budget filter</li>
+            <li>Try a different location</li>
+            <li>Remove category filters</li>
+            <li>Clear your search terms</li>
+          </ul>
+        </div>
+        
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={onRefresh} 
+          className="mt-6 flex items-center gap-2"
+        >
+          <RefreshCw className="h-4 w-4" /> Refresh Results
+        </Button>
       </div>
     );
   }
 
   return (
     <div className="space-y-4">
+      <div className="flex items-center justify-between mb-2">
+        <p className="text-sm text-gray-500">Found {tasks.length} tasks</p>
+        <Button variant="ghost" size="sm" onClick={onRefresh} className="flex items-center gap-1">
+          <RefreshCw className="h-3 w-3" /> Refresh
+        </Button>
+      </div>
+      
       {tasks.map((task) => (
         <TaskCard key={task.id} task={task} futureLocation={futureLocation} />
       ))}

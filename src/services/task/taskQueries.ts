@@ -50,14 +50,22 @@ export async function getTaskById(taskId: string) {
 
 export async function getAllAvailableTasks(filters: TaskFilterParams = {}) {
   try {
+    console.log("Fetching all available tasks with filters:", filters);
+    
     // Build query with filters
     let query = supabase
       .from('tasks')
       .select(`
         *,
         categories(name, description)
-      `)
-      .eq('status', 'open');
+      `);
+    
+    // Only filter by status if we're not in development mode
+    // For testing, we'll show all tasks regardless of status
+    // Remove this condition in production
+    if (import.meta.env.PROD) {
+      query = query.eq('status', 'open');
+    }
     
     // Apply search query filter if provided
     if (filters.searchQuery && filters.searchQuery.trim() !== '') {
@@ -72,25 +80,36 @@ export async function getAllAvailableTasks(filters: TaskFilterParams = {}) {
     
     // Apply budget filter if provided
     if (filters.maxBudget) {
-      // Budget is stored as text, so we convert it to a number for comparison
-      // This isn't ideal, but it's a workaround for the current data structure
-      query = query.filter('budget', 'lte', filters.maxBudget.toString());
+      // Convert number to string for comparison if budget is stored as text
+      query = query.lte('budget', filters.maxBudget.toString());
     }
     
     // Execute the query
     const { data, error } = await query.order('created_at', { ascending: false });
     
     if (error) {
+      console.error("Database error when fetching tasks:", error);
       throw error;
     }
+    
+    console.log("Raw tasks data from database:", data);
     
     let filteredTasks = data || [];
     
     // Apply location distance filter if coordinates are provided
     // This has to be done client-side since we don't have PostGIS extensions
     if (filters.latitude && filters.longitude && filters.distanceRadius) {
+      console.log("Filtering tasks by distance:", {
+        userLat: filters.latitude,
+        userLong: filters.longitude,
+        radius: filters.distanceRadius
+      });
+      
       filteredTasks = filteredTasks.filter(task => {
-        if (!task.latitude || !task.longitude) return false;
+        if (!task.latitude || !task.longitude) {
+          console.log(`Task ${task.id} has no coordinates, excluding from distance filter`);
+          return false;
+        }
         
         const distance = calculateDistance(
           filters.latitude!, 
@@ -99,10 +118,12 @@ export async function getAllAvailableTasks(filters: TaskFilterParams = {}) {
           task.longitude
         );
         
+        console.log(`Task ${task.id} is ${distance.toFixed(1)}km away (max: ${filters.distanceRadius}km)`);
         return distance <= filters.distanceRadius;
       });
     }
     
+    console.log(`Returning ${filteredTasks.length} tasks after all filters`);
     return filteredTasks;
   } catch (error) {
     console.error("Error fetching available tasks:", error);
