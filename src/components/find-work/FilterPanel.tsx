@@ -54,14 +54,15 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   setFutureLocation,
 }) => {
   const { categories } = useCategories();
-  const [showLocationSuggestions, setShowLocationSuggestions] = useState(false);
+  const [showCurrentLocationSuggestions, setShowCurrentLocationSuggestions] = useState(false);
+  const [showFutureLocationSuggestions, setShowFutureLocationSuggestions] = useState(false);
   
   // Current location search
   const {
-    searchTerm,
-    setSearchTerm,
-    suggestions,
-    isLoading,
+    searchTerm: currentSearchTerm,
+    setSearchTerm: setCurrentSearchTerm,
+    suggestions: currentSuggestions,
+    isLoading: currentIsLoading,
   } = useLocationSearch();
   
   // Future location search
@@ -74,9 +75,6 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
 
   // Handle current location selection
   const handleLocationSelect = async (selectedLocation: string) => {
-    setSearchTerm(selectedLocation);
-    setShowLocationSuggestions(false);
-    
     const coordinates = await getLocationCoordinates(selectedLocation);
     if (coordinates) {
       setCurrentUserLocation({
@@ -98,7 +96,6 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
         longitude: coordinates.longitude,
       }),
     });
-    setShowLocationSuggestions(false);
   };
 
   return (
@@ -125,12 +122,12 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
       
       {/* Location search */}
       <LocationSearchInput
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        suggestions={suggestions}
-        isLoading={isLoading}
-        showSuggestions={showLocationSuggestions}
-        setShowSuggestions={setShowLocationSuggestions}
+        searchTerm={currentSearchTerm}
+        setSearchTerm={setCurrentSearchTerm}
+        suggestions={currentSuggestions}
+        isLoading={currentIsLoading}
+        showSuggestions={showCurrentLocationSuggestions}
+        setShowSuggestions={setShowCurrentLocationSuggestions}
         onLocationSelect={handleLocationSelect}
         label="Your Location"
         placeholder="Enter your location"
@@ -172,8 +169,8 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
           setSearchTerm={setFutureSearchTerm}
           suggestions={futureSuggestions}
           isLoading={futureIsLoading}
-          showSuggestions={showLocationSuggestions}
-          setShowSuggestions={setShowLocationSuggestions}
+          showSuggestions={showFutureLocationSuggestions}
+          setShowSuggestions={setShowFutureLocationSuggestions}
           onLocationSelect={handleFutureLocationSelect}
           label=""
           placeholder="Location Name/Postcode"

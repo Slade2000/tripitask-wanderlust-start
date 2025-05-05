@@ -16,13 +16,20 @@ export const useLocationSearch = () => {
     const fetchSuggestions = async () => {
       if (!debouncedSearchTerm) {
         setSuggestions([]);
+        setIsLoading(false);
         return;
       }
       
       setIsLoading(true);
-      const results = await getLocationSuggestions(debouncedSearchTerm);
-      setSuggestions(results);
-      setIsLoading(false);
+      try {
+        const results = await getLocationSuggestions(debouncedSearchTerm);
+        setSuggestions(results);
+      } catch (error) {
+        console.error("Error fetching location suggestions:", error);
+        setSuggestions([]);
+      } finally {
+        setIsLoading(false);
+      }
     };
     
     fetchSuggestions();

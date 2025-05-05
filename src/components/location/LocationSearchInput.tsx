@@ -43,20 +43,26 @@ const LocationSearchInput: React.FC<LocationSearchInputProps> = ({
           }}
           onFocus={() => setShowSuggestions(true)}
         />
-        {showSuggestions && suggestions.length > 0 && (
+        {showSuggestions && searchTerm !== "" && (
           <div className="absolute z-10 w-full bg-white border rounded-md shadow-lg mt-1 max-h-60 overflow-auto">
             {isLoading ? (
               <div className="p-2 text-gray-500">Loading...</div>
-            ) : (
+            ) : suggestions.length > 0 ? (
               suggestions.map((suggestion) => (
                 <div
                   key={suggestion.place_id}
                   className="p-2 hover:bg-gray-100 cursor-pointer"
-                  onClick={() => onLocationSelect(suggestion.description)}
+                  onClick={() => {
+                    onLocationSelect(suggestion.description);
+                    setSearchTerm(suggestion.description);
+                    setShowSuggestions(false);
+                  }}
                 >
                   {suggestion.description}
                 </div>
               ))
+            ) : (
+              <div className="p-2 text-gray-500">No results found</div>
             )}
           </div>
         )}
