@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { TaskFilterParams } from "./types";
 import { calculateDistance } from "../locationService";
@@ -32,7 +33,10 @@ export async function getUserTasks(userId: string) {
     // Process the data to extract the offer count from the aggregation
     const processedData = data?.map(task => {
       // If offers table doesn't exist yet, we'll use a default count of 0
-      const offerCount = task.offer_count?.[0]?.count || 0;
+      // Using type assertion to handle the unknown structure
+      const offerCount = task.offer_count && Array.isArray(task.offer_count) && task.offer_count[0] 
+        ? Number(task.offer_count[0].count) || 0 
+        : 0;
       
       return {
         ...task,
