@@ -44,6 +44,8 @@ const PostTaskStep = ({ onStepBack }: PostTaskStepProps) => {
       location: data.location,
       description: data.description,
       due_date: data.dueDate.toISOString(),
+      latitude: data.latitude || null,
+      longitude: data.longitude || null,
     });
     setCurrentStep("review");
   };
@@ -51,6 +53,7 @@ const PostTaskStep = ({ onStepBack }: PostTaskStepProps) => {
   const handleSubmitTask = async () => {
     setSubmitting(true);
     try {
+      console.log("Submitting task with data:", taskData);
       const newTaskId = await createTask(taskData);
 
       if (newTaskId) {

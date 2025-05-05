@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,11 +11,16 @@ import { Calendar as CalendarIcon, MapPin, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { getLocationCoordinates } from "@/services/locationService";
+
 export interface LocationDateFormData {
   location: string;
   dueDate: Date;
   description: string;
+  latitude?: number | null;
+  longitude?: number | null;
 }
+
 export interface LocationDateProps {
   initialData: {
     location: string;
@@ -24,6 +30,7 @@ export interface LocationDateProps {
   onSubmit: (data: LocationDateFormData) => void;
   onBack: () => void;
 }
+
 const LocationDateStep = ({
   initialData,
   onSubmit,
@@ -39,9 +46,30 @@ const LocationDateStep = ({
   }[]>([]);
   const [showPredictions, setShowPredictions] = useState(false);
   const [fetchingPredictions, setFetchingPredictions] = useState(false);
+  const [coordinates, setCoordinates] = useState<{ latitude: number | null; longitude: number | null }>({ 
+    latitude: null, 
+    longitude: null 
+  });
   const autocompleteRef = useRef<HTMLDivElement>(null);
   const [calendarOpen, setCalendarOpen] = useState(false);
-  const handleSubmit = () => {
+
+  const handleSubmit = async () => {
+    // If we have a location but no coordinates, try to get them
+    if (location && (!coordinates.latitude || !coordinates.longitude)) {
+      try {
+        setLoadingLocation(true);
+        const locationCoords = await getLocationCoordinates(location);
+        if (locationCoords) {
+          setCoordinates(locationCoords);
+          console.log(`Found coordinates for ${location}: ${JSON.stringify(locationCoords)}`);
+        }
+      } catch (error) {
+        console.error("Error getting coordinates:", error);
+      } finally {
+        setLoadingLocation(false);
+      }
+    }
+    
     if (!dueDate) {
       // Add a default date if none selected
       const defaultDate = new Date();
@@ -49,20 +77,27 @@ const LocationDateStep = ({
       onSubmit({
         location,
         dueDate: defaultDate,
-        description
+        description,
+        latitude: coordinates.latitude,
+        longitude: coordinates.longitude
       });
       return;
     }
+    
     onSubmit({
       location,
       dueDate,
-      description
+      description,
+      latitude: coordinates.latitude,
+      longitude: coordinates.longitude
     });
   };
+
   const handleDateSelect = (date: Date | undefined) => {
     setDueDate(date);
     setCalendarOpen(false); // Close calendar when date is selected
   };
+
   const handleCurrentLocation = async () => {
     setLoadingLocation(true);
     if (navigator.geolocation) {
@@ -72,6 +107,10 @@ const LocationDateStep = ({
             latitude,
             longitude
           } = position.coords;
+
+          // Save coordinates
+          setCoordinates({ latitude, longitude });
+          console.log(`Got coordinates from browser: ${latitude}, ${longitude}`);
 
           // Call our edge function with minimal auth requirements now
           try {
@@ -119,9 +158,14 @@ const LocationDateStep = ({
       setLoadingLocation(false);
     }
   };
+
   const handleLocationInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setLocation(value);
+    
+    // Clear coordinates when location changes
+    setCoordinates({ latitude: null, longitude: null });
+    
     if (value.length > 2) {
       try {
         setFetchingPredictions(true);
@@ -154,13 +198,28 @@ const LocationDateStep = ({
       setShowPredictions(false);
     }
   };
-  const selectPrediction = (prediction: {
+
+  const selectPrediction = async (prediction: {
     description: string;
     place_id: string;
   }) => {
     setLocation(prediction.description);
     setPredictions([]);
     setShowPredictions(false);
+    
+    // Get coordinates for the selected location
+    try {
+      setLoadingLocation(true);
+      const locationCoords = await getLocationCoordinates(prediction.description);
+      if (locationCoords) {
+        setCoordinates(locationCoords);
+        console.log(`Found coordinates for ${prediction.description}: ${JSON.stringify(locationCoords)}`);
+      }
+    } catch (error) {
+      console.error("Error getting coordinates for prediction:", error);
+    } finally {
+      setLoadingLocation(false);
+    }
   };
 
   // Close predictions when clicking outside
@@ -175,6 +234,7 @@ const LocationDateStep = ({
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
   return <div className="space-y-6">
       <h2 className="text-2xl font-semibold text-teal-dark text-center">
         Where and When?
@@ -206,6 +266,12 @@ const LocationDateStep = ({
               Detecting location...
             </> : "Use current location"}
         </Button>
+        
+        {coordinates.latitude && coordinates.longitude && (
+          <div className="text-xs text-green-600">
+            Coordinates detected: {coordinates.latitude.toFixed(4)}, {coordinates.longitude.toFixed(4)}
+          </div>
+        )}
       </div>
 
       <div className="space-y-3">
@@ -231,8 +297,14 @@ const LocationDateStep = ({
       </div>
 
       <div className="flex flex-col pt-6">
-        <Button onClick={handleSubmit} className="w-full bg-gold hover:bg-orange text-teal-dark py-6 text-lg">Next</Button>
+        <Button onClick={handleSubmit} className="w-full bg-gold hover:bg-orange text-teal-dark py-6 text-lg">
+          {loadingLocation ? <>
+            <Loader2 className="h-5 w-5 animate-spin mr-2" /> 
+            Processing...
+          </> : "Next"}
+        </Button>
       </div>
     </div>;
 };
+
 export default LocationDateStep;

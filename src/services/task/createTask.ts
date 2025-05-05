@@ -2,9 +2,24 @@
 import { supabase } from "@/integrations/supabase/client";
 import { TaskData } from "./types";
 import { uploadTaskPhotos } from "./taskPhotoUpload";
+import { getLocationCoordinates } from "../locationService";
 
 export async function createTask(taskData: TaskData): Promise<string | null> {
   try {
+    // Try to get coordinates if they are not provided but we have a location
+    let coordinates = { latitude: taskData.latitude, longitude: taskData.longitude };
+    
+    if ((!coordinates.latitude || !coordinates.longitude) && taskData.location) {
+      console.log(`Looking up coordinates for location: ${taskData.location}`);
+      const locationCoords = await getLocationCoordinates(taskData.location);
+      if (locationCoords) {
+        coordinates = locationCoords;
+        console.log(`Found coordinates for ${taskData.location}: ${JSON.stringify(coordinates)}`);
+      } else {
+        console.log(`No coordinates found for location: ${taskData.location}`);
+      }
+    }
+
     // Create task entry
     const { data: taskInsertData, error: taskError } = await supabase
       .from('tasks')
@@ -17,8 +32,8 @@ export async function createTask(taskData: TaskData): Promise<string | null> {
         user_id: taskData.user_id,
         due_date: taskData.due_date,
         status: 'open',
-        latitude: taskData.latitude,
-        longitude: taskData.longitude
+        latitude: coordinates.latitude,
+        longitude: coordinates.longitude
       })
       .select()
       .single();

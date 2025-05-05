@@ -48,7 +48,9 @@ export const PostTaskProvider = ({
       location: "",
       user_id: userId,
       due_date: new Date().toISOString(),
-      photos: []
+      photos: [],
+      latitude: null,
+      longitude: null
     }
   );
 
