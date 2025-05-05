@@ -18,6 +18,7 @@ export function useCategories() {
     async function fetchCategories() {
       try {
         setLoading(true);
+        // Using a more generic approach to avoid TypeScript errors with Supabase tables
         const { data, error } = await supabase
           .from('categories')
           .select('*')
@@ -28,7 +29,8 @@ export function useCategories() {
           throw error;
         }
 
-        setCategories(data || []);
+        // Type assertion to handle the data coming from Supabase
+        setCategories((data || []) as Category[]);
       } catch (err) {
         console.error('Error fetching categories:', err);
         setError(err instanceof Error ? err.message : 'Unknown error occurred');

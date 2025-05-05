@@ -27,7 +27,7 @@ const queryClient = new QueryClient();
 const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
+      <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange>
         <BrowserRouter>
           <AuthProvider>
             <TooltipProvider>
@@ -36,6 +36,7 @@ const App = () => {
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<Signup />} />
                 <Route path="/home" element={<Home />} />
+                <Route path="/welcome-after-login" element={<Home />} />
                 <Route path="/post-task" element={<PostTask />} />
                 <Route path="/find-work" element={<FindWork />} />
                 <Route path="/my-jobs" element={<MyJobs />} />
