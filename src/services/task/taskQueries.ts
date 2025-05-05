@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { TaskFilterParams } from "./types";
 import { calculateDistance } from "../locationService";
+import { countOffersForTask } from "./offerQueries";
 
 export async function getUserTasks(userId: string) {
   try {
@@ -11,14 +12,13 @@ export async function getUserTasks(userId: string) {
       throw new Error("User ID is required to fetch tasks");
     }
     
-    // Improved query with error handling and safe offer count calculation
+    // Get tasks without trying to join with offers
     const { data, error } = await supabase
       .from('tasks')
       .select(`
         *,
         task_photos(*),
-        categories(name, description),
-        offers(count)
+        categories(name, description)
       `)
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
@@ -33,28 +33,20 @@ export async function getUserTasks(userId: string) {
       return [];
     }
     
-    // Process the data to extract the offer count safely
-    const processedData = data.map(task => {
-      // Default offer count to 0
-      let offerCount = 0;
-      
-      // Safely extract the offer count from Supabase response
-      if (task.offers && Array.isArray(task.offers)) {
-        // If offers exists and is an array, get the first element's count
-        const countObj = task.offers[0];
-        if (countObj && typeof countObj.count !== 'undefined') {
-          offerCount = Number(countObj.count);
-        }
-      }
+    // For now, let's use our mock offer counts until we implement the actual relationship
+    // Using Promise.all to fetch all offer counts in parallel
+    const tasksWithOfferCounts = await Promise.all(data.map(async (task) => {
+      // Use our existing mock offer count function
+      const offerCount = await countOffersForTask(task.id);
       
       return {
         ...task,
         offer_count: offerCount
       };
-    });
+    }));
     
-    console.log(`Found ${processedData.length} tasks for user ${userId}`);
-    return processedData;
+    console.log(`Found ${tasksWithOfferCounts.length} tasks for user ${userId}`);
+    return tasksWithOfferCounts;
   } catch (error) {
     console.error("Error in getUserTasks:", error);
     // Rethrow with a more informative message

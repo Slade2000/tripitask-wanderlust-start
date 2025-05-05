@@ -1,3 +1,4 @@
+
 import { useLocation, useNavigate } from "react-router-dom";
 import BottomNav from "@/components/BottomNav";
 import { useAuth } from "@/contexts/AuthContext";
@@ -30,14 +31,15 @@ const MyJobs = () => {
     retry: 2,
     // Add staleTime to prevent too frequent refetches
     staleTime: 1000 * 60 * 5, // 5 minutes
-    // Correctly handle errors in React Query v5
-    onError: (err) => {
-      console.error("Error in tasks query:", err);
-      toast({
-        title: "Error loading tasks",
-        description: err instanceof Error ? err.message : "Unknown error, please try again later",
-        variant: "destructive",
-      });
+    onSettled: (data, error) => {
+      if (error) {
+        console.error("Error in tasks query:", error);
+        toast({
+          title: "Error loading tasks",
+          description: error instanceof Error ? error.message : "Unknown error, please try again later",
+          variant: "destructive",
+        });
+      }
     }
   });
 
