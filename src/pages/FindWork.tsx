@@ -103,7 +103,7 @@ const FindWork = () => {
                   <SelectValue placeholder="All Categories" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Categories</SelectItem>
+                  <SelectItem value="all">All Categories</SelectItem>
                   {categories.map((category) => (
                     <SelectItem key={category.id} value={category.id}>
                       {category.name}
@@ -178,6 +178,7 @@ const FindWork = () => {
                         }
                         initialFocus
                         fromDate={new Date()}
+                        className="pointer-events-auto"
                       />
                     </PopoverContent>
                   </Popover>
@@ -208,6 +209,7 @@ const FindWork = () => {
                         }
                         initialFocus
                         fromDate={futureLocation.startDate || new Date()}
+                        className="pointer-events-auto"
                       />
                     </PopoverContent>
                   </Popover>
