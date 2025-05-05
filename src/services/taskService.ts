@@ -184,7 +184,7 @@ export async function getTaskOffers(taskId: string) {
         provider_id: "provider-1",
         amount: 180,
         expected_delivery_date: new Date().toISOString(),
-        status: 'pending',
+        status: 'pending' as 'pending' | 'accepted' | 'rejected',
         created_at: new Date().toISOString(),
         provider: {
           id: "provider-1",
@@ -200,7 +200,7 @@ export async function getTaskOffers(taskId: string) {
         provider_id: "provider-2",
         amount: 220,
         expected_delivery_date: new Date(Date.now() + 86400000).toISOString(),
-        status: 'pending',
+        status: 'pending' as 'pending' | 'accepted' | 'rejected',
         created_at: new Date().toISOString(),
         provider: {
           id: "provider-2",

@@ -29,7 +29,12 @@ export default function TaskOffers() {
             
             // Fetch offers for the task
             const offersData = await getTaskOffers(taskId);
-            setOffers(offersData || []);
+            // Convert the raw offers data to match the Offer type
+            const typedOffers = offersData.map((offer: any): Offer => ({
+              ...offer,
+              status: offer.status as "pending" | "accepted" | "rejected"
+            }));
+            setOffers(typedOffers);
           } else {
             toast({
               title: "Error",
@@ -72,7 +77,7 @@ export default function TaskOffers() {
           <ChevronLeft size={24} />
           <span className="ml-1">Back</span>
         </button>
-        <Logo size="sm" />
+        <Logo />
       </div>
       
       <h1 className="text-2xl font-bold text-teal text-center my-6">
