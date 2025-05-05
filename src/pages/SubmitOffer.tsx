@@ -2,11 +2,15 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, ArrowRight, DollarSign } from "lucide-react";
+import { format } from "date-fns";
+import { ArrowLeft, ArrowRight, Calendar, DollarSign, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { useToast } from "@/hooks/use-toast";
 import { getTaskById } from "@/services/taskService";
 
@@ -16,6 +20,7 @@ const SubmitOffer = () => {
   const { toast } = useToast();
   
   const [price, setPrice] = useState("");
+  const [deliveryDate, setDeliveryDate] = useState<Date | undefined>(undefined);
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -39,6 +44,15 @@ const SubmitOffer = () => {
       toast({
         title: "Invalid price",
         description: "Please enter a valid price for your offer",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!deliveryDate) {
+      toast({
+        title: "Delivery date required",
+        description: "Please select an expected delivery date",
         variant: "destructive",
       });
       return;
@@ -116,7 +130,7 @@ const SubmitOffer = () => {
         <form onSubmit={handleSubmit} className="m-4 space-y-4">
           <div>
             <label htmlFor="price" className="block mb-2 font-medium">
-              Your Offer Amount
+              Offer Amount (AUD)
             </label>
             <div className="relative">
               <DollarSign className="absolute left-3 top-2.5 h-5 w-5 text-gray-500" />
@@ -134,17 +148,56 @@ const SubmitOffer = () => {
           </div>
           
           <div>
+            <label className="block mb-2 font-medium">
+              Expected Delivery Date
+            </label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start text-left"
+                >
+                  <Calendar className="mr-2 h-5 w-5" />
+                  {deliveryDate ? (
+                    format(deliveryDate, "PPP")
+                  ) : (
+                    <span className="text-gray-500">Select a date</span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <CalendarComponent
+                  mode="single"
+                  selected={deliveryDate}
+                  onSelect={setDeliveryDate}
+                  initialFocus
+                  fromDate={new Date()}
+                  className="pointer-events-auto"
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+          
+          <div>
             <label htmlFor="message" className="block mb-2 font-medium">
-              Message to Task Owner (Optional)
+              Note to Task Poster (Optional)
             </label>
             <Textarea
               id="message"
-              placeholder="Introduce yourself and explain why you're the best person for this task..."
+              placeholder="Add a note for the task poster..."
               className="h-32"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
             />
           </div>
+          
+          <Alert className="bg-blue-50 text-blue-800 border border-blue-200">
+            <Info className="h-4 w-4" />
+            <AlertDescription className="text-sm">
+              By submitting an offer, you agree that your quote includes all service costs. 
+              You will be notified if your offer is accepted.
+            </AlertDescription>
+          </Alert>
           
           <div className="pt-4">
             <Button 
