@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { Search, Filter } from "lucide-react";
@@ -82,73 +83,24 @@ const FindWork = () => {
     }
   }, []);
 
-  // Create some mock tasks for testing when real data can't be fetched
-  const mockTasks = [
-    {
-      id: "mock-task-1",
-      title: "Help move furniture",
-      description: "Need help moving a couch and table to my new apartment",
-      budget: "120",
-      location: "Sydney, NSW",
-      due_date: "2025-06-01",
-      categories: {
-        name: "Moving",
-        description: "Help with moving and lifting"
-      },
-      created_at: new Date().toISOString(),
-      user_id: "user123",
-      status: "open",
-      latitude: -33.8688,
-      longitude: 151.2093,
-      category_id: "cat001"
-    },
-    {
-      id: "mock-task-2",
-      title: "Garden maintenance",
-      description: "Need help with lawn mowing and garden cleanup",
-      budget: "80",
-      location: "Melbourne, VIC",
-      due_date: "2025-05-15",
-      categories: {
-        name: "Gardening",
-        description: "Outdoor gardening and lawn care"
-      },
-      created_at: new Date().toISOString(),
-      user_id: "user456",
-      status: "open",
-      latitude: -37.8136,
-      longitude: 144.9631,
-      category_id: "cat002"
-    },
-    {
-      id: "mock-task-3",
-      title: "Dog walking",
-      description: "Need someone to walk my dog for 1 hour",
-      budget: "25",
-      location: "Perth, WA",
-      due_date: "2025-05-10",
-      categories: {
-        name: "Pet Care",
-        description: "Taking care of pets"
-      },
-      created_at: new Date().toISOString(),
-      user_id: "user789",
-      status: "open",
-      latitude: -31.9505,
-      longitude: 115.8605,
-      category_id: "cat003"
-    }
-  ];
-
   // Fetch available tasks
   const { data: tasks = [], isLoading: tasksLoading, error } = useQuery({
-    queryKey: ["availableTasks", searchQuery, selectedCategory, distanceRadius, budgetRange, currentUserLocation, futureLocation],
+    queryKey: ["availableTasks", searchQuery, selectedCategory, distanceRadius[0], budgetRange[0], currentUserLocation?.latitude, currentUserLocation?.longitude, futureLocation.name],
     queryFn: async () => {
-      // Try fetching real data first
       try {
-        const realTasks = await getAllAvailableTasks({
+        console.log("Fetching tasks with filters:", {
           searchQuery,
-          categoryId: selectedCategory,
+          categoryId: selectedCategory !== "all" ? selectedCategory : undefined,
+          distanceRadius: distanceRadius[0],
+          maxBudget: budgetRange[0],
+          locationName: currentUserLocation?.name,
+          latitude: currentUserLocation?.latitude,
+          longitude: currentUserLocation?.longitude,
+        });
+
+        const result = await getAllAvailableTasks({
+          searchQuery,
+          categoryId: selectedCategory !== "all" ? selectedCategory : undefined,
           distanceRadius: distanceRadius[0],
           maxBudget: budgetRange[0],
           locationName: currentUserLocation?.name,
@@ -158,24 +110,17 @@ const FindWork = () => {
           }),
         });
         
-        // If we get real data back that's not empty, use it
-        if (realTasks && realTasks.length > 0) {
-          return realTasks;
-        }
-        
-        // Otherwise fall back to mock data
-        console.log("No real tasks found, using mock data");
-        return mockTasks;
+        console.log("Tasks fetched from database:", result);
+        return result;
       } catch (err) {
         console.error("Error fetching tasks:", err);
-        // Fall back to mock data on error
-        return mockTasks;
+        throw err;
       }
     },
-    // Make sure this query runs immediately with default data
-    enabled: true,
-    placeholderData: mockTasks, // This replaces keepPreviousData
+    // Enable the query as soon as we have location data or after a timeout
+    enabled: !!currentUserLocation || true,
     staleTime: 60000, // 1 minute before refetch
+    placeholderData: [], // Empty array as placeholder instead of mock data
   });
 
   // Filter toggle
