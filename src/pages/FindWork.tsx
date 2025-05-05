@@ -99,7 +99,7 @@ const FindWork = () => {
     }),
     // Only run the query when we have user's location
     enabled: !!currentUserLocation,
-    keepPreviousData: true,
+    placeholderData: (previousData) => previousData, // This replaces keepPreviousData
   });
 
   // Filter toggle
