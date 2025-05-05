@@ -20,6 +20,7 @@ import FindWork from "./pages/FindWork";
 import MyJobs from "./pages/MyJobs";
 import Messages from "./pages/Messages";
 import Account from "./pages/Account";
+import TaskOffers from "./pages/TaskOffers";
 
 // Create a new QueryClient instance outside of the component
 const queryClient = new QueryClient();
@@ -40,6 +41,7 @@ const App = () => {
                 <Route path="/post-task" element={<PostTask />} />
                 <Route path="/find-work" element={<FindWork />} />
                 <Route path="/my-jobs" element={<MyJobs />} />
+                <Route path="/tasks/:taskId/offers" element={<TaskOffers />} />
                 <Route path="/messages" element={<Messages />} />
                 <Route path="/account" element={<Account />} />
                 <Route path="/terms" element={<Terms />} />

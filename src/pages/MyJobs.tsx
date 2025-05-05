@@ -1,5 +1,5 @@
 
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import BottomNav from "@/components/BottomNav";
 import { useAuth } from "@/contexts/AuthContext";
 import { getUserTasks } from "@/services/taskService";
@@ -8,9 +8,11 @@ import { format } from "date-fns";
 import { CalendarClock, MapPin, DollarSign, Users } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 const MyJobs = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { user } = useAuth();
   
   const { data: tasks, isLoading, error } = useQuery({
@@ -18,6 +20,10 @@ const MyJobs = () => {
     queryFn: () => getUserTasks(user?.id || ''),
     enabled: !!user?.id
   });
+
+  const handleViewTask = (taskId: string) => {
+    navigate(`/tasks/${taskId}/offers`);
+  };
   
   return (
     <div className="min-h-screen bg-cream p-4 pb-20">
@@ -49,7 +55,11 @@ const MyJobs = () => {
         {tasks && tasks.length > 0 && (
           <div className="space-y-4">
             {tasks.map((task) => (
-              <Card key={task.id} className="overflow-hidden">
+              <Card 
+                key={task.id} 
+                className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
+                onClick={() => handleViewTask(task.id)}
+              >
                 <CardContent className="p-0">
                   <div className="p-4">
                     <h2 className="text-xl font-semibold text-teal-dark">{task.title}</h2>
@@ -81,9 +91,15 @@ const MyJobs = () => {
                         <span>{Math.floor(Math.random() * 5)} offers</span>
                       </div>
                       
-                      <button className="text-teal bg-white border border-teal rounded px-4 py-2 hover:bg-teal hover:text-white transition-colors">
-                        View Details
-                      </button>
+                      <Button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleViewTask(task.id);
+                        }}
+                        className="bg-teal hover:bg-teal-dark text-white"
+                      >
+                        View Offers
+                      </Button>
                     </div>
                   </div>
                 </CardContent>
