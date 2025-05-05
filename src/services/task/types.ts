@@ -20,4 +20,6 @@ export interface TaskFilterParams {
   distanceRadius?: number;
   maxBudget?: number;
   locationName?: string;
+  latitude?: number;
+  longitude?: number;
 }

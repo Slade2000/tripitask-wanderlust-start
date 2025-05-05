@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { TaskFilterParams } from "./types";
+import { calculateDistance } from "../locationService";
 
 export async function getUserTasks(userId: string) {
   try {
@@ -122,7 +123,7 @@ export async function getAllAvailableTasks(filters: TaskFilterParams = {}) {
     }
     
     // Filter by category
-    if (filters.categoryId) {
+    if (filters.categoryId && filters.categoryId !== 'all') {
       filteredTasks = filteredTasks.filter(task => task.category_id === filters.categoryId);
     }
     
@@ -131,8 +132,21 @@ export async function getAllAvailableTasks(filters: TaskFilterParams = {}) {
       filteredTasks = filteredTasks.filter(task => parseInt(task.budget) <= filters.maxBudget);
     }
     
-    // In a real implementation, you would use the user's current location and calculate distance
-    // between the user and each task to filter by distanceRadius
+    // Filter by location distance
+    if (filters.latitude && filters.longitude && filters.distanceRadius) {
+      filteredTasks = filteredTasks.filter(task => {
+        if (!task.latitude || !task.longitude) return false;
+        
+        const distance = calculateDistance(
+          filters.latitude!, 
+          filters.longitude!, 
+          task.latitude, 
+          task.longitude
+        );
+        
+        return distance <= filters.distanceRadius;
+      });
+    }
     
     return filteredTasks;
     

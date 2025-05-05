@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { Search, Filter, MapPin, Calendar, DollarSign } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
@@ -24,12 +24,42 @@ import { useCategories } from "@/hooks/useCategories";
 import { format, addDays } from "date-fns";
 import { getAllAvailableTasks } from "@/services/taskService";
 import { useQuery } from "@tanstack/react-query";
+import { getLocationCoordinates, getLocationSuggestions, PlacePrediction } from "@/services/locationService";
+import { useDebounce } from "@/hooks/useDebounce";
 
 interface TaskLocation {
   name: string;
   startDate: Date | undefined;
   endDate: Date | undefined;
+  latitude?: number;
+  longitude?: number;
 }
+
+// Custom hook for location search with debounce
+const useLocationSearch = () => {
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [suggestions, setSuggestions] = useState<PlacePrediction[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+  
+  useEffect(() => {
+    const fetchSuggestions = async () => {
+      if (!debouncedSearchTerm) {
+        setSuggestions([]);
+        return;
+      }
+      
+      setIsLoading(true);
+      const results = await getLocationSuggestions(debouncedSearchTerm);
+      setSuggestions(results);
+      setIsLoading(false);
+    };
+    
+    fetchSuggestions();
+  }, [debouncedSearchTerm]);
+  
+  return { searchTerm, setSearchTerm, suggestions, isLoading };
+};
 
 const FindWork = () => {
   const location = useLocation();
@@ -41,21 +71,104 @@ const FindWork = () => {
   const [distanceRadius, setDistanceRadius] = useState([25]); // km
   const [budgetRange, setBudgetRange] = useState([500]); // dollars
   const [filterOpen, setFilterOpen] = useState(false);
+  const [showLocationSuggestions, setShowLocationSuggestions] = useState(false);
+  
+  // Location search
+  const { searchTerm, setSearchTerm, suggestions, isLoading } = useLocationSearch();
+  
+  // Current location for filtering
+  const [currentUserLocation, setCurrentUserLocation] = useState<{
+    name: string;
+    latitude: number;
+    longitude: number;
+  } | null>(null);
+  
   const [futureLocation, setFutureLocation] = useState<TaskLocation>({
     name: "",
     startDate: undefined,
     endDate: undefined,
   });
+  
+  // Set user's location from browser geolocation
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const coords = {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          };
+          
+          setCurrentUserLocation({
+            name: "Current Location",
+            ...coords,
+          });
+        },
+        (error) => {
+          console.error("Error getting geolocation:", error);
+          // Set default location if geolocation fails
+          setCurrentUserLocation({
+            name: "Sydney",
+            latitude: -33.8688,
+            longitude: 151.2093,
+          });
+        }
+      );
+    } else {
+      // Set default location if geolocation not supported
+      setCurrentUserLocation({
+        name: "Sydney",
+        latitude: -33.8688,
+        longitude: 151.2093,
+      });
+    }
+  }, []);
+  
+  // Handle location selection from suggestions
+  const handleLocationSelect = async (selectedLocation: string) => {
+    setSearchTerm(selectedLocation);
+    setShowLocationSuggestions(false);
+    
+    const coordinates = await getLocationCoordinates(selectedLocation);
+    if (coordinates) {
+      setCurrentUserLocation({
+        name: selectedLocation,
+        ...coordinates,
+      });
+    }
+  };
+  
+  // Handle future location selection
+  const handleFutureLocationSelect = async (selectedLocation: string) => {
+    const coordinates = await getLocationCoordinates(selectedLocation);
+    
+    setFutureLocation({
+      ...futureLocation,
+      name: selectedLocation,
+      ...(coordinates && {
+        latitude: coordinates.latitude,
+        longitude: coordinates.longitude,
+      }),
+    });
+    setShowLocationSuggestions(false);
+  };
 
   // Fetch available tasks
-  const { data: tasks = [], isLoading } = useQuery({
-    queryKey: ["availableTasks", searchQuery, selectedCategory, distanceRadius, budgetRange, futureLocation],
+  const { data: tasks = [], isLoading: tasksLoading } = useQuery({
+    queryKey: ["availableTasks", searchQuery, selectedCategory, distanceRadius, budgetRange, currentUserLocation, futureLocation],
     queryFn: () => getAllAvailableTasks({
       searchQuery,
       categoryId: selectedCategory,
       distanceRadius: distanceRadius[0],
       maxBudget: budgetRange[0],
+      locationName: currentUserLocation?.name,
+      ...(currentUserLocation && {
+        latitude: currentUserLocation.latitude,
+        longitude: currentUserLocation.longitude,
+      }),
     }),
+    // Only run the query when we have user's location
+    enabled: !!currentUserLocation,
   });
 
   // Filter toggle
@@ -113,6 +226,44 @@ const FindWork = () => {
               </Select>
             </div>
             
+            {/* Location search */}
+            <div className="mb-4">
+              <label className="text-sm font-medium mb-1 block">Your Location</label>
+              <div className="relative">
+                <Input 
+                  placeholder="Enter your location" 
+                  value={searchTerm}
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value);
+                    setShowLocationSuggestions(true);
+                  }}
+                  onFocus={() => setShowLocationSuggestions(true)}
+                />
+                {showLocationSuggestions && suggestions.length > 0 && (
+                  <div className="absolute z-10 w-full bg-white border rounded-md shadow-lg mt-1 max-h-60 overflow-auto">
+                    {isLoading ? (
+                      <div className="p-2 text-gray-500">Loading...</div>
+                    ) : (
+                      suggestions.map((suggestion) => (
+                        <div
+                          key={suggestion.place_id}
+                          className="p-2 hover:bg-gray-100 cursor-pointer"
+                          onClick={() => handleLocationSelect(suggestion.description)}
+                        >
+                          {suggestion.description}
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
+              </div>
+              {currentUserLocation && (
+                <p className="text-xs text-gray-500 mt-1">
+                  Using: {currentUserLocation.name}
+                </p>
+              )}
+            </div>
+            
             {/* Distance radius slider */}
             <div className="mb-4">
               <label className="text-sm font-medium mb-1 block">
@@ -144,11 +295,34 @@ const FindWork = () => {
               <h3 className="text-sm font-medium mb-2">Plan Future Location</h3>
               
               <div className="mb-4">
-                <Input 
-                  placeholder="Location Name/Postcode" 
-                  value={futureLocation.name}
-                  onChange={(e) => setFutureLocation({...futureLocation, name: e.target.value})}
-                />
+                <div className="relative">
+                  <Input 
+                    placeholder="Location Name/Postcode" 
+                    value={futureLocation.name}
+                    onChange={(e) => {
+                      setFutureLocation({...futureLocation, name: e.target.value});
+                      setShowLocationSuggestions(true);
+                    }}
+                    onFocus={() => setShowLocationSuggestions(true)}
+                  />
+                  {showLocationSuggestions && suggestions.length > 0 && (
+                    <div className="absolute z-10 w-full bg-white border rounded-md shadow-lg mt-1 max-h-60 overflow-auto">
+                      {isLoading ? (
+                        <div className="p-2 text-gray-500">Loading...</div>
+                      ) : (
+                        suggestions.map((suggestion) => (
+                          <div
+                            key={suggestion.place_id}
+                            className="p-2 hover:bg-gray-100 cursor-pointer"
+                            onClick={() => handleFutureLocationSelect(suggestion.description)}
+                          >
+                            {suggestion.description}
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
               
               {/* Date range picker */}
@@ -231,7 +405,7 @@ const FindWork = () => {
 
         {/* Task listings */}
         <div className="space-y-4">
-          {isLoading ? (
+          {tasksLoading ? (
             <div className="text-center py-8">
               <div className="animate-spin h-8 w-8 border-4 border-teal border-t-transparent rounded-full mx-auto mb-2"></div>
               <p>Loading tasks...</p>
