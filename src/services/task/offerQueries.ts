@@ -1,9 +1,12 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import type { Offer } from "@/types/offer";
 
-export async function getTaskOffers(taskId: string) {
+export async function getTaskOffers(taskId: string): Promise<Offer[]> {
   try {
-    // This is a mock implementation since we don't have the offers table yet
+    console.log("Fetching offers for task:", taskId);
+    
+    // This is a mock implementation until we create the offers table
     // In a real implementation, you would query the offers table for real data
     return [
       {
@@ -59,5 +62,30 @@ export async function getTaskOffers(taskId: string) {
   } catch (error) {
     console.error("Error fetching task offers:", error);
     return [];
+  }
+}
+
+export async function countOffersForTask(taskId: string): Promise<number> {
+  try {
+    // This is a mock implementation until we create the offers table
+    // Return a random number between 0 and 5 for demonstration purposes
+    return Math.floor(Math.random() * 6);
+    
+    // Later, replace with actual query:
+    /*
+    const { count, error } = await supabase
+      .from('offers')
+      .select('id', { count: 'exact' })
+      .eq('task_id', taskId);
+
+    if (error) {
+      throw error;
+    }
+
+    return count || 0;
+    */
+  } catch (error) {
+    console.error("Error counting task offers:", error);
+    return 0;
   }
 }

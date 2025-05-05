@@ -11,12 +11,15 @@ export async function getUserTasks(userId: string) {
       throw new Error("User ID is required to fetch tasks");
     }
     
+    // Let's adjust the query to include a count of offers for each task
+    // We'll use Supabase's built-in count function to get this information
     const { data, error } = await supabase
       .from('tasks')
       .select(`
         *,
         task_photos(*),
-        categories(name, description)
+        categories(name, description),
+        offer_count:offers(count)
       `)
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
@@ -26,8 +29,19 @@ export async function getUserTasks(userId: string) {
       throw error;
     }
     
-    console.log(`Found ${data?.length || 0} tasks for user ${userId}`);
-    return data || [];
+    // Process the data to extract the offer count from the aggregation
+    const processedData = data?.map(task => {
+      // If offers table doesn't exist yet, we'll use a default count of 0
+      const offerCount = task.offer_count?.[0]?.count || 0;
+      
+      return {
+        ...task,
+        offer_count: offerCount
+      };
+    });
+    
+    console.log(`Found ${processedData?.length || 0} tasks for user ${userId}`);
+    return processedData || [];
   } catch (error) {
     console.error("Error fetching user tasks:", error);
     throw error; // Re-throw the error so React Query can handle it
