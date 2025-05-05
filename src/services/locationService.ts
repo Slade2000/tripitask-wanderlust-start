@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 export interface PlacePrediction {
@@ -36,8 +37,13 @@ export async function getLocationCoordinates(
   locationName: string
 ): Promise<{ latitude: number; longitude: number } | null> {
   try {
-    // For simplicity, we'll use mock coordinates
+    // Log the request to help with debugging
+    console.log(`Getting coordinates for location: "${locationName}"`);
+    
+    // For simplicity, we'll use mock coordinates with improved city name matching
     const mockCoordinates = getMockCoordinates(locationName);
+    
+    console.log(`Coordinates for "${locationName}": `, mockCoordinates);
     return mockCoordinates;
   } catch (error) {
     console.error("Error in getLocationCoordinates:", error);
@@ -101,9 +107,11 @@ export function calculateDistance(
 
 /**
  * Mock function to provide coordinates for common locations
+ * Improved with better city name matching and more precise coordinates
  */
 function getMockCoordinates(locationName: string): { latitude: number; longitude: number } | null {
   const locations: Record<string, { latitude: number; longitude: number }> = {
+    // Australia's major cities with precise coordinates
     sydney: { latitude: -33.8688, longitude: 151.2093 },
     melbourne: { latitude: -37.8136, longitude: 144.9631 },
     brisbane: { latitude: -27.4698, longitude: 153.0251 },
@@ -112,16 +120,36 @@ function getMockCoordinates(locationName: string): { latitude: number; longitude
     hobart: { latitude: -42.8821, longitude: 147.3272 },
     darwin: { latitude: -12.4634, longitude: 130.8456 },
     canberra: { latitude: -35.2809, longitude: 149.1300 },
+    // Add more cities as needed
+    "gold coast": { latitude: -28.0167, longitude: 153.4000 },
+    wollongong: { latitude: -34.4331, longitude: 150.8831 },
+    newcastle: { latitude: -32.9283, longitude: 151.7817 },
+    geelong: { latitude: -38.1499, longitude: 144.3617 },
+    townsville: { latitude: -19.2590, longitude: 146.8169 },
+    cairns: { latitude: -16.9186, longitude: 145.7781 },
   };
 
+  // Clean and normalize the input
   const cleanName = locationName.toLowerCase().trim();
   
+  console.log(`Searching for coordinates for location: "${cleanName}"`);
+  
+  // First try exact match
+  if (locations[cleanName]) {
+    console.log(`Found exact match for "${cleanName}"`);
+    return locations[cleanName];
+  }
+  
+  // Then try partial match
   for (const [key, coords] of Object.entries(locations)) {
-    if (cleanName.includes(key)) {
+    if (cleanName.includes(key) || key.includes(cleanName)) {
+      console.log(`Found partial match: "${cleanName}" matches with "${key}"`);
       return coords;
     }
   }
 
+  // No match found
+  console.log(`No coordinate match found for "${cleanName}", using Sydney as default`);
   // Default to Sydney if no match
   return { latitude: -33.8688, longitude: 151.2093 };
 }

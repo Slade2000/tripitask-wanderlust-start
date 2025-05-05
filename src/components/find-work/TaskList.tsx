@@ -2,7 +2,7 @@
 import React from "react";
 import TaskCard from "./TaskCard";
 import { Button } from "@/components/ui/button";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, AlertCircle } from "lucide-react";
 
 interface TaskListProps {
   tasks: any[];
@@ -30,8 +30,11 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, tasksLoading, error, futureL
   if (error) {
     return (
       <div className="text-center py-8 bg-red-50 rounded-lg shadow-sm border border-red-100">
-        <p className="text-red-600 mb-2 font-medium">Error loading tasks</p>
-        <p className="text-gray-500 text-sm">
+        <div className="flex items-center justify-center mb-2">
+          <AlertCircle className="text-red-500 mr-2 h-5 w-5" />
+          <p className="text-red-600 font-medium">Error loading tasks</p>
+        </div>
+        <p className="text-gray-500 text-sm mb-3">
           {error instanceof Error ? error.message : "An unknown error occurred"}
         </p>
         <Button 
@@ -50,19 +53,20 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, tasksLoading, error, futureL
     return (
       <div className="text-center py-12 bg-white rounded-lg shadow-sm">
         <p className="text-gray-600 mb-2 font-medium">
-          No tasks found in the database
+          No tasks found matching your criteria
         </p>
         <p className="text-gray-500 text-sm mb-4">
           Try adjusting your search filters or check back later for new opportunities
         </p>
         
         <div className="flex flex-col gap-3 max-w-xs mx-auto text-left text-sm text-gray-500">
-          <p>Possible solutions:</p>
+          <p className="font-medium">Try these solutions:</p>
           <ul className="list-disc pl-5 space-y-1 text-xs">
-            <li>Increase the distance radius</li>  
-            <li>Adjust your budget filter</li>
-            <li>Try a different location</li>
-            <li>Remove category filters</li>
+            <li>Increase the distance radius in the filter settings</li>  
+            <li>Try a more general location name (like "Sydney" instead of a specific suburb)</li>
+            <li>Check your spelling of location names</li>
+            <li>Remove the category filter or try a different category</li>
+            <li>Increase your maximum budget filter</li>
             <li>Clear your search terms</li>
           </ul>
         </div>
