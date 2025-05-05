@@ -12,11 +12,14 @@ interface TaskListProps {
 }
 
 const TaskList: React.FC<TaskListProps> = ({ tasks, tasksLoading, error, futureLocation }) => {
+  console.log("TaskList render - loading:", tasksLoading, "tasks:", tasks);
+  
   if (tasksLoading) {
     return (
       <div className="text-center py-8">
         <div className="animate-spin h-8 w-8 border-4 border-teal border-t-transparent rounded-full mx-auto mb-2"></div>
         <p>Loading tasks...</p>
+        <p className="text-xs text-gray-500 mt-1">Please wait while we fetch tasks</p>
       </div>
     );
   }
@@ -32,7 +35,7 @@ const TaskList: React.FC<TaskListProps> = ({ tasks, tasksLoading, error, futureL
     );
   }
 
-  if (tasks.length === 0) {
+  if (!tasks || tasks.length === 0) {
     return (
       <div className="text-center py-12 bg-white rounded-lg shadow-sm">
         <p className="text-gray-600 mb-2">
