@@ -3,37 +3,61 @@ import { useState, useEffect } from "react";
 import { getLocationSuggestions, PlacePrediction } from "@/services/locationService";
 import { useDebounce } from "@/hooks/useDebounce";
 
+interface UseLocationSearchOptions {
+  debounceTime?: number;
+  initialTerm?: string;
+}
+
 /**
  * Custom hook for location search with debounce
  */
-export const useLocationSearch = () => {
-  const [searchTerm, setSearchTerm] = useState<string>("");
+export const useLocationSearch = (options: UseLocationSearchOptions = {}) => {
+  const { debounceTime = 500, initialTerm = "" } = options;
+  const [searchTerm, setSearchTerm] = useState<string>(initialTerm);
   const [suggestions, setSuggestions] = useState<PlacePrediction[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+  const [error, setError] = useState<string | null>(null);
+  const debouncedSearchTerm = useDebounce(searchTerm, debounceTime);
   
   useEffect(() => {
     const fetchSuggestions = async () => {
       if (!debouncedSearchTerm) {
         setSuggestions([]);
         setIsLoading(false);
+        setError(null);
         return;
       }
       
       setIsLoading(true);
+      setError(null);
+      
       try {
         const results = await getLocationSuggestions(debouncedSearchTerm);
         setSuggestions(results);
       } catch (error) {
         console.error("Error fetching location suggestions:", error);
         setSuggestions([]);
+        setError(error instanceof Error ? error.message : "Failed to fetch location suggestions");
       } finally {
         setIsLoading(false);
       }
     };
     
     fetchSuggestions();
-  }, [debouncedSearchTerm]);
+  }, [debouncedSearchTerm, debounceTime]);
   
-  return { searchTerm, setSearchTerm, suggestions, isLoading };
+  const resetSearch = () => {
+    setSearchTerm("");
+    setSuggestions([]);
+    setError(null);
+  };
+  
+  return { 
+    searchTerm, 
+    setSearchTerm, 
+    suggestions, 
+    isLoading, 
+    error,
+    resetSearch
+  };
 };

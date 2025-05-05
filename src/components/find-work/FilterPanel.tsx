@@ -51,7 +51,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
 }) => {
   const [showCurrentLocationSuggestions, setShowCurrentLocationSuggestions] = React.useState(false);
   
-  // Current location search
+  // Current location search with enhanced hook
   const {
     searchTerm: currentSearchTerm,
     setSearchTerm: setCurrentSearchTerm,

@@ -14,6 +14,8 @@ interface LocationSearchInputProps {
   label?: string;
   placeholder?: string;
   currentLocation?: string;
+  className?: string;
+  disabled?: boolean;
 }
 
 const LocationSearchInput: React.FC<LocationSearchInputProps> = ({
@@ -27,9 +29,11 @@ const LocationSearchInput: React.FC<LocationSearchInputProps> = ({
   label = "Location",
   placeholder = "Enter location",
   currentLocation,
+  className = "",
+  disabled = false,
 }) => {
   return (
-    <div className="mb-4">
+    <div className={`mb-4 ${className}`}>
       {label && (
         <label className="text-sm font-medium mb-1 block">{label}</label>
       )}
@@ -42,6 +46,8 @@ const LocationSearchInput: React.FC<LocationSearchInputProps> = ({
             setShowSuggestions(true);
           }}
           onFocus={() => setShowSuggestions(true)}
+          disabled={disabled}
+          className="w-full"
         />
         {showSuggestions && searchTerm !== "" && (
           <div className="absolute z-10 w-full bg-white border rounded-md shadow-lg mt-1 max-h-60 overflow-auto">
