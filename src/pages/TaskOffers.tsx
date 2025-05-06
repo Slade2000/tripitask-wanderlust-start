@@ -32,6 +32,7 @@ export default function TaskOffers() {
             
             // Fetch offers for the task
             const offersData = await getTaskOffers(taskId);
+            console.log("Fetched offers:", offersData);
             setOffers(offersData);
           } else {
             toast({
@@ -135,6 +136,9 @@ export default function TaskOffers() {
     }
   };
 
+  // Debugging - check if we actually have offers
+  console.log("Current offers state:", offers);
+
   return (
     <div className="min-h-screen bg-cream p-4 pb-20">
       <div className="flex items-center justify-between">
@@ -155,7 +159,7 @@ export default function TaskOffers() {
       <div className="max-w-4xl mx-auto space-y-4">
         {loading ? (
           <div className="text-center p-6">Loading offers...</div>
-        ) : offers.length > 0 ? (
+        ) : offers && offers.length > 0 ? (
           offers.map((offer) => (
             <div 
               key={offer.id} 
@@ -164,11 +168,11 @@ export default function TaskOffers() {
               <div className="flex items-start justify-between">
                 <div className="flex items-center">
                   <Avatar className="h-12 w-12 mr-3">
-                    <AvatarImage src={offer.provider?.avatar_url || ""} alt={offer.provider?.name} />
-                    <AvatarFallback>{offer.provider?.name?.charAt(0) || "U"}</AvatarFallback>
+                    <AvatarImage src={offer.provider?.avatar_url || ""} alt={offer.provider?.name || "Provider"} />
+                    <AvatarFallback>{offer.provider?.name?.charAt(0) || "P"}</AvatarFallback>
                   </Avatar>
                   <div>
-                    <h3 className="font-semibold">{offer.provider?.name}</h3>
+                    <h3 className="font-semibold">{offer.provider?.name || "Unknown Provider"}</h3>
                     <Badge className={
                       offer.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
                       offer.status === 'accepted' ? 'bg-green-100 text-green-800' : 

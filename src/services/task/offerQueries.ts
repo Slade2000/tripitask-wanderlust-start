@@ -1,17 +1,17 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import type { Offer } from "@/types/offer";
-import { User } from "@supabase/supabase-js";
 
 export async function getTaskOffers(taskId: string): Promise<Offer[]> {
   try {
     console.log("Fetching offers for task:", taskId);
     
+    // Modified query with better join syntax and error handling
     const { data, error } = await supabase
       .from('offers')
       .select(`
         *,
-        provider:profiles(
+        provider:profiles!provider_id(
           id,
           full_name,
           avatar_url
@@ -24,7 +24,14 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
       throw error;
     }
 
-    // Transform data to match the Offer type
+    if (!data || data.length === 0) {
+      console.log("No offers found for task:", taskId);
+      return [];
+    }
+
+    console.log("Raw offers data:", data); // Log raw data for debugging
+
+    // Transform data with better null handling
     const offers: Offer[] = data.map(offer => ({
       id: offer.id,
       task_id: offer.task_id,
@@ -35,13 +42,14 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
       status: offer.status as 'pending' | 'accepted' | 'rejected',
       created_at: offer.created_at,
       provider: {
-        id: offer.provider?.id || '',
-        name: offer.provider?.full_name || 'Unknown User',
+        id: offer.provider?.id || offer.provider_id || '',
+        name: offer.provider?.full_name || 'Unknown Provider',
         avatar_url: offer.provider?.avatar_url || '',
       }
     }));
 
-    return offers || [];
+    console.log("Transformed offers:", offers); // Log transformed data for debugging
+    return offers;
   } catch (error) {
     console.error("Error fetching task offers:", error);
     return [];
