@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ChevronLeft } from "lucide-react";
 import { getTaskById } from "@/services/taskService";
-import { getTaskOffers } from "@/services/task/offers/getOffers";
+import { getTaskOffers } from "@/services/task/offers/getTaskOffers";
 import { Offer } from "@/types/offer";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
