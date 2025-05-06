@@ -15,4 +15,11 @@ export interface Offer {
     rating?: number;
     success_rate?: string;
   };
+  task?: {
+    title: string;
+    description: string;
+    budget: string;
+    due_date: string;
+    status: string;
+  };
 }

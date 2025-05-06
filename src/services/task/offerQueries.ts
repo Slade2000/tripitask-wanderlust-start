@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import type { Offer } from "@/types/offer";
+import { User } from "@supabase/supabase-js";
 
 export async function getTaskOffers(taskId: string): Promise<Offer[]> {
   try {
@@ -10,7 +11,7 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
       .from('offers')
       .select(`
         *,
-        provider:provider_id (
+        provider:profiles!provider_id(
           id,
           full_name,
           avatar_url
@@ -24,8 +25,15 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
     }
 
     // Transform data to match the Offer type
-    const offers = data.map(offer => ({
-      ...offer,
+    const offers: Offer[] = data.map(offer => ({
+      id: offer.id,
+      task_id: offer.task_id,
+      provider_id: offer.provider_id,
+      amount: offer.amount,
+      expected_delivery_date: offer.expected_delivery_date,
+      message: offer.message || undefined,
+      status: offer.status as 'pending' | 'accepted' | 'rejected',
+      created_at: offer.created_at,
       provider: {
         id: offer.provider?.id || '',
         name: offer.provider?.full_name || 'Unknown User',
@@ -47,14 +55,19 @@ export async function submitOffer(offer: {
   message?: string;
 }): Promise<{ success: boolean; error?: string }> {
   try {
-    const { data, error } = await supabase
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    if (userError || !userData.user) {
+      return { success: false, error: "User not authenticated" };
+    }
+
+    const { error } = await supabase
       .from('offers')
       .insert({
         task_id: offer.task_id,
-        provider_id: supabase.auth.getUser().then(res => res.data.user?.id),
+        provider_id: userData.user.id,
         amount: offer.amount,
         expected_delivery_date: offer.expected_delivery_date,
-        message: offer.message,
+        message: offer.message || null,
         status: 'pending'
       });
 
@@ -117,7 +130,7 @@ export async function getProviderOffers(providerId: string): Promise<Offer[]> {
       .from('offers')
       .select(`
         *,
-        tasks:task_id (
+        task:tasks!task_id(
           title,
           description,
           budget,
@@ -132,7 +145,7 @@ export async function getProviderOffers(providerId: string): Promise<Offer[]> {
       throw error;
     }
 
-    return data || [];
+    return data as unknown as Offer[] || [];
   } catch (error) {
     console.error("Error fetching provider offers:", error);
     return [];

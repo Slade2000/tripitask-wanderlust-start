@@ -123,6 +123,54 @@ export interface Database {
           }
         ]
       }
+      offers: {
+        Row: {
+          id: string
+          task_id: string
+          provider_id: string
+          amount: number
+          expected_delivery_date: string
+          message: string | null
+          status: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          task_id: string
+          provider_id: string
+          amount: number
+          expected_delivery_date: string
+          message?: string | null
+          status?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          task_id?: string
+          provider_id?: string
+          amount?: number
+          expected_delivery_date?: string
+          message?: string | null
+          status?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offers_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offers_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       task_photos: {
         Row: {
           id: string
