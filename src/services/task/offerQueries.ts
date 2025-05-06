@@ -145,7 +145,19 @@ export async function getProviderOffers(providerId: string): Promise<Offer[]> {
       throw error;
     }
 
-    return data as unknown as Offer[] || [];
+    const offers: Offer[] = data.map(offer => ({
+      id: offer.id,
+      task_id: offer.task_id,
+      provider_id: offer.provider_id,
+      amount: offer.amount,
+      expected_delivery_date: offer.expected_delivery_date,
+      message: offer.message || undefined,
+      status: offer.status as 'pending' | 'accepted' | 'rejected',
+      created_at: offer.created_at,
+      task: offer.task as Offer['task']
+    }));
+
+    return offers || [];
   } catch (error) {
     console.error("Error fetching provider offers:", error);
     return [];
