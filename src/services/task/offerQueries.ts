@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import type { Offer } from "@/types/offer";
 
@@ -6,16 +5,12 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
   try {
     console.log("Fetching offers for task:", taskId);
     
-    // Modified query with better join syntax and error handling
+    // Use a simpler query with proper joins
     const { data, error } = await supabase
       .from('offers')
       .select(`
         *,
-        provider:profiles!provider_id(
-          id,
-          full_name,
-          avatar_url
-        )
+        provider:profiles(id, full_name, avatar_url, rating, success_rate)
       `)
       .eq('task_id', taskId);
 
@@ -24,34 +19,40 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
       throw error;
     }
 
+    console.log("Raw offers data returned from database:", data);
+
     if (!data || data.length === 0) {
       console.log("No offers found for task:", taskId);
       return [];
     }
 
-    console.log("Raw offers data:", data); // Log raw data for debugging
+    // Transform data with better property handling
+    const offers: Offer[] = data.map(offer => {
+      console.log("Processing offer:", offer);
+      
+      return {
+        id: offer.id,
+        task_id: offer.task_id,
+        provider_id: offer.provider_id,
+        amount: offer.amount,
+        expected_delivery_date: offer.expected_delivery_date,
+        message: offer.message || undefined,
+        status: offer.status as 'pending' | 'accepted' | 'rejected',
+        created_at: offer.created_at,
+        provider: {
+          id: offer.provider?.id || offer.provider_id || '',
+          name: offer.provider?.full_name || 'Unknown Provider',
+          avatar_url: offer.provider?.avatar_url || '',
+          rating: offer.provider?.rating,
+          success_rate: offer.provider?.success_rate
+        }
+      };
+    });
 
-    // Transform data with better null handling
-    const offers: Offer[] = data.map(offer => ({
-      id: offer.id,
-      task_id: offer.task_id,
-      provider_id: offer.provider_id,
-      amount: offer.amount,
-      expected_delivery_date: offer.expected_delivery_date,
-      message: offer.message || undefined,
-      status: offer.status as 'pending' | 'accepted' | 'rejected',
-      created_at: offer.created_at,
-      provider: {
-        id: offer.provider?.id || offer.provider_id || '',
-        name: offer.provider?.full_name || 'Unknown Provider',
-        avatar_url: offer.provider?.avatar_url || '',
-      }
-    }));
-
-    console.log("Transformed offers:", offers); // Log transformed data for debugging
+    console.log("Transformed offers:", offers);
     return offers;
   } catch (error) {
-    console.error("Error fetching task offers:", error);
+    console.error("Error in getTaskOffers:", error);
     return [];
   }
 }

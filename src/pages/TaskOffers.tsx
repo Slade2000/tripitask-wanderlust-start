@@ -19,39 +19,61 @@ export default function TaskOffers() {
   const [offers, setOffers] = useState<Offer[]>([]);
   const [loading, setLoading] = useState(true);
   const [updatingOfferId, setUpdatingOfferId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadTaskAndOffers = async () => {
       setLoading(true);
-      if (taskId) {
-        try {
-          // Fetch task details
-          const taskData = await getTaskById(taskId);
-          if (taskData) {
-            setTask(taskData);
-            
-            // Fetch offers for the task
-            const offersData = await getTaskOffers(taskId);
-            console.log("Fetched offers:", offersData);
-            setOffers(offersData);
+      setError(null);
+      
+      if (!taskId) {
+        setError("Task ID is missing");
+        setLoading(false);
+        return;
+      }
+      
+      try {
+        console.log("Loading task with ID:", taskId);
+        
+        // Fetch task details
+        const taskData = await getTaskById(taskId);
+        console.log("Task data received:", taskData);
+        
+        if (taskData) {
+          setTask(taskData);
+          
+          // Fetch offers for the task
+          console.log("Fetching offers for task:", taskId);
+          const offersData = await getTaskOffers(taskId);
+          console.log("Offers data received:", offersData);
+          
+          setOffers(offersData);
+          
+          if (offersData.length === 0) {
+            console.log("No offers found for this task");
           } else {
-            toast({
-              title: "Error",
-              description: "Task not found",
-              variant: "destructive",
-            });
-            navigate("/my-jobs");
+            console.log(`Found ${offersData.length} offers for this task`);
           }
-        } catch (error) {
-          console.error("Error loading task or offers:", error);
+        } else {
+          setError("Task not found");
           toast({
             title: "Error",
-            description: "Failed to load task offers",
+            description: "Task not found",
             variant: "destructive",
           });
+          navigate("/my-jobs");
         }
+      } catch (error) {
+        console.error("Error loading task or offers:", error);
+        setError("Failed to load task offers");
+        toast({
+          title: "Error",
+          description: "Failed to load task offers",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     loadTaskAndOffers();
@@ -62,6 +84,8 @@ export default function TaskOffers() {
   };
 
   const handleViewOfferDetails = (offerId: string) => {
+    console.log("View details for offer:", offerId);
+    
     // For now, we'll just show a toast
     toast({
       title: "Coming Soon",
@@ -72,7 +96,9 @@ export default function TaskOffers() {
   const handleAcceptOffer = async (offerId: string) => {
     if (!taskId) return;
     
+    console.log("Accepting offer:", offerId);
     setUpdatingOfferId(offerId);
+    
     try {
       const result = await updateOfferStatus(offerId, 'accepted');
       if (result.success) {
@@ -92,6 +118,7 @@ export default function TaskOffers() {
         });
       }
     } catch (error) {
+      console.error("Error accepting offer:", error);
       toast({
         title: "Error",
         description: "An unexpected error occurred",
@@ -105,7 +132,9 @@ export default function TaskOffers() {
   const handleRejectOffer = async (offerId: string) => {
     if (!taskId) return;
     
+    console.log("Rejecting offer:", offerId);
     setUpdatingOfferId(offerId);
+    
     try {
       const result = await updateOfferStatus(offerId, 'rejected');
       if (result.success) {
@@ -125,6 +154,7 @@ export default function TaskOffers() {
         });
       }
     } catch (error) {
+      console.error("Error rejecting offer:", error);
       toast({
         title: "Error",
         description: "An unexpected error occurred",
@@ -135,7 +165,6 @@ export default function TaskOffers() {
     }
   };
 
-  // Debugging - check if we actually have offers
   console.log("Current offers state:", offers);
 
   return (
@@ -154,6 +183,12 @@ export default function TaskOffers() {
       <h1 className="text-2xl font-bold text-teal text-center my-6">
         {loading ? "Loading..." : task ? `Offers for ${task.title}` : "Task Not Found"}
       </h1>
+      
+      {error && (
+        <div className="bg-red-100 text-red-800 p-4 rounded-md mb-4 text-center">
+          {error}
+        </div>
+      )}
       
       <div className="max-w-4xl mx-auto space-y-4">
         {loading ? (
