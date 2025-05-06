@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import type { Offer } from "@/types/offer";
 
@@ -5,12 +6,24 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
   try {
     console.log("Fetching offers for task:", taskId);
     
+    // Query profiles table separately to see its actual structure
+    const { data: profilesSchema, error: schemaError } = await supabase
+      .from('profiles')
+      .select('*')
+      .limit(1);
+
+    if (schemaError) {
+      console.error("Error fetching profile schema:", schemaError);
+    } else {
+      console.log("Profiles table structure:", profilesSchema);
+    }
+
     // Use a simpler query with proper joins
     const { data, error } = await supabase
       .from('offers')
       .select(`
         *,
-        provider:profiles(id, full_name, avatar_url, rating, success_rate)
+        provider:profiles(id, full_name, avatar_url)
       `)
       .eq('task_id', taskId);
 
@@ -43,8 +56,9 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
           id: offer.provider?.id || offer.provider_id || '',
           name: offer.provider?.full_name || 'Unknown Provider',
           avatar_url: offer.provider?.avatar_url || '',
-          rating: offer.provider?.rating,
-          success_rate: offer.provider?.success_rate
+          // Since the database doesn't have these fields, we'll use placeholders
+          rating: undefined,
+          success_rate: undefined
         }
       };
     });
