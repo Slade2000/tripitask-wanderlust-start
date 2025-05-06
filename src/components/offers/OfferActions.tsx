@@ -1,6 +1,6 @@
 
 import { useToast } from "@/hooks/use-toast";
-import { updateOfferStatus } from "@/services/task/offerQueries";
+import { updateOfferStatus } from "@/services/task/offers/updateOfferStatus";
 
 interface OfferActionsProps {
   taskId: string;
