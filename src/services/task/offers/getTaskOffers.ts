@@ -28,10 +28,13 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
 
     console.log("Task exists:", taskData);
 
-    // Fetch offers with a simpler query structure
+    // Fetch offers with provider data in a single query
     const { data: offersData, error: offersError } = await supabase
       .from('offers')
-      .select('*')
+      .select(`
+        *,
+        profiles:provider_id(id, full_name, avatar_url)
+      `)
       .eq('task_id', taskId);
 
     if (offersError) {
@@ -39,43 +42,17 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
       throw offersError;
     }
 
-    console.log("Raw offers data:", offersData);
+    console.log("Raw offers data with provider info:", offersData);
 
     if (!offersData || offersData.length === 0) {
       console.log("No offers found for task:", taskId);
       return [];
     }
 
-    // Get all provider IDs to fetch their details
-    const providerIds = offersData
-      .map(offer => offer.provider_id)
-      .filter(Boolean);
-    
-    console.log("Provider IDs to fetch:", providerIds);
-
-    // Fetch all relevant providers
-    const { data: providers, error: providersError } = await supabase
-      .from('profiles')
-      .select('id, full_name, avatar_url')
-      .in('id', providerIds);
-      
-    if (providersError) {
-      console.error("Error fetching provider details:", providersError);
-    }
-
-    // Create a lookup map for providers
-    const providerMap = {};
-    if (providers) {
-      providers.forEach(provider => {
-        providerMap[provider.id] = provider;
-      });
-    }
-    
-    console.log("Provider lookup map:", providerMap);
-
     // Transform offers with provider data
     const offers: Offer[] = offersData.map(offer => {
-      const providerData = providerMap[offer.provider_id];
+      // The provider data is now available directly as offer.profiles
+      const providerData = offer.profiles;
       console.log(`Processing offer ${offer.id}, provider:`, providerData);
       
       return {
