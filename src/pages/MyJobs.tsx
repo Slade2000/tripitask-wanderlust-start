@@ -31,15 +31,17 @@ const MyJobs = () => {
     retry: 2,
     // Add staleTime to prevent too frequent refetches
     staleTime: 1000 * 60 * 5, // 5 minutes
-    onSettled: (data, error) => {
-      if (error) {
-        console.error("Error in tasks query:", error);
-        toast({
-          title: "Error loading tasks",
-          description: error instanceof Error ? error.message : "Unknown error, please try again later",
-          variant: "destructive",
-        });
-      }
+    // Correct way to handle errors in React Query v5
+    onSuccess: (data) => {
+      console.log("Tasks loaded successfully:", data?.length || 0);
+    },
+    onError: (error) => {
+      console.error("Error in tasks query:", error);
+      toast({
+        title: "Error loading tasks",
+        description: error instanceof Error ? error.message : "Unknown error, please try again later",
+        variant: "destructive",
+      });
     }
   });
 
