@@ -18,7 +18,20 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
       console.log("Profiles table structure:", profilesSchema);
     }
 
-    // Use a simpler query with proper joins
+    // Get the task details to verify it exists
+    const { data: taskData, error: taskError } = await supabase
+      .from('tasks')
+      .select('*')
+      .eq('id', taskId)
+      .single();
+
+    if (taskError) {
+      console.error("Error fetching task:", taskError);
+    } else {
+      console.log("Task exists:", taskData ? "Yes" : "No", taskData);
+    }
+
+    // Enhanced query to debug join issues
     const { data, error } = await supabase
       .from('offers')
       .select(`
@@ -39,9 +52,37 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
       return [];
     }
 
-    // Transform data with better property handling
+    // Also fetch provider data separately as a fallback
+    const providerIds = data
+      .map(offer => offer.provider_id)
+      .filter(Boolean);
+
+    let providerData = {};
+    if (providerIds.length > 0) {
+      const { data: providers, error: providersError } = await supabase
+        .from('profiles')
+        .select('id, full_name, avatar_url')
+        .in('id', providerIds);
+      
+      if (providersError) {
+        console.error("Error fetching providers:", providersError);
+      } else if (providers) {
+        console.log("Provider data fetched separately:", providers);
+        // Create a lookup object for providers
+        providerData = providers.reduce((acc, provider) => {
+          acc[provider.id] = provider;
+          return acc;
+        }, {});
+      }
+    }
+
+    // Transform data with better property handling and more detailed logging
     const offers: Offer[] = data.map(offer => {
       console.log("Processing offer:", offer);
+      
+      // Try to get provider from the join first, then fallback to our separate query
+      const provider = offer.provider || providerData[offer.provider_id];
+      console.log("Provider data for this offer:", provider);
       
       return {
         id: offer.id,
@@ -53,9 +94,9 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
         status: offer.status as 'pending' | 'accepted' | 'rejected',
         created_at: offer.created_at,
         provider: {
-          id: offer.provider?.id || offer.provider_id || '',
-          name: offer.provider?.full_name || 'Unknown Provider',
-          avatar_url: offer.provider?.avatar_url || '',
+          id: provider?.id || offer.provider_id || '',
+          name: provider?.full_name || 'Unknown Provider',
+          avatar_url: provider?.avatar_url || '',
           // Since the database doesn't have these fields, we'll use placeholders
           rating: undefined,
           success_rate: undefined

@@ -20,6 +20,7 @@ export default function TaskOffers() {
   const [loading, setLoading] = useState(true);
   const [updatingOfferId, setUpdatingOfferId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [debugInfo, setDebugInfo] = useState<string | null>(null);
 
   useEffect(() => {
     const loadTaskAndOffers = async () => {
@@ -51,8 +52,10 @@ export default function TaskOffers() {
           
           if (offersData.length === 0) {
             console.log("No offers found for this task");
+            setDebugInfo(`No offers found for this task (ID: ${taskId}). Please check if offers exist in the database for this task.`);
           } else {
             console.log(`Found ${offersData.length} offers for this task`);
+            setDebugInfo(null);
           }
         } else {
           setError("Task not found");
@@ -187,6 +190,13 @@ export default function TaskOffers() {
       {error && (
         <div className="bg-red-100 text-red-800 p-4 rounded-md mb-4 text-center">
           {error}
+        </div>
+      )}
+      
+      {debugInfo && (
+        <div className="bg-yellow-100 text-yellow-800 p-4 rounded-md mb-4 text-center text-sm">
+          <p className="font-semibold">Debug Info</p>
+          <p>{debugInfo}</p>
         </div>
       )}
       
