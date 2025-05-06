@@ -1,4 +1,3 @@
-
 export type Json =
   | string
   | number
@@ -166,7 +165,7 @@ export interface Database {
             foreignKeyName: "offers_provider_id_fkey"
             columns: ["provider_id"]
             isOneToOne: false
-            referencedRelation: "users"
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           }
         ]

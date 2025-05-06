@@ -11,7 +11,7 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
       .from('offers')
       .select(`
         *,
-        provider:profiles!provider_id(
+        provider:profiles(
           id,
           full_name,
           avatar_url
@@ -130,7 +130,7 @@ export async function getProviderOffers(providerId: string): Promise<Offer[]> {
       .from('offers')
       .select(`
         *,
-        task:tasks!task_id(
+        task:tasks(
           title,
           description,
           budget,
