@@ -10,7 +10,7 @@ interface OfferCardProps {
   onAccept: (offerId: string) => void;
   onReject: (offerId: string) => void;
   onViewDetails: (offerId: string) => void;
-  isUpdating: boolean;
+  isUpdating: boolean | string | null;
 }
 
 export default function OfferCard({ 
