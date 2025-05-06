@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import type { Offer } from "@/types/offer";
 
@@ -6,19 +5,7 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
   try {
     console.log("Fetching offers for task:", taskId);
     
-    // Query profiles table separately to see its actual structure
-    const { data: profilesSchema, error: schemaError } = await supabase
-      .from('profiles')
-      .select('*')
-      .limit(1);
-
-    if (schemaError) {
-      console.error("Error fetching profile schema:", schemaError);
-    } else {
-      console.log("Profiles table structure:", profilesSchema);
-    }
-
-    // Get the task details to verify it exists
+    // Verify that the task exists
     const { data: taskData, error: taskError } = await supabase
       .from('tasks')
       .select('*')
@@ -26,63 +13,66 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
       .single();
 
     if (taskError) {
-      console.error("Error fetching task:", taskError);
-    } else {
-      console.log("Task exists:", taskData ? "Yes" : "No", taskData);
+      console.error("Error verifying task existence:", taskError);
+      throw new Error(`Task verification failed: ${taskError.message}`);
     }
 
-    // Enhanced query to debug join issues
-    const { data, error } = await supabase
+    if (!taskData) {
+      console.error("Task not found with ID:", taskId);
+      throw new Error("Task not found");
+    }
+
+    console.log("Task exists:", taskData);
+
+    // Fetch offers with a simpler query structure
+    const { data: offersData, error: offersError } = await supabase
       .from('offers')
-      .select(`
-        *,
-        provider:profiles(id, full_name, avatar_url)
-      `)
+      .select('*')
       .eq('task_id', taskId);
 
-    if (error) {
-      console.error("Error fetching task offers:", error);
-      throw error;
+    if (offersError) {
+      console.error("Error fetching offers:", offersError);
+      throw offersError;
     }
 
-    console.log("Raw offers data returned from database:", data);
+    console.log("Raw offers data:", offersData);
 
-    if (!data || data.length === 0) {
+    if (!offersData || offersData.length === 0) {
       console.log("No offers found for task:", taskId);
       return [];
     }
 
-    // Also fetch provider data separately as a fallback
-    const providerIds = data
+    // Get all provider IDs to fetch their details
+    const providerIds = offersData
       .map(offer => offer.provider_id)
       .filter(Boolean);
+    
+    console.log("Provider IDs to fetch:", providerIds);
 
-    let providerData = {};
-    if (providerIds.length > 0) {
-      const { data: providers, error: providersError } = await supabase
-        .from('profiles')
-        .select('id, full_name, avatar_url')
-        .in('id', providerIds);
+    // Fetch all relevant providers
+    const { data: providers, error: providersError } = await supabase
+      .from('profiles')
+      .select('id, full_name, avatar_url')
+      .in('id', providerIds);
       
-      if (providersError) {
-        console.error("Error fetching providers:", providersError);
-      } else if (providers) {
-        console.log("Provider data fetched separately:", providers);
-        // Create a lookup object for providers
-        providerData = providers.reduce((acc, provider) => {
-          acc[provider.id] = provider;
-          return acc;
-        }, {});
-      }
+    if (providersError) {
+      console.error("Error fetching provider details:", providersError);
     }
 
-    // Transform data with better property handling and more detailed logging
-    const offers: Offer[] = data.map(offer => {
-      console.log("Processing offer:", offer);
-      
-      // Try to get provider from the join first, then fallback to our separate query
-      const provider = offer.provider || providerData[offer.provider_id];
-      console.log("Provider data for this offer:", provider);
+    // Create a lookup map for providers
+    const providerMap = {};
+    if (providers) {
+      providers.forEach(provider => {
+        providerMap[provider.id] = provider;
+      });
+    }
+    
+    console.log("Provider lookup map:", providerMap);
+
+    // Transform offers with provider data
+    const offers: Offer[] = offersData.map(offer => {
+      const providerData = providerMap[offer.provider_id];
+      console.log(`Processing offer ${offer.id}, provider:`, providerData);
       
       return {
         id: offer.id,
@@ -94,10 +84,9 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
         status: offer.status as 'pending' | 'accepted' | 'rejected',
         created_at: offer.created_at,
         provider: {
-          id: provider?.id || offer.provider_id || '',
-          name: provider?.full_name || 'Unknown Provider',
-          avatar_url: provider?.avatar_url || '',
-          // Since the database doesn't have these fields, we'll use placeholders
+          id: offer.provider_id || '',
+          name: providerData?.full_name || 'Unknown Provider',
+          avatar_url: providerData?.avatar_url || '',
           rating: undefined,
           success_rate: undefined
         }
@@ -108,7 +97,7 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
     return offers;
   } catch (error) {
     console.error("Error in getTaskOffers:", error);
-    return [];
+    throw error;
   }
 }
 

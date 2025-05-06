@@ -22,16 +22,29 @@ export default function OfferCard({
 }: OfferCardProps) {
   console.log("Rendering offer card with data:", offer);
   
+  // Ensure provider object always exists
+  const provider = offer.provider || {
+    id: offer.provider_id,
+    name: 'Unknown Provider',
+    avatar_url: '',
+  };
+  
+  // Get provider name with fallback
+  const providerName = provider.name || 'Unknown Provider';
+  
+  // Get first letter of provider name for avatar fallback
+  const providerInitial = providerName && providerName.charAt(0) || 'P';
+  
   return (
     <div className="bg-white rounded-lg shadow-md p-4 border border-gray-100">
       <div className="flex items-start justify-between">
         <div className="flex items-center">
           <Avatar className="h-12 w-12 mr-3">
-            <AvatarImage src={offer.provider?.avatar_url || ""} alt={offer.provider?.name || "Provider"} />
-            <AvatarFallback>{offer.provider?.name?.charAt(0) || "P"}</AvatarFallback>
+            <AvatarImage src={provider.avatar_url || ""} alt={providerName} />
+            <AvatarFallback>{providerInitial}</AvatarFallback>
           </Avatar>
           <div>
-            <h3 className="font-semibold">{offer.provider?.name || "Unknown Provider"}</h3>
+            <h3 className="font-semibold">{providerName}</h3>
             <Badge className={
               offer.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
               offer.status === 'accepted' ? 'bg-green-100 text-green-800' : 
@@ -54,11 +67,11 @@ export default function OfferCard({
         </div>
         <div className="flex items-center">
           <Star size={16} className="mr-2 text-amber-400" />
-          <span>{offer.provider?.rating || "New"}</span>
+          <span>{provider.rating || "New"}</span>
         </div>
         <div className="flex items-center">
           <CheckCircle size={16} className="mr-2 text-green-500" />
-          <span>{offer.provider?.success_rate || "New provider"}</span>
+          <span>{provider.success_rate || "New provider"}</span>
         </div>
       </div>
       

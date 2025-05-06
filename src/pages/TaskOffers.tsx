@@ -20,12 +20,13 @@ export default function TaskOffers() {
   const [loading, setLoading] = useState(true);
   const [updatingOfferId, setUpdatingOfferId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [debugInfo, setDebugInfo] = useState<string | null>(null);
+  const [debugInfo, setDebugInfo] = useState<any>(null);
 
   useEffect(() => {
     const loadTaskAndOffers = async () => {
       setLoading(true);
       setError(null);
+      setDebugInfo(null);
       
       if (!taskId) {
         setError("Task ID is missing");
@@ -43,19 +44,48 @@ export default function TaskOffers() {
         if (taskData) {
           setTask(taskData);
           
-          // Fetch offers for the task
-          console.log("Fetching offers for task:", taskId);
-          const offersData = await getTaskOffers(taskId);
-          console.log("Offers data received:", offersData);
-          
-          setOffers(offersData);
-          
-          if (offersData.length === 0) {
-            console.log("No offers found for this task");
-            setDebugInfo(`No offers found for this task (ID: ${taskId}). Please check if offers exist in the database for this task.`);
-          } else {
-            console.log(`Found ${offersData.length} offers for this task`);
-            setDebugInfo(null);
+          try {
+            // Fetch offers for the task
+            console.log("Fetching offers for task:", taskId);
+            const offersData = await getTaskOffers(taskId);
+            console.log("Offers data received:", offersData);
+            
+            setOffers(offersData);
+            
+            if (offersData.length === 0) {
+              console.log("No offers found for this task");
+              setDebugInfo({
+                message: `No offers found for this task (ID: ${taskId})`,
+                taskId: taskId
+              });
+            } else {
+              console.log(`Found ${offersData.length} offers for this task`);
+              
+              // Check if any offers are missing provider data
+              const missingProviderData = offersData.some(
+                offer => !offer.provider?.name || offer.provider.name === 'Unknown Provider'
+              );
+              
+              if (missingProviderData) {
+                setDebugInfo({
+                  message: "Some offers are missing provider data",
+                  offers: offersData.map(o => ({
+                    id: o.id,
+                    provider_id: o.provider_id,
+                    provider: o.provider
+                  }))
+                });
+              } else {
+                setDebugInfo(null);
+              }
+            }
+          } catch (offerError) {
+            console.error("Error fetching offers:", offerError);
+            setError(`Failed to load offers: ${offerError instanceof Error ? offerError.message : 'Unknown error'}`);
+            setDebugInfo({
+              message: "Error occurred while fetching offers",
+              error: offerError instanceof Error ? offerError.message : String(offerError)
+            });
           }
         } else {
           setError("Task not found");
@@ -69,6 +99,10 @@ export default function TaskOffers() {
       } catch (error) {
         console.error("Error loading task or offers:", error);
         setError("Failed to load task offers");
+        setDebugInfo({
+          message: "Error occurred while loading task",
+          error: error instanceof Error ? error.message : String(error)
+        });
         toast({
           title: "Error",
           description: "Failed to load task offers",
@@ -196,7 +230,9 @@ export default function TaskOffers() {
       {debugInfo && (
         <div className="bg-yellow-100 text-yellow-800 p-4 rounded-md mb-4 text-center text-sm">
           <p className="font-semibold">Debug Info</p>
-          <p>{debugInfo}</p>
+          <pre className="whitespace-pre-wrap text-left mt-2 bg-yellow-50 p-2 rounded overflow-auto max-h-40">
+            {JSON.stringify(debugInfo, null, 2)}
+          </pre>
         </div>
       )}
       
