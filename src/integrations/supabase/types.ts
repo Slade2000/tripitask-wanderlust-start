@@ -33,6 +33,47 @@ export type Database = {
         }
         Relationships: []
       }
+      offers: {
+        Row: {
+          amount: number
+          created_at: string
+          expected_delivery_date: string
+          id: string
+          message: string | null
+          provider_id: string
+          status: string
+          task_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          expected_delivery_date: string
+          id?: string
+          message?: string | null
+          provider_id: string
+          status?: string
+          task_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          expected_delivery_date?: string
+          id?: string
+          message?: string | null
+          provider_id?: string
+          status?: string
+          task_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offers_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null

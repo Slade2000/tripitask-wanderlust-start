@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -13,11 +12,14 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { useToast } from "@/hooks/use-toast";
 import { getTaskById } from "@/services/taskService";
+import { submitOffer } from "@/services/task/offerQueries";
+import { useAuth } from "@/contexts/AuthContext";
 
 const SubmitOffer = () => {
   const { taskId } = useParams<{ taskId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
   
   const [price, setPrice] = useState("");
   const [deliveryDate, setDeliveryDate] = useState<Date | undefined>(undefined);
@@ -37,8 +39,17 @@ const SubmitOffer = () => {
   };
 
   // Handle offer submission
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please login to submit an offer",
+        variant: "destructive",
+      });
+      return;
+    }
     
     if (!price || parseInt(price) <= 0) {
       toast({
@@ -60,16 +71,38 @@ const SubmitOffer = () => {
     
     setIsSubmitting(true);
     
-    // In a real implementation, this would call an API
-    setTimeout(() => {
-      toast({
-        title: "Offer Submitted",
-        description: "Your offer has been sent to the task owner",
-      });
+    try {
+      const offerData = {
+        task_id: taskId || '',
+        amount: parseInt(price),
+        expected_delivery_date: deliveryDate.toISOString(),
+        message: message || undefined
+      };
       
+      const result = await submitOffer(offerData);
+      
+      if (result.success) {
+        toast({
+          title: "Offer Submitted",
+          description: "Your offer has been sent to the task owner",
+        });
+        navigate("/find-work");
+      } else {
+        toast({
+          title: "Error",
+          description: result.error || "Failed to submit offer",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "An unexpected error occurred",
+        variant: "destructive",
+      });
+    } finally {
       setIsSubmitting(false);
-      navigate("/find-work");
-    }, 1000);
+    }
   };
 
   if (isLoading) {
@@ -118,10 +151,10 @@ const SubmitOffer = () => {
         {/* Task Summary */}
         <Card className="m-4">
           <CardContent className="pt-6">
-            <h2 className="text-lg font-semibold">{task.title}</h2>
+            <h2 className="text-lg font-semibold">{task?.title}</h2>
             <div className="flex items-center mt-2">
               <DollarSign className="h-5 w-5 text-gray-500 mr-1" />
-              <span className="text-gray-500">Budget: ${task.budget}</span>
+              <span className="text-gray-500">Budget: ${task?.budget}</span>
             </div>
           </CardContent>
         </Card>
@@ -203,7 +236,7 @@ const SubmitOffer = () => {
             <Button 
               type="submit" 
               className="w-full flex items-center justify-center gap-2"
-              disabled={isSubmitting}
+              disabled={isSubmitting || !user}
             >
               Submit Offer
               {!isSubmitting && <ArrowRight className="h-4 w-4" />}

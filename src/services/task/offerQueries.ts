@@ -6,86 +6,135 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
   try {
     console.log("Fetching offers for task:", taskId);
     
-    // This is a mock implementation until we create the offers table
-    // In a real implementation, you would query the offers table for real data
-    return [
-      {
-        id: "offer-1",
-        task_id: taskId,
-        provider_id: "provider-1",
-        amount: 180,
-        expected_delivery_date: new Date().toISOString(),
-        status: 'pending' as 'pending' | 'accepted' | 'rejected',
-        created_at: new Date().toISOString(),
-        provider: {
-          id: "provider-1",
-          name: "John Doe",
-          avatar_url: "",
-          rating: 4.8,
-          success_rate: "92% jobs completed successfully"
-        }
-      },
-      {
-        id: "offer-2",
-        task_id: taskId,
-        provider_id: "provider-2",
-        amount: 220,
-        expected_delivery_date: new Date(Date.now() + 86400000).toISOString(),
-        status: 'pending' as 'pending' | 'accepted' | 'rejected',
-        created_at: new Date().toISOString(),
-        provider: {
-          id: "provider-2",
-          name: "Jane Smith",
-          avatar_url: "",
-          rating: 4.9,
-          success_rate: "95% jobs completed successfully"
-        }
-      }
-    ];
-    
-    // Later, replace with actual query:
-    /*
     const { data, error } = await supabase
       .from('offers')
       .select(`
         *,
-        profiles:provider_id(id, full_name, avatar_url)
+        provider:provider_id (
+          id,
+          full_name,
+          avatar_url
+        )
       `)
       .eq('task_id', taskId);
 
     if (error) {
+      console.error("Error fetching task offers:", error);
       throw error;
     }
 
-    return data;
-    */
+    // Transform data to match the Offer type
+    const offers = data.map(offer => ({
+      ...offer,
+      provider: {
+        id: offer.provider?.id || '',
+        name: offer.provider?.full_name || 'Unknown User',
+        avatar_url: offer.provider?.avatar_url || '',
+      }
+    }));
+
+    return offers || [];
   } catch (error) {
     console.error("Error fetching task offers:", error);
     return [];
   }
 }
 
+export async function submitOffer(offer: {
+  task_id: string;
+  amount: number; 
+  expected_delivery_date: string;
+  message?: string;
+}): Promise<{ success: boolean; error?: string }> {
+  try {
+    const { data, error } = await supabase
+      .from('offers')
+      .insert({
+        task_id: offer.task_id,
+        provider_id: supabase.auth.getUser().then(res => res.data.user?.id),
+        amount: offer.amount,
+        expected_delivery_date: offer.expected_delivery_date,
+        message: offer.message,
+        status: 'pending'
+      });
+
+    if (error) {
+      console.error("Error submitting offer:", error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  } catch (error: any) {
+    console.error("Error submitting offer:", error);
+    return { success: false, error: error.message };
+  }
+}
+
 export async function countOffersForTask(taskId: string): Promise<number> {
   try {
-    // This is a mock implementation until we create the offers table
-    // Return a random number between 0 and 5 for demonstration purposes
-    return Math.floor(Math.random() * 6);
-    
-    // Later, replace with actual query:
-    /*
     const { count, error } = await supabase
       .from('offers')
-      .select('id', { count: 'exact' })
+      .select('*', { count: 'exact', head: true })
       .eq('task_id', taskId);
 
     if (error) {
-      throw error;
+      console.error("Error counting task offers:", error);
+      return 0;
     }
 
     return count || 0;
-    */
   } catch (error) {
     console.error("Error counting task offers:", error);
     return 0;
+  }
+}
+
+export async function updateOfferStatus(
+  offerId: string, 
+  status: 'accepted' | 'rejected'
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const { error } = await supabase
+      .from('offers')
+      .update({ status })
+      .eq('id', offerId);
+
+    if (error) {
+      console.error("Error updating offer status:", error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  } catch (error: any) {
+    console.error("Error updating offer status:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function getProviderOffers(providerId: string): Promise<Offer[]> {
+  try {
+    const { data, error } = await supabase
+      .from('offers')
+      .select(`
+        *,
+        tasks:task_id (
+          title,
+          description,
+          budget,
+          due_date,
+          status
+        )
+      `)
+      .eq('provider_id', providerId);
+
+    if (error) {
+      console.error("Error fetching provider offers:", error);
+      throw error;
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error("Error fetching provider offers:", error);
+    return [];
   }
 }

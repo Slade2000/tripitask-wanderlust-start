@@ -8,9 +8,9 @@ export interface Offer {
   message?: string;
   status: 'pending' | 'accepted' | 'rejected';
   created_at: string;
-  provider: {
+  provider?: {
     id: string;
-    name: string;
+    name?: string;
     avatar_url?: string;
     rating?: number;
     success_rate?: string;
