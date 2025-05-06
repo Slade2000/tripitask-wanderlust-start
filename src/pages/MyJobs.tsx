@@ -27,21 +27,21 @@ const MyJobs = () => {
     queryKey: ['userTasks', user?.id],
     queryFn: () => getUserTasks(user?.id || ''),
     enabled: !!user?.id,
-    // Add retry options to handle potential network issues
     retry: 2,
-    // Add staleTime to prevent too frequent refetches
     staleTime: 1000 * 60 * 5, // 5 minutes
-    // Correct way to handle errors in React Query v5
-    onSuccess: (data) => {
-      console.log("Tasks loaded successfully:", data?.length || 0);
-    },
-    onError: (error) => {
-      console.error("Error in tasks query:", error);
-      toast({
-        title: "Error loading tasks",
-        description: error instanceof Error ? error.message : "Unknown error, please try again later",
-        variant: "destructive",
-      });
+    gcTime: 1000 * 60 * 10, // 10 minutes
+    meta: {
+      onSuccess: (data) => {
+        console.log("Tasks loaded successfully:", data?.length || 0);
+      },
+      onError: (error) => {
+        console.error("Error in tasks query:", error);
+        toast({
+          title: "Error loading tasks",
+          description: error instanceof Error ? error.message : "Unknown error, please try again later",
+          variant: "destructive",
+        });
+      }
     }
   });
 
