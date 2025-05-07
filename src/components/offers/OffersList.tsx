@@ -3,8 +3,8 @@ import { Offer } from "@/types/offer";
 import { useToast } from "@/hooks/use-toast";
 import OfferCard from "./OfferCard";
 import EmptyOffers from "./EmptyOffers";
-import OfferActions from "./OfferActions";
 import { useState } from "react";
+import { updateOfferStatus } from "@/services/task/offers/queries/updateOfferStatus";
 
 interface OffersListProps {
   offers: Offer[];
@@ -27,6 +27,76 @@ export default function OffersList({ offers, taskId, loading, onRefresh }: Offer
     });
   };
 
+  const handleAcceptOffer = async (offerId: string) => {
+    if (!taskId) return;
+    
+    console.log("Accepting offer:", offerId);
+    setUpdatingOfferId(offerId);
+    
+    try {
+      const result = await updateOfferStatus(offerId, 'accepted');
+      if (result.success) {
+        toast({
+          title: "Success",
+          description: "Offer accepted successfully",
+        });
+        
+        // Refresh offers list
+        await onRefresh();
+      } else {
+        toast({
+          title: "Error",
+          description: result.error || "Failed to accept offer",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error accepting offer:", error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setUpdatingOfferId(null);
+    }
+  };
+
+  const handleRejectOffer = async (offerId: string) => {
+    if (!taskId) return;
+    
+    console.log("Rejecting offer:", offerId);
+    setUpdatingOfferId(offerId);
+    
+    try {
+      const result = await updateOfferStatus(offerId, 'rejected');
+      if (result.success) {
+        toast({
+          title: "Success",
+          description: "Offer rejected successfully",
+        });
+        
+        // Refresh offers list
+        await onRefresh();
+      } else {
+        toast({
+          title: "Error",
+          description: result.error || "Failed to reject offer",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error rejecting offer:", error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setUpdatingOfferId(null);
+    }
+  };
+
   if (loading) {
     return <div className="text-center p-6">Loading offers...</div>;
   }
@@ -37,25 +107,16 @@ export default function OffersList({ offers, taskId, loading, onRefresh }: Offer
   
   return (
     <div className="space-y-4">
-      {offers.map((offer) => {
-        const { handleAcceptOffer, handleRejectOffer } = OfferActions({
-          taskId,
-          offerId: offer.id,
-          onUpdate: onRefresh,
-          setUpdatingOfferId
-        });
-        
-        return (
-          <OfferCard
-            key={offer.id}
-            offer={offer}
-            onAccept={handleAcceptOffer}
-            onReject={handleRejectOffer}
-            onViewDetails={handleViewOfferDetails}
-            isUpdating={updatingOfferId === offer.id}
-          />
-        );
-      })}
+      {offers.map((offer) => (
+        <OfferCard
+          key={offer.id}
+          offer={offer}
+          onAccept={() => handleAcceptOffer(offer.id)}
+          onReject={() => handleRejectOffer(offer.id)}
+          onViewDetails={() => handleViewOfferDetails(offer.id)}
+          isUpdating={updatingOfferId === offer.id}
+        />
+      ))}
     </div>
   );
 }

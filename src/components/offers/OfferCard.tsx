@@ -7,9 +7,9 @@ import { Badge } from "@/components/ui/badge";
 
 interface OfferCardProps {
   offer: Offer;
-  onAccept: (offerId: string) => void;
-  onReject: (offerId: string) => void;
-  onViewDetails: (offerId: string) => void;
+  onAccept: () => void;
+  onReject: () => void;
+  onViewDetails: () => void;
   isUpdating: boolean | string | null;
 }
 
@@ -85,24 +85,24 @@ export default function OfferCard({
         {offer.status === 'pending' && (
           <>
             <Button 
-              onClick={() => onReject(offer.id)}
+              onClick={onReject}
               variant="outline" 
               className="text-red-600 border-red-600 hover:bg-red-50"
-              disabled={isUpdating === offer.id}
+              disabled={!!isUpdating}
             >
               Reject
             </Button>
             <Button 
-              onClick={() => onAccept(offer.id)}
+              onClick={onAccept}
               className="bg-green-600 hover:bg-green-700"
-              disabled={isUpdating === offer.id}
+              disabled={!!isUpdating}
             >
               Accept
             </Button>
           </>
         )}
         <Button 
-          onClick={() => onViewDetails(offer.id)}
+          onClick={onViewDetails}
           variant="outline"
           className="bg-teal hover:bg-teal-dark text-white hover:text-white"
         >
