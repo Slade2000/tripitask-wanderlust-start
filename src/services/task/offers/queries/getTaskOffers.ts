@@ -57,13 +57,14 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
     // Transform the offers to match our expected Offer type
     const offers: Offer[] = offersWithProfiles.map(offer => {
       // Extract provider data from the joined profiles
+      // Important: Supabase returns this as an array, we need to get the first item
       const providerProfile = offer.provider?.[0] || null;
       console.log(`Provider profile for offer ${offer.id}:`, providerProfile);
 
-      // Create the provider object with actual data or fallbacks
+      // Create the provider object with actual data
       const provider = {
         id: offer.provider_id,
-        name: providerProfile?.full_name || '', // Use full_name directly
+        name: providerProfile?.full_name || '', // Use full_name directly from the provider profile
         avatar_url: providerProfile?.avatar_url || '',
         rating: 4.5, // Placeholder rating
         success_rate: "95%" // Placeholder success rate
