@@ -33,44 +33,40 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
 
     console.log("Task exists:", taskData);
 
-    // Use a direct join with the profiles table to get provider information in one query
-    const { data: offersWithProfiles, error: joinError } = await supabase
+    // Step 1: Get all offers for the task
+    const { data: offersData, error: offersError } = await supabase
       .from('offers')
-      .select(`
-        *,
-        provider:profiles(id, full_name, avatar_url)
-      `)
+      .select('*')
       .eq('task_id', taskId);
 
-    if (joinError) {
-      console.error("Error fetching offers with profiles:", joinError);
-      throw new Error(`Failed to fetch offers with profiles: ${joinError.message}`);
+    if (offersError) {
+      console.error("Error fetching offers:", offersError);
+      throw new Error(`Failed to fetch offers: ${offersError.message}`);
     }
 
-    console.log("Raw offers with profiles data:", offersWithProfiles);
+    console.log("Raw offers data:", offersData);
 
-    if (!offersWithProfiles || offersWithProfiles.length === 0) {
+    if (!offersData || offersData.length === 0) {
       console.log("No offers found for task:", taskId);
       return [];
     }
 
-    // Transform the offers to match our expected Offer type
-    const offers: Offer[] = offersWithProfiles.map(offer => {
-      // Extract provider data from the joined profiles
-      // Important: Supabase returns this as an array, we need to get the first item
-      const providerProfile = offer.provider?.[0] || null;
-      console.log(`Provider profile for offer ${offer.id}:`, providerProfile);
-
-      // Create the provider object with actual data
-      const provider = {
-        id: offer.provider_id,
-        name: providerProfile?.full_name || '', // Use full_name directly from the provider profile
-        avatar_url: providerProfile?.avatar_url || '',
-        rating: 4.5, // Placeholder rating
-        success_rate: "95%" // Placeholder success rate
-      };
+    // Step 2: For each offer, get the provider information
+    const offers: Offer[] = await Promise.all(offersData.map(async (offer) => {
+      console.log(`Fetching provider info for offer ${offer.id}, provider_id: ${offer.provider_id}`);
       
-      console.log(`Final provider data for offer ${offer.id}:`, provider);
+      const { data: providerData, error: providerError } = await supabase
+        .from('profiles')
+        .select('id, full_name, avatar_url')
+        .eq('id', offer.provider_id)
+        .single();
+      
+      if (providerError) {
+        console.error(`Error fetching provider ${offer.provider_id}:`, providerError);
+        // Continue with what we have - don't fail the entire request for one provider
+      }
+
+      console.log(`Provider data for offer ${offer.id}:`, providerData);
       
       return {
         id: offer.id,
@@ -81,11 +77,17 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
         message: offer.message || undefined,
         status: offer.status as 'pending' | 'accepted' | 'rejected',
         created_at: offer.created_at,
-        provider
+        provider: {
+          id: offer.provider_id,
+          name: providerData?.full_name || 'Unknown Provider',
+          avatar_url: providerData?.avatar_url || '',
+          rating: 4.5, // Placeholder rating
+          success_rate: "95%" // Placeholder success rate
+        }
       };
-    });
+    }));
 
-    console.log("Transformed offers with provider data:", offers);
+    console.log("Transformed offers:", offers);
     return offers;
   } catch (error) {
     console.error("Error in getTaskOffers:", error);

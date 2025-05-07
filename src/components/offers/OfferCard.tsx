@@ -26,14 +26,14 @@ export default function OfferCard({
   // Ensure provider object always exists with good defaults
   const provider = offer.provider || {
     id: offer.provider_id,
-    name: '',
+    name: 'Unknown Provider',
     avatar_url: '',
     rating: 4.5,
     success_rate: "95%"
   };
   
-  // Use the full_name from profiles table as the provider name without fallback
-  const providerName = provider.name || "";
+  // Get a valid provider name or fallback to unknown
+  const providerName = provider.name || "Unknown Provider";
   
   console.log("Final provider name being displayed:", providerName);
   
