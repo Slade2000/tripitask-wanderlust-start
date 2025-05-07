@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getAllAvailableTasks } from "@/services/taskService";
@@ -42,7 +41,7 @@ export const useTaskFilter = () => {
     startDate: undefined,
     endDate: undefined,
   });
-  
+
   // Set user's location from browser geolocation
   useEffect(() => {
     if (navigator.geolocation) {
@@ -84,6 +83,21 @@ export const useTaskFilter = () => {
       });
     }
   }, []);
+
+  // Clear all filters
+  const clearFilters = () => {
+    console.log("Clearing all filters");
+    setSearchQuery("");
+    setSelectedCategory("");
+    setDistanceRadius([100]);
+    setBudgetRange([500]);
+    setFutureLocation({
+      name: "",
+      startDate: undefined,
+      endDate: undefined,
+    });
+    // We don't reset currentUserLocation as it's the user's actual location
+  };
 
   // Fetch available tasks
   const { data: tasks = [], isLoading: tasksLoading, error, refetch } = useQuery({
@@ -144,6 +158,7 @@ export const useTaskFilter = () => {
       setBudgetRange,
       filterOpen,
       toggleFilters,
+      clearFilters,
     },
     location: {
       currentUserLocation,

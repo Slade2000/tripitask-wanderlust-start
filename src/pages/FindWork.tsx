@@ -20,6 +20,7 @@ const FindWork = () => {
       setBudgetRange,
       filterOpen,
       toggleFilters,
+      clearFilters,
     },
     location: {
       currentUserLocation,
@@ -54,6 +55,7 @@ const FindWork = () => {
           filterOpen={filterOpen}
           toggleFilters={toggleFilters}
           onRefresh={handleRefresh}
+          onClearFilters={clearFilters}
         />
 
         {/* Advanced filters panel */}
