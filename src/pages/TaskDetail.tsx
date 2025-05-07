@@ -4,7 +4,7 @@ import { useParams, Link } from "react-router-dom";
 import { format } from "date-fns";
 import { useQuery } from "@tanstack/react-query";
 import { getTaskById } from "@/services/taskService";
-import { useAuth } from "../contexts/AuthContext"; // Updated import path
+import { useAuth } from "../contexts/AuthContext"; 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -14,7 +14,6 @@ import { calculateDistance } from "@/services/location/distance";
 import BottomNav from "@/components/BottomNav";
 import { useToast } from "@/hooks/use-toast";
 
-// Add the actual component implementation
 const TaskDetail: React.FC = () => {
   const { taskId } = useParams<{ taskId: string }>();
   const { toast } = useToast();
@@ -65,7 +64,7 @@ const TaskDetail: React.FC = () => {
             <div className="flex flex-col gap-4">
               <div className="flex items-center gap-2">
                 <Badge variant="outline" className="bg-teal/10">
-                  {task.category}
+                  {task.categories?.name || 'Uncategorized'}
                 </Badge>
                 <Badge variant="outline" className="bg-amber-500/10">
                   ${task.budget}
@@ -77,11 +76,11 @@ const TaskDetail: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                 <div className="flex items-center gap-2">
                   <MapPin className="h-5 w-5 text-teal" />
-                  <span>{task.location?.address || 'Location not specified'}</span>
+                  <span>{task.location || 'Location not specified'}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Calendar className="h-5 w-5 text-teal" />
-                  <span>{task.date ? format(new Date(task.date), 'PPP') : 'Date not specified'}</span>
+                  <span>{task.due_date ? format(new Date(task.due_date), 'PPP') : 'Date not specified'}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <DollarSign className="h-5 w-5 text-teal" />
@@ -89,7 +88,7 @@ const TaskDetail: React.FC = () => {
                 </div>
                 <div className="flex items-center gap-2">
                   <User className="h-5 w-5 text-teal" />
-                  <span>{task.posted_by?.full_name || 'Unknown'}</span>
+                  <span>{task.user_id || 'Unknown'}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Clock className="h-5 w-5 text-teal" />
@@ -121,7 +120,7 @@ const TaskDetail: React.FC = () => {
           <TabsContent value="requirements" className="mt-4">
             <Card>
               <CardContent className="pt-6">
-                <p>{task.requirements || 'No specific requirements provided.'}</p>
+                <p>No specific requirements provided.</p>
               </CardContent>
             </Card>
           </TabsContent>
@@ -132,5 +131,4 @@ const TaskDetail: React.FC = () => {
   );
 };
 
-// Add default export
 export default TaskDetail;
