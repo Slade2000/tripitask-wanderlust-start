@@ -4,6 +4,8 @@ import { Offer } from "@/types/offer";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface OfferCardProps {
   offer: Offer;
@@ -20,20 +22,54 @@ export default function OfferCard({
   onViewDetails, 
   isUpdating 
 }: OfferCardProps) {
-  console.log("Rendering offer card with data:", offer);
-  console.log("Provider data:", offer.provider);
+  const [providerName, setProviderName] = useState<string>("Loading...");
+  const [avatarUrl, setAvatarUrl] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // Fetch provider data separately
+  useEffect(() => {
+    async function fetchProviderData() {
+      if (!offer.provider_id) {
+        setProviderName("Unknown Provider");
+        return;
+      }
+      
+      try {
+        // Get provider profile directly
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('full_name, avatar_url')
+          .eq('id', offer.provider_id)
+          .single();
+        
+        if (error) {
+          console.error("Error fetching provider:", error);
+          setProviderName("Unknown Provider");
+        } else if (data) {
+          setProviderName(data.full_name || "Unknown Provider");
+          setAvatarUrl(data.avatar_url || "");
+        } else {
+          setProviderName("Unknown Provider");
+        }
+      } catch (err) {
+        console.error("Exception fetching provider:", err);
+        setProviderName("Unknown Provider");
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    
+    fetchProviderData();
+  }, [offer.provider_id]);
   
   // Ensure provider object always exists with good defaults
   const provider = offer.provider || {
     id: offer.provider_id,
-    name: 'Unknown Provider',
-    avatar_url: '',
+    name: providerName,
+    avatar_url: avatarUrl,
     rating: 4.5,
     success_rate: "95%"
   };
-  
-  // Get a valid provider name or fallback to unknown
-  const providerName = provider.name || "Unknown Provider";
   
   console.log("Final provider name being displayed:", providerName);
   
@@ -56,11 +92,11 @@ export default function OfferCard({
       <div className="flex items-start justify-between">
         <div className="flex items-center">
           <Avatar className="h-12 w-12 mr-3">
-            <AvatarImage src={provider.avatar_url || ""} alt={providerName} />
+            <AvatarImage src={avatarUrl || ""} alt={providerName} />
             <AvatarFallback className="bg-teal text-white">{providerInitial}</AvatarFallback>
           </Avatar>
           <div>
-            <h3 className="font-semibold">{providerName}</h3>
+            <h3 className="font-semibold">{isLoading ? "Loading..." : providerName}</h3>
             <Badge className={
               offer.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
               offer.status === 'accepted' ? 'bg-green-100 text-green-800' : 

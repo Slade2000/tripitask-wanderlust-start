@@ -33,7 +33,7 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
 
     console.log("Task exists:", taskData);
 
-    // Step 1: Get all offers for the task
+    // Simply fetch all offers for the task without provider details
     const { data: offersData, error: offersError } = await supabase
       .from('offers')
       .select('*')
@@ -51,23 +51,8 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
       return [];
     }
 
-    // Step 2: For each offer, get the provider information
-    const offers: Offer[] = await Promise.all(offersData.map(async (offer) => {
-      console.log(`Fetching provider info for offer ${offer.id}, provider_id: ${offer.provider_id}`);
-      
-      const { data: providerData, error: providerError } = await supabase
-        .from('profiles')
-        .select('id, full_name, avatar_url')
-        .eq('id', offer.provider_id)
-        .single();
-      
-      if (providerError) {
-        console.error(`Error fetching provider ${offer.provider_id}:`, providerError);
-        // Continue with what we have - don't fail the entire request for one provider
-      }
-
-      console.log(`Provider data for offer ${offer.id}:`, providerData);
-      
+    // Transform the offers without provider details (these will be fetched by the component)
+    const offers: Offer[] = offersData.map(offer => {
       return {
         id: offer.id,
         task_id: offer.task_id,
@@ -77,17 +62,16 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
         message: offer.message || undefined,
         status: offer.status as 'pending' | 'accepted' | 'rejected',
         created_at: offer.created_at,
+        // Provide minimal provider info, the component will fetch the rest
         provider: {
           id: offer.provider_id,
-          name: providerData?.full_name || 'Unknown Provider',
-          avatar_url: providerData?.avatar_url || '',
           rating: 4.5, // Placeholder rating
           success_rate: "95%" // Placeholder success rate
         }
       };
-    }));
+    });
 
-    console.log("Transformed offers:", offers);
+    console.log("Transformed offers (without provider details):", offers);
     return offers;
   } catch (error) {
     console.error("Error in getTaskOffers:", error);
