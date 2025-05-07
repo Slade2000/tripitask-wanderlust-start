@@ -1,7 +1,9 @@
+
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getAllAvailableTasks } from "@/services/taskService";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface TaskLocation {
   name: string;
@@ -21,6 +23,7 @@ export interface TaskFilterState {
 
 export const useTaskFilter = () => {
   const { toast } = useToast();
+  const { user } = useAuth();  // Get the current user from AuthContext
   
   // Filter states
   const [searchQuery, setSearchQuery] = useState("");
@@ -106,7 +109,7 @@ export const useTaskFilter = () => {
 
   // Fetch available tasks
   const { data: tasks = [], isLoading: tasksLoading, error, refetch } = useQuery({
-    queryKey: ["availableTasks", searchQuery, selectedCategory, distanceRadius[0], budgetRange[0], applyLocationFilter ? currentUserLocation?.latitude : null, applyLocationFilter ? currentUserLocation?.longitude : null, futureLocation.name],
+    queryKey: ["availableTasks", searchQuery, selectedCategory, distanceRadius[0], budgetRange[0], applyLocationFilter ? currentUserLocation?.latitude : null, applyLocationFilter ? currentUserLocation?.longitude : null, futureLocation.name, user?.id],
     queryFn: async () => {
       try {
         console.log("Fetching tasks with filters:", {
@@ -117,6 +120,7 @@ export const useTaskFilter = () => {
           locationName: applyLocationFilter ? currentUserLocation?.name : undefined,
           latitude: applyLocationFilter ? currentUserLocation?.latitude : undefined,
           longitude: applyLocationFilter ? currentUserLocation?.longitude : undefined,
+          userId: user?.id,  // Add current user ID to filter params
         });
 
         // Add mock data if no location for testing only
@@ -134,6 +138,7 @@ export const useTaskFilter = () => {
             latitude: currentUserLocation.latitude,
             longitude: currentUserLocation.longitude,
           }),
+          userId: user?.id,  // Pass the current user ID
         });
         
         console.log("Tasks fetched from database:", result);
@@ -143,8 +148,8 @@ export const useTaskFilter = () => {
         throw err;
       }
     },
-    // Enable the query as soon as we have location data
-    enabled: !!currentUserLocation,
+    // Enable the query as soon as we have user data
+    enabled: true,
     staleTime: 0, // Changed from 30000 to 0 to always fetch fresh data
     refetchOnWindowFocus: true, // Added to refetch when window gets focus
   });

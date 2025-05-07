@@ -22,6 +22,12 @@ export async function getAllAvailableTasks(filters: TaskFilterParams = {}) {
       query = query.eq('status', 'open');
     }
     
+    // Filter out current user's tasks if userId is provided
+    if (filters.userId) {
+      console.log("Excluding tasks from current user:", filters.userId);
+      query = query.neq('user_id', filters.userId);
+    }
+    
     // Apply search query filter if provided
     if (filters.searchQuery && filters.searchQuery.trim() !== '') {
       const searchTerm = `%${filters.searchQuery.toLowerCase()}%`;

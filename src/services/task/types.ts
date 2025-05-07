@@ -22,4 +22,5 @@ export interface TaskFilterParams {
   locationName?: string;
   latitude?: number;
   longitude?: number;
+  userId?: string;  // Added userId to filter out current user's tasks
 }
