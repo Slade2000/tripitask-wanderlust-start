@@ -144,7 +144,8 @@ export async function getAllAvailableTasks(filters: TaskFilterParams = {}) {
     }
     
     // Apply location filtering - both by coordinates and by name
-    if (filters.locationName) {
+    // Only if location filtering parameters are provided
+    if (filters.locationName && filters.locationName.trim() !== '') {
       console.log(`Filtering by location name: "${filters.locationName}"`);
       
       // First check if we have coordinates to do distance-based filtering

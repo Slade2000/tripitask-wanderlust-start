@@ -36,6 +36,9 @@ export const useTaskFilter = () => {
     longitude: number;
   } | null>(null);
   
+  // Add a flag to track if we should apply location filtering
+  const [applyLocationFilter, setApplyLocationFilter] = useState(true);
+  
   const [futureLocation, setFutureLocation] = useState<TaskLocation>({
     name: "",
     startDate: undefined,
@@ -96,12 +99,14 @@ export const useTaskFilter = () => {
       startDate: undefined,
       endDate: undefined,
     });
-    // We don't reset currentUserLocation as it's the user's actual location
+    
+    // Set the flag to disable location filtering, while keeping the current location info
+    setApplyLocationFilter(false);
   };
 
   // Fetch available tasks
   const { data: tasks = [], isLoading: tasksLoading, error, refetch } = useQuery({
-    queryKey: ["availableTasks", searchQuery, selectedCategory, distanceRadius[0], budgetRange[0], currentUserLocation?.latitude, currentUserLocation?.longitude, futureLocation.name],
+    queryKey: ["availableTasks", searchQuery, selectedCategory, distanceRadius[0], budgetRange[0], applyLocationFilter ? currentUserLocation?.latitude : null, applyLocationFilter ? currentUserLocation?.longitude : null, futureLocation.name],
     queryFn: async () => {
       try {
         console.log("Fetching tasks with filters:", {
@@ -109,9 +114,9 @@ export const useTaskFilter = () => {
           categoryId: selectedCategory !== "all" ? selectedCategory : undefined,
           distanceRadius: distanceRadius[0],
           maxBudget: budgetRange[0],
-          locationName: currentUserLocation?.name,
-          latitude: currentUserLocation?.latitude,
-          longitude: currentUserLocation?.longitude,
+          locationName: applyLocationFilter ? currentUserLocation?.name : undefined,
+          latitude: applyLocationFilter ? currentUserLocation?.latitude : undefined,
+          longitude: applyLocationFilter ? currentUserLocation?.longitude : undefined,
         });
 
         // Add mock data if no location for testing only
@@ -124,8 +129,8 @@ export const useTaskFilter = () => {
           categoryId: selectedCategory !== "all" ? selectedCategory : undefined,
           distanceRadius: distanceRadius[0],
           maxBudget: budgetRange[0],
-          locationName: currentUserLocation?.name,
-          ...(currentUserLocation && {
+          ...(applyLocationFilter && currentUserLocation && {
+            locationName: currentUserLocation.name,
             latitude: currentUserLocation.latitude,
             longitude: currentUserLocation.longitude,
           }),
@@ -143,6 +148,19 @@ export const useTaskFilter = () => {
     staleTime: 0, // Changed from 30000 to 0 to always fetch fresh data
     refetchOnWindowFocus: true, // Added to refetch when window gets focus
   });
+
+  // Re-enable location filtering when any filter is modified
+  useEffect(() => {
+    // If any filter changes except for applyLocationFilter, and filters were disabled, re-enable them
+    if (!applyLocationFilter && 
+        (searchQuery !== "" || 
+         selectedCategory !== "" || 
+         distanceRadius[0] !== 100 || 
+         budgetRange[0] !== 500 || 
+         futureLocation.name !== "")) {
+      setApplyLocationFilter(true);
+    }
+  }, [searchQuery, selectedCategory, distanceRadius, budgetRange, futureLocation]);
 
   const toggleFilters = () => setFilterOpen(!filterOpen);
 
