@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { getLocationSuggestions, PlacePrediction } from "@/services/locationService";
+import { getLocationSuggestions, PlacePrediction } from "@/services/location";
 import { useDebounce } from "@/hooks/useDebounce";
 
 interface UseLocationSearchOptions {

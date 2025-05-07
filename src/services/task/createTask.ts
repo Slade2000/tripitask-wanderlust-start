@@ -2,7 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { TaskData } from "./types";
 import { uploadTaskPhotos } from "./taskPhotoUpload";
-import { getLocationCoordinates } from "../locationService";
+import { getLocationCoordinates } from "@/services/location";
 
 export async function createTask(taskData: TaskData): Promise<string | null> {
   try {

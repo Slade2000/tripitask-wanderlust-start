@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Coordinates } from "@/services/location/types";
 
 interface LocationCoordinates {
   latitude: number | null;

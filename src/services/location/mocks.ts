@@ -1,167 +1,12 @@
-import { supabase } from "@/integrations/supabase/client";
-
-export interface PlacePrediction {
-  description: string;
-  place_id: string;
-}
-
-export interface GeocodeResult {
-  results: any[];
-  status: string;
-}
-
-/**
- * Get location suggestions based on user input
- */
-export async function getLocationSuggestions(
-  input: string
-): Promise<PlacePrediction[]> {
-  try {
-    console.log("Fetching suggestions for:", input);
-    
-    if (!input || input.trim().length < 2) {
-      return [];
-    }
-    
-    // Call our edge function with the Google Places API
-    const { data, error } = await supabase.functions.invoke("google-places", {
-      body: {
-        action: "autocomplete",
-        input: input.trim(),
-      },
-    });
-    
-    if (error) {
-      console.error("Error in autocomplete function:", error);
-      // Fallback to mock data if API call fails
-      return getMockSuggestions(input);
-    }
-    
-    if (data?.predictions && Array.isArray(data.predictions)) {
-      console.log(`Received ${data.predictions.length} suggestions from API`);
-      return data.predictions;
-    }
-    
-    // Fallback to mock data if API returns invalid format
-    console.log("API returned invalid format, using mock data");
-    return getMockSuggestions(input);
-  } catch (error) {
-    console.error("Error in getLocationSuggestions:", error);
-    // Fallback to mock data if API call fails
-    return getMockSuggestions(input);
-  }
-}
-
-/**
- * Get coordinates from a location string using Google Places API
- */
-export async function getLocationCoordinates(
-  locationName: string
-): Promise<{ latitude: number; longitude: number } | null> {
-  try {
-    // Log the request to help with debugging
-    console.log(`Getting coordinates for location: "${locationName}"`);
-    
-    if (!locationName || locationName.trim() === '') {
-      console.log("Empty location name, cannot get coordinates");
-      return null;
-    }
-    
-    // Call our edge function to get geocoding information
-    const { data, error } = await supabase.functions.invoke("google-places", {
-      body: {
-        action: "geocode",
-        address: locationName.trim(),
-      },
-    });
-    
-    if (error) {
-      console.error("Error in geocode function:", error);
-      // Fallback to mock coordinates if API call fails
-      return getMockCoordinates(locationName);
-    }
-    
-    if (data?.results && data.results.length > 0 && 
-        data.results[0].geometry && data.results[0].geometry.location) {
-      const location = data.results[0].geometry.location;
-      console.log(`Got coordinates from API for "${locationName}":`, location);
-      
-      return {
-        latitude: location.lat,
-        longitude: location.lng
-      };
-    }
-    
-    // Fallback to mock coordinates if API returns invalid format
-    console.log("API returned invalid format, using mock coordinates");
-    return getMockCoordinates(locationName);
-  } catch (error) {
-    console.error("Error in getLocationCoordinates:", error);
-    // Fallback to mock coordinates if API call fails
-    return getMockCoordinates(locationName);
-  }
-}
-
-/**
- * Get reverse geocoding from coordinates
- */
-export async function getAddressFromCoordinates(
-  latitude: number,
-  longitude: number
-): Promise<string | null> {
-  try {
-    const { data, error } = await supabase.functions.invoke("google-places", {
-      body: {
-        action: "geocode",
-        latitude,
-        longitude,
-      },
-    });
-
-    if (error) {
-      console.error("Error in reverse geocoding:", error);
-      return null;
-    }
-
-    if (data?.results && data.results.length > 0) {
-      return data.results[0].formatted_address;
-    }
-
-    return null;
-  } catch (error) {
-    console.error("Error in getAddressFromCoordinates:", error);
-    return null;
-  }
-}
-
-/**
- * Calculate distance between two coordinates in kilometers
- */
-export function calculateDistance(
-  lat1: number,
-  lon1: number,
-  lat2: number,
-  lon2: number
-): number {
-  const R = 6371; // Radius of the Earth in km
-  const dLat = ((lat2 - lat1) * Math.PI) / 180;
-  const dLon = ((lon2 - lon1) * Math.PI) / 180;
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c; // Distance in km
-}
+import { Coordinates } from "./types";
+import { PlacePrediction } from "./types";
 
 /**
  * Mock function to provide coordinates for common locations
  * Enhanced with more locations including Ellenbrook and Perth suburbs
  */
-function getMockCoordinates(locationName: string): { latitude: number; longitude: number } | null {
-  const locations: Record<string, { latitude: number; longitude: number }> = {
+export function getMockCoordinates(locationName: string): Coordinates | null {
+  const locations: Record<string, Coordinates> = {
     // Australia's major cities with precise coordinates
     sydney: { latitude: -33.8688, longitude: 151.2093 },
     melbourne: { latitude: -37.8136, longitude: 144.9631 },
@@ -219,7 +64,7 @@ function getMockCoordinates(locationName: string): { latitude: number; longitude
  * Generate mock location suggestions based on input
  * This provides fallback if the Google API fails
  */
-function getMockSuggestions(input: string): PlacePrediction[] {
+export function getMockSuggestions(input: string): PlacePrediction[] {
   if (!input || input.trim() === '') return [];
   
   const lowercaseInput = input.toLowerCase().trim();

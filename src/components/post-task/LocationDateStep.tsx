@@ -1,10 +1,9 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2 } from "lucide-react";
-import { getLocationCoordinates } from "@/services/locationService";
+import { getLocationCoordinates } from "@/services/location";
 import LocationAutoComplete from "./location/LocationAutoComplete";
 import DatePicker from "./location/DatePicker";
 import { useCurrentLocation } from "@/hooks/useCurrentLocation";

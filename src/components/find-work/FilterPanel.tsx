@@ -1,7 +1,6 @@
-
 import React from "react";
 import { useLocationSearch } from "@/hooks/useLocationSearch";
-import { getLocationCoordinates } from "@/services/locationService";
+import { getLocationCoordinates } from "@/services/location";
 import LocationSearchInput from "@/components/location/LocationSearchInput";
 import CategorySelect from "./filters/CategorySelect";
 import DistanceSlider from "./filters/DistanceSlider";

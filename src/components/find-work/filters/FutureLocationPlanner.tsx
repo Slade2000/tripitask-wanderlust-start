@@ -3,7 +3,7 @@ import React from "react";
 import { format } from "date-fns";
 import LocationSearchInput from "@/components/location/LocationSearchInput";
 import DateRangePicker from "./DateRangePicker";
-import { getLocationCoordinates } from "@/services/locationService";
+import { getLocationCoordinates } from "@/services/location";
 import { useLocationSearch } from "@/hooks/useLocationSearch";
 
 interface TaskLocation {
