@@ -21,6 +21,7 @@ export default function OfferCard({
   isUpdating 
 }: OfferCardProps) {
   console.log("Rendering offer card with data:", offer);
+  console.log("Provider data:", offer.provider);
   
   // Ensure provider object always exists with good defaults
   const provider = offer.provider || {
@@ -31,9 +32,11 @@ export default function OfferCard({
     success_rate: "95%"
   };
   
-  // Get provider name - prioritize the provider's actual name from profiles
-  // If no name is available, format a display ID from provider_id
+  // Get provider name from the provider object
+  // Only use fallback if name is completely empty
   const providerName = provider.name || (offer.provider_id ? `User ${offer.provider_id.substring(0, 8)}` : 'Unknown');
+  
+  console.log("Final provider name being displayed:", providerName);
   
   // Get first letter of provider name for avatar fallback
   const providerInitial = providerName.charAt(0) || 'P';

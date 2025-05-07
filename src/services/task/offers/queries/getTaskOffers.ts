@@ -60,7 +60,9 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
     
     if (providerIds.length > 0) {
       try {
-        // Try to get profiles from the profiles table with exact fields we need
+        console.log("Fetching profiles for provider IDs:", providerIds);
+        
+        // Try to get profiles from the profiles table
         const { data: profilesData, error: profilesError } = await supabase
           .from('profiles')
           .select('id, full_name, avatar_url')
@@ -77,8 +79,7 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
             const normalizedId = profile.id.toLowerCase();
             acc[normalizedId] = {
               id: profile.id,
-              // Just use full_name without any prefix
-              name: profile.full_name || '', // Don't add any prefix here
+              name: profile.full_name || '', // Use full_name directly
               avatar_url: profile.avatar_url || '',
             };
             console.log(`Added profile to map: ${normalizedId} = ${profile.full_name || 'no name found'}`);
@@ -108,7 +109,7 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
       // Create the provider object with actual data or fallbacks
       const provider = {
         id: offer.provider_id,
-        name: providerData?.name || '', // Just use the name as-is, no prefix
+        name: providerData?.name || '', // Don't add any prefix here, just use name as-is
         avatar_url: providerData?.avatar_url || '',
         rating: 4.5, // Placeholder rating
         success_rate: "95%" // Placeholder success rate
