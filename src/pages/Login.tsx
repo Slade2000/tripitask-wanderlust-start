@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,7 +16,7 @@ const Login = () => {
   const [loginInProgress, setLoginInProgress] = useState(false);
 
   // If user is already logged in, redirect to home
-  React.useEffect(() => {
+  useEffect(() => {
     if (session) {
       navigate("/home");
     }
