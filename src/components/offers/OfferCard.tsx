@@ -32,9 +32,9 @@ export default function OfferCard({
     success_rate: "95%"
   };
   
-  // Get provider name from the provider object
-  // Only use fallback if name is completely empty
-  const providerName = provider.name || (offer.provider_id ? `User ${offer.provider_id.substring(0, 8)}` : 'Unknown');
+  // Use the name directly from the provider object
+  // If it's empty, use a clean fallback without the ID
+  const providerName = provider.name || "Unknown Provider";
   
   console.log("Final provider name being displayed:", providerName);
   
