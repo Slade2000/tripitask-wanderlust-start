@@ -71,6 +71,37 @@ async function handleGeocodeRequest(latitude: number, longitude: number) {
   }
 }
 
+// Handle geocode by address requests (for getting lat/lng from address)
+async function handleGeocodeByAddressRequest(address: string) {
+  try {
+    // Use the Google Maps API with secure API key
+    const apiKey = Deno.env.get('GOOGLE_MAPS_API_KEY')
+    
+    if (!apiKey) {
+      throw new Error('Google Maps API key not configured')
+    }
+    
+    const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${apiKey}`
+    
+    const response = await fetch(url)
+    const data = await response.json()
+    
+    return new Response(JSON.stringify({ 
+      results: data.results,
+      status: data.status
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 200
+    })
+  } catch (error) {
+    console.error('Geocode by address error:', error)
+    return new Response(JSON.stringify({ error: error.message }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 500
+    })
+  }
+}
+
 // Main handler for the function
 Deno.serve(async (req) => {
   // Handle CORS preflight requests
@@ -81,13 +112,15 @@ Deno.serve(async (req) => {
   try {
     // For simplicity and testing, we're making this function public
     // Remove authorization checks for now to fix the unauthorized error
-    const { action, input, latitude, longitude } = await req.json()
+    const { action, input, latitude, longitude, address } = await req.json()
     
     // Route to appropriate handler based on action
     if (action === 'autocomplete' && input) {
       return handlePlaceAutocomplete(input)
     } else if (action === 'geocode' && latitude && longitude) {
       return handleGeocodeRequest(latitude, longitude)
+    } else if (action === 'geocode' && address) {
+      return handleGeocodeByAddressRequest(address)
     } else {
       return new Response(JSON.stringify({ error: 'Invalid action or missing parameters' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

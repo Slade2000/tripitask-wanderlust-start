@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 export interface PlacePrediction {
@@ -18,15 +17,38 @@ export async function getLocationSuggestions(
   input: string
 ): Promise<PlacePrediction[]> {
   try {
-    // For testing purposes, let's generate mock suggestions immediately
-    // This will help us determine if the API call is the issue
     console.log("Fetching suggestions for:", input);
     
-    // Return mock suggestions instead of waiting for API
+    if (!input || input.trim().length < 2) {
+      return [];
+    }
+    
+    // Call our edge function with the Google Places API
+    const { data, error } = await supabase.functions.invoke("google-places", {
+      body: {
+        action: "autocomplete",
+        input: input.trim(),
+      },
+    });
+    
+    if (error) {
+      console.error("Error in autocomplete function:", error);
+      // Fallback to mock data if API call fails
+      return getMockSuggestions(input);
+    }
+    
+    if (data?.predictions && Array.isArray(data.predictions)) {
+      console.log(`Received ${data.predictions.length} suggestions from API`);
+      return data.predictions;
+    }
+    
+    // Fallback to mock data if API returns invalid format
+    console.log("API returned invalid format, using mock data");
     return getMockSuggestions(input);
   } catch (error) {
     console.error("Error in getLocationSuggestions:", error);
-    return [];
+    // Fallback to mock data if API call fails
+    return getMockSuggestions(input);
   }
 }
 
@@ -40,14 +62,43 @@ export async function getLocationCoordinates(
     // Log the request to help with debugging
     console.log(`Getting coordinates for location: "${locationName}"`);
     
-    // For simplicity, we'll use mock coordinates with improved city name matching
-    const mockCoordinates = getMockCoordinates(locationName);
+    if (!locationName || locationName.trim() === '') {
+      console.log("Empty location name, cannot get coordinates");
+      return null;
+    }
     
-    console.log(`Coordinates for "${locationName}": `, mockCoordinates);
-    return mockCoordinates;
+    // Call our edge function to get geocoding information
+    const { data, error } = await supabase.functions.invoke("google-places", {
+      body: {
+        action: "geocode",
+        address: locationName.trim(),
+      },
+    });
+    
+    if (error) {
+      console.error("Error in geocode function:", error);
+      // Fallback to mock coordinates if API call fails
+      return getMockCoordinates(locationName);
+    }
+    
+    if (data?.results && data.results.length > 0 && 
+        data.results[0].geometry && data.results[0].geometry.location) {
+      const location = data.results[0].geometry.location;
+      console.log(`Got coordinates from API for "${locationName}":`, location);
+      
+      return {
+        latitude: location.lat,
+        longitude: location.lng
+      };
+    }
+    
+    // Fallback to mock coordinates if API returns invalid format
+    console.log("API returned invalid format, using mock coordinates");
+    return getMockCoordinates(locationName);
   } catch (error) {
     console.error("Error in getLocationCoordinates:", error);
-    return null;
+    // Fallback to mock coordinates if API call fails
+    return getMockCoordinates(locationName);
   }
 }
 
@@ -107,7 +158,7 @@ export function calculateDistance(
 
 /**
  * Mock function to provide coordinates for common locations
- * Improved with better city name matching and more precise coordinates
+ * Enhanced with more locations including Ellenbrook and Perth suburbs
  */
 function getMockCoordinates(locationName: string): { latitude: number; longitude: number } | null {
   const locations: Record<string, { latitude: number; longitude: number }> = {
@@ -127,6 +178,16 @@ function getMockCoordinates(locationName: string): { latitude: number; longitude
     geelong: { latitude: -38.1499, longitude: 144.3617 },
     townsville: { latitude: -19.2590, longitude: 146.8169 },
     cairns: { latitude: -16.9186, longitude: 145.7781 },
+    // Add Ellenbrook with correct coordinates
+    ellenbrook: { latitude: -31.7833, longitude: 116.0167 },
+    // Add more Perth suburbs
+    joondalup: { latitude: -31.7438, longitude: 115.7655 },
+    fremantle: { latitude: -32.0560, longitude: 115.7471 },
+    mandurah: { latitude: -32.5280, longitude: 115.7401 },
+    rockingham: { latitude: -32.2809, longitude: 115.7232 },
+    armadale: { latitude: -32.1533, longitude: 116.0139 },
+    midland: { latitude: -31.8898, longitude: 116.0086 },
+    kalamunda: { latitude: -31.9705, longitude: 116.0579 }
   };
 
   // Clean and normalize the input
@@ -149,14 +210,14 @@ function getMockCoordinates(locationName: string): { latitude: number; longitude
   }
 
   // No match found
-  console.log(`No coordinate match found for "${cleanName}", using Sydney as default`);
-  // Default to Sydney if no match
-  return { latitude: -33.8688, longitude: 151.2093 };
+  console.log(`No coordinate match found for "${cleanName}", using Perth as default`);
+  // Default to Perth if no match (changed from Sydney)
+  return { latitude: -31.9505, longitude: 115.8605 };
 }
 
 /**
  * Generate mock location suggestions based on input
- * This solves the loading issue by returning immediate results
+ * This provides fallback if the Google API fails
  */
 function getMockSuggestions(input: string): PlacePrediction[] {
   if (!input || input.trim() === '') return [];
@@ -179,6 +240,16 @@ function getMockSuggestions(input: string): PlacePrediction[] {
     { name: "Geelong", state: "VIC" },
     { name: "Townsville", state: "QLD" },
     { name: "Cairns", state: "QLD" },
+    // Add Perth suburbs with WA state
+    { name: "Ellenbrook", state: "WA" },
+    { name: "Joondalup", state: "WA" },
+    { name: "Fremantle", state: "WA" },
+    { name: "Mandurah", state: "WA" },
+    { name: "Rockingham", state: "WA" },
+    { name: "Armadale", state: "WA" },
+    { name: "Midland", state: "WA" },
+    { name: "Kalamunda", state: "WA" },
+    // Keep remaining cities
     { name: "Toowoomba", state: "QLD" },
     { name: "Ballarat", state: "VIC" },
     { name: "Bendigo", state: "VIC" },
