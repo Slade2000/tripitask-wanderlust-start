@@ -9,6 +9,11 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
   try {
     console.log("Fetching offers for task:", taskId);
     
+    if (!taskId) {
+      console.error("No task ID provided");
+      throw new Error("Task ID is required to fetch offers");
+    }
+    
     // Verify that the task exists
     const { data: taskData, error: taskError } = await supabase
       .from('tasks')
@@ -39,7 +44,7 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
 
     if (offersError) {
       console.error("Error fetching offers:", offersError);
-      throw offersError;
+      throw new Error(`Failed to fetch offers: ${offersError.message}`);
     }
 
     console.log("Raw offers data with provider info:", offersData);
@@ -78,6 +83,10 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
     return offers;
   } catch (error) {
     console.error("Error in getTaskOffers:", error);
-    throw error;
+    if (error instanceof Error) {
+      throw error;
+    } else {
+      throw new Error("An unexpected error occurred while fetching offers");
+    }
   }
 }

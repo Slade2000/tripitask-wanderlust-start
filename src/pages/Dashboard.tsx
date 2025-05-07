@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { getProviderOffers } from "@/services/task/offers/queries/getProviderOffers";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -51,6 +52,10 @@ const Dashboard = () => {
   const activeTasks = tasks?.filter(task => task.status === 'open' || task.status === 'assigned') || [];
   const completedTasks = tasks?.filter(task => task.status === 'completed') || [];
   const pendingOffers = offers?.filter(offer => offer.status === 'pending') || [];
+  
+  // Get tasks by status for the Posted Tasks section
+  const openTasks = tasks?.filter(task => task.status === 'open') || [];
+  const inProgressTasks = tasks?.filter(task => task.status === 'assigned') || [];
   
   // Mock data for earnings (replace with real data once available)
   const totalEarnings = 3250;
@@ -144,6 +149,105 @@ const Dashboard = () => {
             </CardContent>
           </Card>
         </div>
+        
+        {/* Posted Tasks Section with Tabs */}
+        <h2 className="text-xl font-semibold text-teal-dark mb-3">Posted Tasks</h2>
+        <Tabs defaultValue="all" className="mb-6">
+          <TabsList className="bg-white mb-4">
+            <TabsTrigger value="all">All</TabsTrigger>
+            <TabsTrigger value="open">Open</TabsTrigger>
+            <TabsTrigger value="in-progress">In Progress</TabsTrigger>
+            <TabsTrigger value="completed">Completed</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="all" className="mt-0">
+            {tasks && tasks.length > 0 ? (
+              <div className="space-y-3">
+                {tasks.slice(0, 3).map((task) => (
+                  <TaskCard key={task.id} task={task} navigate={navigate} />
+                ))}
+                {tasks.length > 3 && (
+                  <div className="text-center">
+                    <Button 
+                      variant="ghost"
+                      className="text-teal"
+                      onClick={() => navigate('/my-jobs')}>
+                      View All ({tasks.length}) Tasks
+                    </Button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <EmptyTasksCard navigate={navigate} />
+            )}
+          </TabsContent>
+          
+          <TabsContent value="open" className="mt-0">
+            {openTasks.length > 0 ? (
+              <div className="space-y-3">
+                {openTasks.slice(0, 3).map((task) => (
+                  <TaskCard key={task.id} task={task} navigate={navigate} />
+                ))}
+                {openTasks.length > 3 && (
+                  <div className="text-center">
+                    <Button 
+                      variant="ghost"
+                      className="text-teal"
+                      onClick={() => navigate('/my-jobs')}>
+                      View All ({openTasks.length}) Open Tasks
+                    </Button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <EmptyStateCard message="No open tasks yet." />
+            )}
+          </TabsContent>
+          
+          <TabsContent value="in-progress" className="mt-0">
+            {inProgressTasks.length > 0 ? (
+              <div className="space-y-3">
+                {inProgressTasks.slice(0, 3).map((task) => (
+                  <TaskCard key={task.id} task={task} navigate={navigate} />
+                ))}
+                {inProgressTasks.length > 3 && (
+                  <div className="text-center">
+                    <Button 
+                      variant="ghost"
+                      className="text-teal"
+                      onClick={() => navigate('/my-jobs')}>
+                      View All ({inProgressTasks.length}) In Progress Tasks
+                    </Button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <EmptyStateCard message="No tasks in progress." />
+            )}
+          </TabsContent>
+          
+          <TabsContent value="completed" className="mt-0">
+            {completedTasks.length > 0 ? (
+              <div className="space-y-3">
+                {completedTasks.slice(0, 3).map((task) => (
+                  <TaskCard key={task.id} task={task} navigate={navigate} />
+                ))}
+                {completedTasks.length > 3 && (
+                  <div className="text-center">
+                    <Button 
+                      variant="ghost"
+                      className="text-teal"
+                      onClick={() => navigate('/my-jobs')}>
+                      View All ({completedTasks.length}) Completed Tasks
+                    </Button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <EmptyStateCard message="No completed tasks yet." />
+            )}
+          </TabsContent>
+        </Tabs>
         
         {/* Active Jobs Section */}
         <h2 className="text-xl font-semibold text-teal-dark mb-3">Active Jobs</h2>
@@ -251,6 +355,75 @@ const Dashboard = () => {
       
       <BottomNav currentPath={location.pathname} />
     </div>
+  );
+};
+
+// Component to display task card
+const TaskCard = ({ task, navigate }) => {
+  return (
+    <Card key={task.id} className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow">
+      <CardContent className="p-4">
+        <div className="flex justify-between items-start mb-2">
+          <div>
+            <h3 className="font-medium text-teal-dark">{task.title}</h3>
+            <p className="text-sm text-gray-600 mb-2">
+              Due: {format(new Date(task.due_date), 'dd MMM yyyy')}
+            </p>
+          </div>
+          <Badge className={
+            task.status === 'open' 
+              ? 'bg-green-100 text-green-800 hover:bg-green-100' 
+              : task.status === 'assigned' 
+              ? 'bg-blue-100 text-blue-800 hover:bg-blue-100'
+              : 'bg-gray-100 text-gray-800 hover:bg-gray-100'
+          }>
+            {task.status === 'open' ? 'Open' : task.status === 'assigned' ? 'In Progress' : 'Completed'}
+          </Badge>
+        </div>
+        
+        <div className="flex items-center justify-between mt-2">
+          <div className="flex items-center text-gray-600 text-sm">
+            <Clock size={14} className="mr-1" />
+            <span>{task.offer_count || 0} offers</span>
+          </div>
+          
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => navigate(`/tasks/${task.id}/offers`)}
+            className="text-xs">
+            View Offers
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+// Component for empty tasks state
+const EmptyTasksCard = ({ navigate }) => {
+  return (
+    <Card className="bg-white p-6 text-center">
+      <CardContent className="p-0">
+        <p className="text-gray-600 mb-4">You haven't posted any tasks yet. Create one to get started!</p>
+        <Button 
+          onClick={() => navigate("/post-task")}
+          className="bg-teal hover:bg-teal-dark text-white">
+          Post a New Task
+        </Button>
+      </CardContent>
+    </Card>
+  );
+};
+
+// Component for empty state messages in tabs
+const EmptyStateCard = ({ message }) => {
+  return (
+    <Card className="bg-white p-6 text-center">
+      <CardContent className="p-0">
+        <p className="text-gray-600">{message}</p>
+      </CardContent>
+    </Card>
   );
 };
 
