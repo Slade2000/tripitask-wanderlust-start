@@ -56,62 +56,26 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
     console.log("Provider IDs found:", providerIds);
 
     // Fetch provider profiles separately if there are any provider IDs
-    let providerProfiles = {};
+    let providerProfiles: Record<string, any> = {};
     
     if (providerIds.length > 0) {
-      // Using a different approach to get profiles from the 'users' table
-      // This assumes provider_id is a user ID that's in the auth.users table
-      const { data: usersData, error: usersError } = await supabase
-        .from('users')
+      // Try to get profiles from the profiles table
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
         .select('id, full_name, avatar_url')
         .in('id', providerIds);
       
-      if (usersError) {
-        console.error("Error fetching users data:", usersError);
-        // Try profiles table as fallback
-        const { data: profilesData, error: profilesError } = await supabase
-          .from('profiles')
-          .select('id, full_name, avatar_url')
-          .in('id', providerIds);
-  
-        if (profilesError) {
-          console.error("Error fetching provider profiles:", profilesError);
-        } else if (profilesData) {
-          // Create a map of profiles by ID for easy lookup
-          providerProfiles = profilesData.reduce((acc, profile) => {
-            acc[profile.id] = profile;
-            return acc;
-          }, {});
-          console.log("Provider profiles fetched from profiles table:", profilesData.length);
-        }
-      } else if (usersData) {
-        // Create a map of users by ID for easy lookup
-        providerProfiles = usersData.reduce((acc, user) => {
-          acc[user.id] = user;
+      if (profilesError) {
+        console.error("Error fetching provider profiles:", profilesError);
+      } else if (profilesData && profilesData.length > 0) {
+        // Create a map of profiles by ID for easy lookup
+        providerProfiles = profilesData.reduce((acc, profile) => {
+          acc[profile.id] = profile;
           return acc;
-        }, {});
-        console.log("Provider profiles fetched from users table:", usersData.length);
-      }
-      
-      // If we still don't have provider profiles, try another approach with the auth schema
-      if (Object.keys(providerProfiles).length === 0) {
-        try {
-          // Try to get user data directly using RPC or auth schema if available
-          const { data: authUsersData, error: authUsersError } = await supabase
-            .rpc('get_users_by_ids', { user_ids: providerIds });
-            
-          if (authUsersError) {
-            console.error("Error fetching auth users data:", authUsersError);
-          } else if (authUsersData) {
-            providerProfiles = authUsersData.reduce((acc, user) => {
-              acc[user.id] = user;
-              return acc;
-            }, {});
-            console.log("Provider profiles fetched from rpc:", authUsersData.length);
-          }
-        } catch (rpcError) {
-          console.error("RPC error or function not available:", rpcError);
-        }
+        }, {} as Record<string, any>);
+        console.log("Provider profiles fetched:", profilesData.length);
+      } else {
+        console.log("No provider profiles found in profiles table");
       }
     }
 
@@ -121,7 +85,6 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
       console.log(`Processing offer ${offer.id}, provider:`, providerData);
       
       const providerName = providerData?.full_name || 
-                           providerData?.name || 
                            `Provider #${offer.provider_id.substring(0, 8)}`;
       
       return {
