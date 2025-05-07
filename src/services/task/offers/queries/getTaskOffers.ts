@@ -33,10 +33,14 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
 
     console.log("Task exists:", taskData);
 
-    // First, get all offers for the task
+    // Fetch offers with joined profile data in a single query
+    // This performs the join on the server side for better performance
     const { data: offersData, error: offersError } = await supabase
       .from('offers')
-      .select('*')
+      .select(`
+        *,
+        profiles:provider_id(id, full_name, avatar_url)
+      `)
       .eq('task_id', taskId);
 
     if (offersError) {
@@ -44,41 +48,17 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
       throw new Error(`Failed to fetch offers: ${offersError.message}`);
     }
 
-    console.log("Raw offers data:", offersData);
+    console.log("Raw offers data with provider info:", offersData);
 
     if (!offersData || offersData.length === 0) {
       console.log("No offers found for task:", taskId);
       return [];
     }
 
-    // Extract all provider IDs from the offers
-    const providerIds = offersData.map(offer => offer.provider_id).filter(Boolean);
-    console.log("Provider IDs found:", providerIds);
-
-    // Fetch provider profiles separately if there are any provider IDs
-    let providerProfiles = {};
-    
-    if (providerIds.length > 0) {
-      const { data: profilesData, error: profilesError } = await supabase
-        .from('profiles')
-        .select('id, full_name, avatar_url')
-        .in('id', providerIds);
-
-      if (profilesError) {
-        console.error("Error fetching provider profiles:", profilesError);
-      } else if (profilesData) {
-        // Create a map of profiles by ID for easy lookup
-        providerProfiles = profilesData.reduce((acc, profile) => {
-          acc[profile.id] = profile;
-          return acc;
-        }, {});
-        console.log("Provider profiles fetched:", profilesData.length);
-      }
-    }
-
     // Transform offers with provider data
     const offers: Offer[] = offersData.map(offer => {
-      const providerData = providerProfiles[offer.provider_id] || null;
+      // The provider data is directly available from the joined query
+      const providerData = offer.profiles;
       console.log(`Processing offer ${offer.id}, provider:`, providerData);
       
       return {
