@@ -77,11 +77,11 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
             const normalizedId = profile.id.toLowerCase();
             acc[normalizedId] = {
               id: profile.id,
-              // Use full_name or default to shortened id
-              name: profile.full_name || `Provider ${profile.id.substring(0, 8)}`,
+              // Just use full_name without any prefix
+              name: profile.full_name || '', // Don't add any prefix here
               avatar_url: profile.avatar_url || '',
             };
-            console.log(`Added profile to map: ${normalizedId} = ${profile.full_name || 'unnamed'}`);
+            console.log(`Added profile to map: ${normalizedId} = ${profile.full_name || 'no name found'}`);
             return acc;
           }, {} as Record<string, any>);
           
@@ -108,7 +108,7 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
       // Create the provider object with actual data or fallbacks
       const provider = {
         id: offer.provider_id,
-        name: providerData?.name || `Provider ${offer.provider_id.substring(0, 8)}`,
+        name: providerData?.name || '', // Just use the name as-is, no prefix
         avatar_url: providerData?.avatar_url || '',
         rating: 4.5, // Placeholder rating
         success_rate: "95%" // Placeholder success rate
