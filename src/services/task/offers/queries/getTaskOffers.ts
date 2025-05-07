@@ -33,84 +33,38 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
 
     console.log("Task exists:", taskData);
 
-    // First, get all offers for the task
-    const { data: offersData, error: offersError } = await supabase
+    // Use a direct join with the profiles table to get provider information in one query
+    const { data: offersWithProfiles, error: joinError } = await supabase
       .from('offers')
-      .select('*')
+      .select(`
+        *,
+        provider:profiles(id, full_name, avatar_url)
+      `)
       .eq('task_id', taskId);
 
-    if (offersError) {
-      console.error("Error fetching offers:", offersError);
-      throw new Error(`Failed to fetch offers: ${offersError.message}`);
+    if (joinError) {
+      console.error("Error fetching offers with profiles:", joinError);
+      throw new Error(`Failed to fetch offers with profiles: ${joinError.message}`);
     }
 
-    console.log("Raw offers data:", offersData);
+    console.log("Raw offers with profiles data:", offersWithProfiles);
 
-    if (!offersData || offersData.length === 0) {
+    if (!offersWithProfiles || offersWithProfiles.length === 0) {
       console.log("No offers found for task:", taskId);
       return [];
     }
 
-    // Extract all provider IDs from the offers
-    const providerIds = offersData.map(offer => offer.provider_id).filter(Boolean);
-    console.log("Provider IDs found:", providerIds);
+    // Transform the offers to match our expected Offer type
+    const offers: Offer[] = offersWithProfiles.map(offer => {
+      // Extract provider data from the joined profiles
+      const providerProfile = offer.provider?.[0] || null;
+      console.log(`Provider profile for offer ${offer.id}:`, providerProfile);
 
-    // Fetch provider profiles separately if there are any provider IDs
-    let providerProfiles: Record<string, any> = {};
-    
-    if (providerIds.length > 0) {
-      try {
-        console.log("Fetching profiles for provider IDs:", providerIds);
-        
-        // Try to get profiles from the profiles table
-        const { data: profilesData, error: profilesError } = await supabase
-          .from('profiles')
-          .select('id, full_name, avatar_url')
-          .in('id', providerIds);
-        
-        if (profilesError) {
-          console.error("Error fetching provider profiles:", profilesError);
-        } else if (profilesData && profilesData.length > 0) {
-          console.log("Provider profiles fetched successfully:", profilesData);
-          
-          // Create a normalized map of profiles by ID for easy lookup (case-insensitive)
-          providerProfiles = profilesData.reduce((acc, profile) => {
-            // Store with lowercase key for case-insensitive lookup
-            const normalizedId = profile.id.toLowerCase();
-            acc[normalizedId] = {
-              id: profile.id,
-              name: profile.full_name || '', // Use full_name directly
-              avatar_url: profile.avatar_url || '',
-            };
-            console.log(`Added profile to map: ${normalizedId} = ${profile.full_name || 'no name found'}`);
-            return acc;
-          }, {} as Record<string, any>);
-          
-          console.log("Provider profiles map created:", providerProfiles);
-        } else {
-          console.log("No provider profiles found in profiles table");
-        }
-      } catch (profileError) {
-        console.error("Error in profile fetching:", profileError);
-      }
-    }
-
-    // Transform offers with provider data
-    const offers: Offer[] = offersData.map(offer => {
-      // Make the provider ID lookup case insensitive
-      const providerId = offer.provider_id ? offer.provider_id.toLowerCase() : '';
-      
-      // Look up the provider data from our map
-      const providerData = providerId ? providerProfiles[providerId] : null;
-      
-      console.log(`Processing offer ${offer.id}, provider ID: ${offer.provider_id}`);
-      console.log(`Provider data found:`, providerData);
-      
       // Create the provider object with actual data or fallbacks
       const provider = {
         id: offer.provider_id,
-        name: providerData?.name || '', // Don't add any prefix here, just use name as-is
-        avatar_url: providerData?.avatar_url || '',
+        name: providerProfile?.full_name || '', // Use full_name directly
+        avatar_url: providerProfile?.avatar_url || '',
         rating: 4.5, // Placeholder rating
         success_rate: "95%" // Placeholder success rate
       };

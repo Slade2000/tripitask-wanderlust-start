@@ -1,4 +1,3 @@
-
 import { CalendarClock, CheckCircle, DollarSign, Star } from "lucide-react";
 import { Offer } from "@/types/offer";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -32,8 +31,7 @@ export default function OfferCard({
     success_rate: "95%"
   };
   
-  // Use the name directly from the provider object
-  // If it's empty, use a clean fallback without the ID
+  // Use the full_name from profiles table as the provider name
   const providerName = provider.name || "Unknown Provider";
   
   console.log("Final provider name being displayed:", providerName);
