@@ -10,7 +10,6 @@ import {
   CreditCard,
   Star,
   User,
-  Search,
   ArrowRight,
 } from "lucide-react";
 import { format } from "date-fns";
@@ -93,8 +92,8 @@ const Dashboard = () => {
               <Skeleton key={i} className="h-28 rounded-lg" />
             ))}
           </div>
-          <div className="grid grid-cols-3 gap-3">
-            {[1, 2, 3].map((i) => (
+          <div className="grid grid-cols-2 gap-3">
+            {[1, 2].map((i) => (
               <Skeleton key={i} className="h-14 rounded-lg" />
             ))}
           </div>
@@ -231,7 +230,7 @@ const Dashboard = () => {
         )}
         
         {/* Quick Access Buttons */}
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 gap-3">
           <Button 
             variant="outline" 
             className="flex flex-col items-center justify-center h-auto py-4"
@@ -246,14 +245,6 @@ const Dashboard = () => {
             onClick={() => navigate('/account')}>
             <User className="h-5 w-5 mb-1" />
             <span className="text-xs">My Profile</span>
-          </Button>
-          
-          <Button 
-            variant="outline"
-            className="flex flex-col items-center justify-center h-auto py-4"
-            onClick={() => navigate('/find-work')}>
-            <Search className="h-5 w-5 mb-1" />
-            <span className="text-xs">Find New Tasks</span>
           </Button>
         </div>
       </div>
