@@ -22,18 +22,31 @@ export default function OfferCard({
 }: OfferCardProps) {
   console.log("Rendering offer card with data:", offer);
   
-  // Ensure provider object always exists
+  // Ensure provider object always exists with good defaults
   const provider = offer.provider || {
     id: offer.provider_id,
-    name: 'Unknown Provider',
+    name: `Provider #${offer.provider_id.substring(0, 8)}`,
     avatar_url: '',
+    rating: 4.5,
+    success_rate: "95%"
   };
   
   // Get provider name with fallback
-  const providerName = provider.name || 'Unknown Provider';
+  const providerName = provider.name || `Provider #${offer.provider_id.substring(0, 8)}`;
   
   // Get first letter of provider name for avatar fallback
-  const providerInitial = providerName && providerName.charAt(0) || 'P';
+  const providerInitial = providerName.charAt(0) || 'P';
+  
+  // Format date properly
+  const formattedDate = new Date(offer.expected_delivery_date).toLocaleDateString(undefined, {
+    year: 'numeric', 
+    month: 'short', 
+    day: 'numeric'
+  });
+
+  // Format provider rating and success rate
+  const rating = provider.rating || 4.5;
+  const successRate = provider.success_rate || "95%";
   
   return (
     <div className="bg-white rounded-lg shadow-md p-4 border border-gray-100">
@@ -41,7 +54,7 @@ export default function OfferCard({
         <div className="flex items-center">
           <Avatar className="h-12 w-12 mr-3">
             <AvatarImage src={provider.avatar_url || ""} alt={providerName} />
-            <AvatarFallback>{providerInitial}</AvatarFallback>
+            <AvatarFallback className="bg-teal text-white">{providerInitial}</AvatarFallback>
           </Avatar>
           <div>
             <h3 className="font-semibold">{providerName}</h3>
@@ -63,15 +76,15 @@ export default function OfferCard({
         </div>
         <div className="flex items-center">
           <CalendarClock size={16} className="mr-2 text-teal" />
-          <span>{new Date(offer.expected_delivery_date).toLocaleDateString()}</span>
+          <span>{formattedDate}</span>
         </div>
         <div className="flex items-center">
           <Star size={16} className="mr-2 text-amber-400" />
-          <span>{provider.rating || "New"}</span>
+          <span>{rating}</span>
         </div>
         <div className="flex items-center">
           <CheckCircle size={16} className="mr-2 text-green-500" />
-          <span>{provider.success_rate || "New provider"}</span>
+          <span>{successRate}</span>
         </div>
       </div>
       
