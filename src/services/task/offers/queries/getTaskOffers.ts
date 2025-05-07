@@ -70,10 +70,12 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
       } else if (profilesData && profilesData.length > 0) {
         // Create a map of profiles by ID for easy lookup
         providerProfiles = profilesData.reduce((acc, profile) => {
-          acc[profile.id] = profile;
+          acc[profile.id.toLowerCase()] = profile;
+          console.log(`Added profile to map: ${profile.id.toLowerCase()} = ${profile.full_name}`);
           return acc;
         }, {} as Record<string, any>);
         console.log("Provider profiles fetched:", profilesData.length);
+        console.log("Provider profiles map:", providerProfiles);
       } else {
         console.log("No provider profiles found in profiles table");
       }
@@ -81,11 +83,23 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
 
     // Transform offers with provider data and add dummy data if provider not found
     const offers: Offer[] = offersData.map(offer => {
-      const providerData = providerProfiles[offer.provider_id] || null;
-      console.log(`Processing offer ${offer.id}, provider:`, providerData);
+      // Make the lookup case insensitive
+      const providerId = offer.provider_id ? offer.provider_id.toLowerCase() : '';
+      const providerData = providerId ? providerProfiles[providerId] : null;
       
-      const providerName = providerData?.full_name || 
-                           `Provider #${offer.provider_id.substring(0, 8)}`;
+      console.log(`Processing offer ${offer.id}, provider ID: ${offer.provider_id}`);
+      console.log(`Looking up provider with ID (lowercase): ${providerId}`);
+      console.log(`Provider data found:`, providerData);
+      
+      let providerName;
+      
+      if (providerData && providerData.full_name) {
+        providerName = providerData.full_name;
+        console.log(`Using profile full_name: ${providerName}`);
+      } else {
+        providerName = `Provider #${offer.provider_id.substring(0, 8)}`;
+        console.log(`Using fallback provider name: ${providerName}`);
+      }
       
       return {
         id: offer.id,

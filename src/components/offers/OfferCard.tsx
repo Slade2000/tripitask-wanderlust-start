@@ -31,8 +31,10 @@ export default function OfferCard({
     success_rate: "95%"
   };
   
-  // Get provider name with fallback
-  const providerName = provider.name || `Provider #${offer.provider_id.substring(0, 8)}`;
+  // Get provider name with proper fallback handling
+  const providerName = provider.name && provider.name.startsWith("Provider #") 
+    ? `Service Provider ${provider.name.substring(10)}` 
+    : provider.name || `Service Provider`;
   
   // Get first letter of provider name for avatar fallback
   const providerInitial = providerName.charAt(0) || 'P';
