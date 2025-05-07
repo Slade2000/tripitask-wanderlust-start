@@ -126,7 +126,8 @@ export const useTaskFilter = () => {
     },
     // Enable the query as soon as we have location data
     enabled: !!currentUserLocation,
-    staleTime: 30000, // 30 seconds before refetch
+    staleTime: 0, // Changed from 30000 to 0 to always fetch fresh data
+    refetchOnWindowFocus: true, // Added to refetch when window gets focus
   });
 
   const toggleFilters = () => setFilterOpen(!filterOpen);

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { format } from "date-fns";
@@ -23,6 +22,8 @@ const TaskDetail: React.FC = () => {
     queryKey: ['task', taskId],
     queryFn: () => getTaskById(taskId as string),
     enabled: !!taskId,
+    staleTime: 0, // Changed from default to 0 for fresh data
+    refetchOnWindowFocus: true, // Added to refetch when window gets focus
   });
 
   if (isLoading) {
