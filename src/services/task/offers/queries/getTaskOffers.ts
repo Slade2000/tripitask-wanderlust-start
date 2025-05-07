@@ -34,6 +34,7 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
     console.log("Task exists:", taskData);
 
     // Fetch offers with provider data in a single query
+    // Fix: Use profiles(id, full_name, avatar_url) instead of provider_id(id, full_name, avatar_url)
     const { data: offersData, error: offersError } = await supabase
       .from('offers')
       .select(`
