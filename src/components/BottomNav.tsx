@@ -1,6 +1,6 @@
 
 import { Link } from "react-router-dom";
-import { HelpCircle, Briefcase, List, MessageSquare, User } from "lucide-react";
+import { HelpCircle, Briefcase, LayoutDashboard, MessageSquare, User } from "lucide-react";
 
 interface NavItemProps {
   icon: React.ReactNode;
@@ -54,10 +54,10 @@ const BottomNav = ({ currentPath }: BottomNavProps) => {
           active={currentPath === "/find-work"}
         />
         <NavItem
-          icon={<List size={24} />}
-          label="My tasks"
-          to="/my-jobs"
-          active={currentPath === "/my-jobs"}
+          icon={<LayoutDashboard size={24} />}
+          label="Dashboard"
+          to="/dashboard"
+          active={currentPath === "/dashboard"}
         />
         <NavItem
           icon={<MessageSquare size={24} />}
