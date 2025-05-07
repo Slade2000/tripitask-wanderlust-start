@@ -33,12 +33,12 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
 
     console.log("Task exists:", taskData);
 
-    // Fix the join syntax by using a proper join instead of relationship syntax
+    // Fix the join syntax by explicitly specifying the foreign key relationship
     const { data: offersData, error: offersError } = await supabase
       .from('offers')
       .select(`
         *,
-        profiles(id, full_name, avatar_url)
+        profiles:provider_id(id, full_name, avatar_url)
       `)
       .eq('task_id', taskId);
 
