@@ -20,13 +20,21 @@ interface UserMetadata {
   full_name?: string;
 }
 
+interface SignInResult {
+  error?: Error;
+  data?: {
+    user: User | null;
+    session: Session | null;
+  };
+}
+
 interface AuthContextProps {
   session: Session | null;
   user: User | null;
   profile: Profile | null;
   isLoading: boolean;
   signUp: (email: string, password: string, metadata?: UserMetadata) => Promise<void>;
-  signIn: (email: string, password: string) => Promise<void>;
+  signIn: (email: string, password: string) => Promise<SignInResult>;
   signOut: () => Promise<void>;
   signInWithProvider: (provider: Provider) => Promise<void>;
 }
@@ -41,37 +49,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const setupAuth = async () => {
-      const { data } = await supabase.auth.getSession();
-      setSession(data.session);
-      setUser(data.session?.user || null);
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, newSession) => {
+        console.log("Auth state changed:", event, newSession?.user?.id);
+        
+        // Only update state synchronously to avoid deadlocks
+        setSession(newSession);
+        setUser(newSession?.user ?? null);
+        
+        // If we have a session, fetch profile data asynchronously
+        if (newSession?.user) {
+          setTimeout(() => {
+            fetchProfile(newSession.user.id);
+          }, 0);
+        }
+      }
+    );
+
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
+      setSession(initialSession);
+      setUser(initialSession?.user ?? null);
       
-      if (data.session?.user) {
-        await fetchProfile(data.session.user.id);
+      if (initialSession?.user) {
+        fetchProfile(initialSession.user.id);
       }
       
       setIsLoading(false);
-      
-      const { data: authListener } = supabase.auth.onAuthStateChange(
-        async (event, session) => {
-          console.log("Auth state changed:", event, session?.user?.id);
-          setSession(session);
-          setUser(session?.user || null);
-          
-          if (session?.user) {
-            await fetchProfile(session.user.id);
-          } else {
-            setProfile(null);
-          }
-        }
-      );
+    }).catch((err) => {
+      console.error('Error getting session:', err);
+      setIsLoading(false);
+    });
 
-      return () => {
-        authListener.subscription.unsubscribe();
-      };
+    return () => {
+      subscription.unsubscribe();
     };
-
-    setupAuth();
   }, []);
 
   const fetchProfile = async (userId: string) => {
@@ -159,7 +172,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (email: string, password: string): Promise<SignInResult> => {
     try {
       setIsLoading(true);
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -168,16 +181,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       if (error) {
-        throw error;
+        return { error };
       }
 
       if (data.user) {
+        // Don't navigate here - let the auth state change event handle it
         toast.success("Welcome back!");
-        navigate('/home');
+        return { data };
       }
+      
+      return { data };
     } catch (error: any) {
-      toast.error(error.message || 'Invalid login credentials');
       console.error('Sign in error:', error);
+      return { error };
     } finally {
       setIsLoading(false);
     }
@@ -212,6 +228,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (error) {
         throw error;
       }
+      
+      // Clear state after sign out
+      setSession(null);
+      setUser(null);
+      setProfile(null);
       
       navigate('/');
       toast.success("Successfully signed out");
