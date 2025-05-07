@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Pagination } from "@/components/ui/pagination";
 import { Search, Loader } from "lucide-react";
+import { SpatialRefSys } from '@/services/spatialReferenceService';
 
 export default function SpatialRefSystemsViewer() {
   const { 
@@ -21,7 +22,7 @@ export default function SpatialRefSystemsViewer() {
   } = useSpatialRefSystems({ pageSize: 10 });
   
   const [searchTerm, setSearchTerm] = useState('');
-  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searchResults, setSearchResults] = useState<SpatialRefSys[]>([]);
   const [isSearching, setIsSearching] = useState(false);
 
   const handleSearch = async () => {

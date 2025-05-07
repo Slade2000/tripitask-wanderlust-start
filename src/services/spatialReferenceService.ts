@@ -7,10 +7,10 @@ import { supabase } from "@/integrations/supabase/client";
  */
 export interface SpatialRefSys {
   srid: number;
-  auth_name: string;
-  auth_srid: number;
-  srtext: string;
-  proj4text: string;
+  auth_name: string | null;
+  auth_srid: number | null;
+  srtext: string | null;
+  proj4text: string | null;
 }
 
 /**

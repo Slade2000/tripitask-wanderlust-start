@@ -1,3 +1,4 @@
+
 export type Json =
   | string
   | number
@@ -224,6 +225,31 @@ export interface Database {
             referencedColumns: ["id"]
           }
         ]
+      }
+      // Add spatial_ref_sys table type definition
+      spatial_ref_sys: {
+        Row: {
+          srid: number
+          auth_name: string | null
+          auth_srid: number | null
+          srtext: string | null
+          proj4text: string | null
+        }
+        Insert: {
+          srid: number
+          auth_name?: string | null
+          auth_srid?: number | null
+          srtext?: string | null
+          proj4text?: string | null
+        }
+        Update: {
+          srid?: number
+          auth_name?: string | null
+          auth_srid?: number | null
+          srtext?: string | null
+          proj4text?: string | null
+        }
+        Relationships: []
       }
     }
     Views: {
