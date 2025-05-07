@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { TaskFilterParams } from "./types";
 import { calculateDistance } from "../location/distance";
@@ -112,9 +113,11 @@ export async function getAllAvailableTasks(filters: TaskFilterParams = {}) {
     }
     
     // Apply budget filter if provided
+    // Convert maxBudget to number and handle budget comparison properly
     if (filters.maxBudget) {
-      // Convert number to string for comparison if budget is stored as text
-      query = query.lte('budget', filters.maxBudget.toString());
+      console.log(`Filtering by max budget: ${filters.maxBudget} (type: ${typeof filters.maxBudget})`);
+      // We'll handle numeric comparison post-query since the budget might be stored as text in the database
+      // Rather than using .lte on the query directly
     }
     
     // Execute the query
@@ -128,6 +131,17 @@ export async function getAllAvailableTasks(filters: TaskFilterParams = {}) {
     console.log("Raw tasks data from database:", data);
     
     let filteredTasks = data || [];
+
+    // Apply budget filter after getting the data
+    if (filters.maxBudget) {
+      filteredTasks = filteredTasks.filter(task => {
+        // Parse the budget as number for proper comparison
+        const taskBudget = parseFloat(task.budget);
+        console.log(`Task ${task.id}: comparing budget ${taskBudget} <= ${filters.maxBudget}`);
+        return !isNaN(taskBudget) && taskBudget <= filters.maxBudget;
+      });
+      console.log(`After budget filter (max: ${filters.maxBudget}): ${filteredTasks.length} tasks remaining`);
+    }
     
     // Apply location filtering - both by coordinates and by name
     if (filters.locationName) {
