@@ -18,6 +18,7 @@ export interface TaskFilterParams {
   searchQuery?: string;
   categoryId?: string;
   distanceRadius?: number;
+  minBudget?: number;
   maxBudget?: number;
   locationName?: string;
   latitude?: number;

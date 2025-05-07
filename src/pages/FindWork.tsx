@@ -16,8 +16,10 @@ const FindWork = () => {
       setSelectedCategory,
       distanceRadius,
       setDistanceRadius,
-      budgetRange,
-      setBudgetRange,
+      minBudget,
+      setMinBudget,
+      maxBudget,
+      setMaxBudget,
       filterOpen,
       toggleFilters,
       clearFilters,
@@ -65,8 +67,10 @@ const FindWork = () => {
             setSelectedCategory={setSelectedCategory}
             distanceRadius={distanceRadius}
             setDistanceRadius={setDistanceRadius}
-            budgetRange={budgetRange}
-            setBudgetRange={setBudgetRange}
+            minBudget={minBudget}
+            setMinBudget={setMinBudget}
+            maxBudget={maxBudget}
+            setMaxBudget={setMaxBudget}
             currentUserLocation={currentUserLocation}
             setCurrentUserLocation={setCurrentUserLocation}
             futureLocation={futureLocation}

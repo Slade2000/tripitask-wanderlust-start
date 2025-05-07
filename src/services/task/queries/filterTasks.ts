@@ -11,8 +11,20 @@ export function applyTaskFilters(
 ): any[] {
   let filteredTasks = [...tasks];
   
-  // Apply budget filter if provided
-  if (filters.maxBudget) {
+  // Apply min budget filter if provided
+  if (filters.minBudget !== undefined) {
+    console.log(`Filtering by min budget: ${filters.minBudget}`);
+    filteredTasks = filteredTasks.filter(task => {
+      // Parse the budget as number for proper comparison
+      const taskBudget = parseFloat(task.budget);
+      console.log(`Task ${task.id}: comparing budget ${taskBudget} >= ${filters.minBudget}`);
+      return !isNaN(taskBudget) && taskBudget >= filters.minBudget;
+    });
+    console.log(`After min budget filter (min: ${filters.minBudget}): ${filteredTasks.length} tasks remaining`);
+  }
+  
+  // Apply max budget filter if provided
+  if (filters.maxBudget !== undefined) {
     console.log(`Filtering by max budget: ${filters.maxBudget}`);
     filteredTasks = filteredTasks.filter(task => {
       // Parse the budget as number for proper comparison
@@ -20,7 +32,7 @@ export function applyTaskFilters(
       console.log(`Task ${task.id}: comparing budget ${taskBudget} <= ${filters.maxBudget}`);
       return !isNaN(taskBudget) && taskBudget <= filters.maxBudget;
     });
-    console.log(`After budget filter (max: ${filters.maxBudget}): ${filteredTasks.length} tasks remaining`);
+    console.log(`After max budget filter (max: ${filters.maxBudget}): ${filteredTasks.length} tasks remaining`);
   }
   
   // Apply location filtering only if provided

@@ -17,7 +17,8 @@ export interface TaskFilterState {
   searchQuery: string;
   selectedCategory: string;
   distanceRadius: number[];
-  budgetRange: number[];
+  minBudget: string;
+  maxBudget: string;
   filterOpen: boolean;
 }
 
@@ -29,7 +30,8 @@ export const useTaskFilter = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [distanceRadius, setDistanceRadius] = useState([100]); // Default 100km
-  const [budgetRange, setBudgetRange] = useState([500]); // Default $500
+  const [minBudget, setMinBudget] = useState("");  // Empty string for no minimum
+  const [maxBudget, setMaxBudget] = useState("");  // Empty string for no maximum
   const [filterOpen, setFilterOpen] = useState(false);
   
   // Current location for filtering
@@ -96,7 +98,8 @@ export const useTaskFilter = () => {
     setSearchQuery("");
     setSelectedCategory("");
     setDistanceRadius([100]);
-    setBudgetRange([500]);
+    setMinBudget("");
+    setMaxBudget("");
     setFutureLocation({
       name: "",
       startDate: undefined,
@@ -109,18 +112,19 @@ export const useTaskFilter = () => {
 
   // Fetch available tasks
   const { data: tasks = [], isLoading: tasksLoading, error, refetch } = useQuery({
-    queryKey: ["availableTasks", searchQuery, selectedCategory, distanceRadius[0], budgetRange[0], applyLocationFilter ? currentUserLocation?.latitude : null, applyLocationFilter ? currentUserLocation?.longitude : null, futureLocation.name, user?.id],
+    queryKey: ["availableTasks", searchQuery, selectedCategory, distanceRadius[0], minBudget, maxBudget, applyLocationFilter ? currentUserLocation?.latitude : null, applyLocationFilter ? currentUserLocation?.longitude : null, futureLocation.name, user?.id],
     queryFn: async () => {
       try {
         console.log("Fetching tasks with filters:", {
           searchQuery,
           categoryId: selectedCategory !== "all" ? selectedCategory : undefined,
           distanceRadius: distanceRadius[0],
-          maxBudget: budgetRange[0],
+          minBudget: minBudget ? parseInt(minBudget) : undefined,
+          maxBudget: maxBudget ? parseInt(maxBudget) : undefined,
           locationName: applyLocationFilter ? currentUserLocation?.name : undefined,
           latitude: applyLocationFilter ? currentUserLocation?.latitude : undefined,
           longitude: applyLocationFilter ? currentUserLocation?.longitude : undefined,
-          userId: user?.id,  // Add current user ID to filter params
+          userId: user?.id,
         });
 
         // Add mock data if no location for testing only
@@ -132,7 +136,8 @@ export const useTaskFilter = () => {
           searchQuery,
           categoryId: selectedCategory !== "all" ? selectedCategory : undefined,
           distanceRadius: distanceRadius[0],
-          maxBudget: budgetRange[0],
+          minBudget: minBudget ? parseInt(minBudget) : undefined,
+          maxBudget: maxBudget ? parseInt(maxBudget) : undefined,
           ...(applyLocationFilter && currentUserLocation && {
             locationName: currentUserLocation.name,
             latitude: currentUserLocation.latitude,
@@ -161,11 +166,12 @@ export const useTaskFilter = () => {
         (searchQuery !== "" || 
          selectedCategory !== "" || 
          distanceRadius[0] !== 100 || 
-         budgetRange[0] !== 500 || 
+         minBudget !== "" || 
+         maxBudget !== "" || 
          futureLocation.name !== "")) {
       setApplyLocationFilter(true);
     }
-  }, [searchQuery, selectedCategory, distanceRadius, budgetRange, futureLocation]);
+  }, [searchQuery, selectedCategory, distanceRadius, minBudget, maxBudget, futureLocation]);
 
   const toggleFilters = () => setFilterOpen(!filterOpen);
 
@@ -177,8 +183,10 @@ export const useTaskFilter = () => {
       setSelectedCategory,
       distanceRadius,
       setDistanceRadius,
-      budgetRange,
-      setBudgetRange,
+      minBudget,
+      setMinBudget,
+      maxBudget,
+      setMaxBudget,
       filterOpen,
       toggleFilters,
       clearFilters,

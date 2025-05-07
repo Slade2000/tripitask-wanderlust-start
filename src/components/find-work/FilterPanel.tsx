@@ -1,10 +1,11 @@
+
 import React from "react";
 import { useLocationSearch } from "@/hooks/useLocationSearch";
 import { getLocationCoordinates } from "@/services/location";
 import LocationSearchInput from "@/components/location/LocationSearchInput";
 import CategorySelect from "./filters/CategorySelect";
 import DistanceSlider from "./filters/DistanceSlider";
-import BudgetSlider from "./filters/BudgetSlider";
+import BudgetFilter from "./filters/BudgetFilter";
 import FutureLocationPlanner from "./filters/FutureLocationPlanner";
 
 interface TaskLocation {
@@ -20,8 +21,10 @@ interface FilterPanelProps {
   setSelectedCategory: (category: string) => void;
   distanceRadius: number[];
   setDistanceRadius: (radius: number[]) => void;
-  budgetRange: number[];
-  setBudgetRange: (budget: number[]) => void;
+  minBudget: string;
+  setMinBudget: (value: string) => void;
+  maxBudget: string;
+  setMaxBudget: (value: string) => void;
   currentUserLocation: {
     name: string;
     latitude: number;
@@ -41,8 +44,10 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   setSelectedCategory,
   distanceRadius,
   setDistanceRadius,
-  budgetRange,
-  setBudgetRange,
+  minBudget,
+  setMinBudget,
+  maxBudget,
+  setMaxBudget,
   currentUserLocation,
   setCurrentUserLocation,
   futureLocation,
@@ -99,10 +104,12 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
         setDistanceRadius={setDistanceRadius} 
       />
       
-      {/* Budget range slider */}
-      <BudgetSlider 
-        budgetRange={budgetRange} 
-        setBudgetRange={setBudgetRange} 
+      {/* Budget filter with min/max inputs */}
+      <BudgetFilter 
+        minBudget={minBudget} 
+        setMinBudget={setMinBudget}
+        maxBudget={maxBudget}
+        setMaxBudget={setMaxBudget}
       />
       
       {/* Future location */}
