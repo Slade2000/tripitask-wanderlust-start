@@ -2,8 +2,8 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ChevronLeft } from "lucide-react";
-import { getTaskById } from "@/services/taskService";
-import { getTaskOffers } from "@/services/task/offers/getTaskOffers";
+import { getTaskById } from "@/services/task/queries/getTaskById";
+import { getTaskOffers } from "@/services/task/offers/queries/getTaskOffers";
 import { Offer } from "@/types/offer";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";

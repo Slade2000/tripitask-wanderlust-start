@@ -1,7 +1,3 @@
 
-// Export all offer-related functions
-export * from './getTaskOffers';
-export * from './getProviderOffers';
-export * from './countOffersForTask';
-export * from './submitOffer';
-export * from './updateOfferStatus';
+// Re-export all offer query functions from the queries directory
+export * from './queries';

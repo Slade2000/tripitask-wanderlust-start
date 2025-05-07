@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -11,8 +12,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { useToast } from "@/hooks/use-toast";
-import { getTaskById } from "@/services/taskService";
-import { submitOffer } from "@/services/task/offerQueries";
+import { getTaskById } from "@/services/task/queries/getTaskById";
+import { submitOffer } from "@/services/task/offers/queries/submitOffer";
 import { useAuth } from "@/contexts/AuthContext";
 
 const SubmitOffer = () => {
