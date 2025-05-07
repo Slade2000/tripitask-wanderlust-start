@@ -25,14 +25,14 @@ export default function OfferCard({
   // Ensure provider object always exists with good defaults
   const provider = offer.provider || {
     id: offer.provider_id,
-    name: `User ${offer.provider_id.substring(0, 8)}`,
+    name: offer.provider_id,
     avatar_url: '',
     rating: 4.5,
     success_rate: "95%"
   };
   
-  // Get provider name - use the actual name directly without transforming
-  const providerName = provider.name || `User ${offer.provider_id.substring(0, 8)}`;
+  // Get provider name - prioritize the provider's actual name without any prefix
+  const providerName = provider.name || offer.provider_id;
   
   // Get first letter of provider name for avatar fallback
   const providerInitial = providerName.charAt(0) || 'P';
