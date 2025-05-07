@@ -1,141 +1,44 @@
 
-import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { Search, Filter } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { useToast } from "@/hooks/use-toast";
 import BottomNav from "@/components/BottomNav";
 import FilterPanel from "@/components/find-work/FilterPanel";
 import TaskList from "@/components/find-work/TaskList";
-import { getAllAvailableTasks } from "@/services/taskService";
-
-interface TaskLocation {
-  name: string;
-  startDate: Date | undefined;
-  endDate: Date | undefined;
-  latitude?: number;
-  longitude?: number;
-}
+import SearchFilterBar from "@/components/find-work/SearchFilterBar";
+import { useTaskFilter } from "@/hooks/useTaskFilter";
 
 const FindWork = () => {
   const location = useLocation();
-  const { toast } = useToast();
-  
-  // Filter states
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("");
-  const [distanceRadius, setDistanceRadius] = useState([100]); // Changed from 25km to 100km
-  const [budgetRange, setBudgetRange] = useState([500]); // dollars
-  const [filterOpen, setFilterOpen] = useState(false);
-  
-  // Current location for filtering
-  const [currentUserLocation, setCurrentUserLocation] = useState<{
-    name: string;
-    latitude: number;
-    longitude: number;
-  } | null>(null);
-  
-  const [futureLocation, setFutureLocation] = useState<TaskLocation>({
-    name: "",
-    startDate: undefined,
-    endDate: undefined,
-  });
-  
-  // Set user's location from browser geolocation
-  useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          const coords = {
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-          };
-          
-          setCurrentUserLocation({
-            name: "Current Location",
-            ...coords,
-          });
-          
-          console.log("Set user location to:", coords);
-        },
-        (error) => {
-          console.error("Error getting geolocation:", error);
-          toast({
-            title: "Location Error",
-            description: "Could not get your location. Using default location.",
-            variant: "destructive",
-          });
-          // Set default location if geolocation fails
-          setCurrentUserLocation({
-            name: "Sydney",
-            latitude: -33.8688,
-            longitude: 151.2093,
-          });
-        }
-      );
-    } else {
-      // Set default location if geolocation not supported
-      setCurrentUserLocation({
-        name: "Sydney",
-        latitude: -33.8688,
-        longitude: 151.2093,
-      });
-    }
-  }, []);
-
-  // Fetch available tasks
-  const { data: tasks = [], isLoading: tasksLoading, error, refetch } = useQuery({
-    queryKey: ["availableTasks", searchQuery, selectedCategory, distanceRadius[0], budgetRange[0], currentUserLocation?.latitude, currentUserLocation?.longitude, futureLocation.name],
-    queryFn: async () => {
-      try {
-        console.log("Fetching tasks with filters:", {
-          searchQuery,
-          categoryId: selectedCategory !== "all" ? selectedCategory : undefined,
-          distanceRadius: distanceRadius[0],
-          maxBudget: budgetRange[0],
-          locationName: currentUserLocation?.name,
-          latitude: currentUserLocation?.latitude,
-          longitude: currentUserLocation?.longitude,
-        });
-
-        // Add mock data if no location for testing only
-        if (!currentUserLocation) {
-          console.log("No location available yet, using default");
-        }
-
-        const result = await getAllAvailableTasks({
-          searchQuery,
-          categoryId: selectedCategory !== "all" ? selectedCategory : undefined,
-          distanceRadius: distanceRadius[0],
-          maxBudget: budgetRange[0],
-          locationName: currentUserLocation?.name,
-          ...(currentUserLocation && {
-            latitude: currentUserLocation.latitude,
-            longitude: currentUserLocation.longitude,
-          }),
-        });
-        
-        console.log("Tasks fetched from database:", result);
-        return result;
-      } catch (err) {
-        console.error("Error fetching tasks:", err);
-        throw err;
-      }
+  const {
+    filters: {
+      searchQuery,
+      setSearchQuery,
+      selectedCategory,
+      setSelectedCategory,
+      distanceRadius,
+      setDistanceRadius,
+      budgetRange,
+      setBudgetRange,
+      filterOpen,
+      toggleFilters,
     },
-    // Enable the query as soon as we have location data
-    enabled: !!currentUserLocation,
-    staleTime: 30000, // 30 seconds before refetch
-  });
+    location: {
+      currentUserLocation,
+      setCurrentUserLocation,
+      futureLocation,
+      setFutureLocation,
+    },
+    tasks: {
+      data: tasks,
+      isLoading: tasksLoading,
+      error,
+      refetch,
+    }
+  } = useTaskFilter();
 
   // Manual refetch button handler
   const handleRefresh = () => {
     refetch();
   };
-
-  // Filter toggle
-  const toggleFilters = () => setFilterOpen(!filterOpen);
 
   return (
     <div className="min-h-screen bg-cream p-4 pb-20">
@@ -145,34 +48,13 @@ const FindWork = () => {
         </h1>
 
         {/* Search and filter bar */}
-        <div className="flex gap-2 mb-4">
-          <div className="relative flex-1">
-            <Input
-              type="text"
-              placeholder="Search tasks by keyword"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
-            <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-          </div>
-          <Button 
-            variant={filterOpen ? "default" : "outline"} 
-            size="icon" 
-            onClick={toggleFilters}
-            className="flex-shrink-0"
-          >
-            <Filter className="h-4 w-4" />
-          </Button>
-          <Button 
-            variant="outline"
-            size="sm"
-            onClick={handleRefresh}
-            className="flex-shrink-0 hidden md:flex"
-          >
-            Refresh
-          </Button>
-        </div>
+        <SearchFilterBar
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          filterOpen={filterOpen}
+          toggleFilters={toggleFilters}
+          onRefresh={handleRefresh}
+        />
 
         {/* Advanced filters panel */}
         {filterOpen && (

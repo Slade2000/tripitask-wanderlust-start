@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { TaskFilterParams } from "./types";
-import { calculateDistance } from "../locationService";
+import { calculateDistance } from "../location/distance";
 import { countOffersForTask } from "./offers/countOffersForTask";
 
 export async function getUserTasks(userId: string) {

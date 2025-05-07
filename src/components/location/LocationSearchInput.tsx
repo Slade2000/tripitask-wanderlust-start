@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Input } from "@/components/ui/input";
-import { PlacePrediction } from "@/services/locationService";
+import { PlacePrediction } from "@/services/location/types";
 import { Loader2 } from "lucide-react";
 
 interface LocationSearchInputProps {
