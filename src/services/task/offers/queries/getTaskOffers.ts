@@ -63,7 +63,7 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
         // Try to get profiles from the profiles table with exact fields we need
         const { data: profilesData, error: profilesError } = await supabase
           .from('profiles')
-          .select('id, full_name, avatar_url, display_name')
+          .select('id, full_name, avatar_url')
           .in('id', providerIds);
         
         if (profilesError) {
@@ -77,11 +77,11 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
             const normalizedId = profile.id.toLowerCase();
             acc[normalizedId] = {
               id: profile.id,
-              // Prioritize display_name over full_name
-              name: profile.display_name || profile.full_name || `User ${profile.id.substring(0, 8)}`,
+              // Use full_name or default to shortened id
+              name: profile.full_name || `Provider ${profile.id.substring(0, 8)}`,
               avatar_url: profile.avatar_url || '',
             };
-            console.log(`Added profile to map: ${normalizedId} = ${profile.display_name || profile.full_name || 'unnamed'}`);
+            console.log(`Added profile to map: ${normalizedId} = ${profile.full_name || 'unnamed'}`);
             return acc;
           }, {} as Record<string, any>);
           
@@ -108,7 +108,7 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
       // Create the provider object with actual data or fallbacks
       const provider = {
         id: offer.provider_id,
-        name: providerData?.name || `${offer.provider_id.substring(0, 8)}`,
+        name: providerData?.name || `Provider ${offer.provider_id.substring(0, 8)}`,
         avatar_url: providerData?.avatar_url || '',
         rating: 4.5, // Placeholder rating
         success_rate: "95%" // Placeholder success rate
