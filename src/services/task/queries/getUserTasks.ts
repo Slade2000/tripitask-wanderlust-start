@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { countOffersForTask } from "../offers/countOffersForTask";
+import { countOffersForTask } from "../offers/queries/countOffersForTask";
 
 export async function getUserTasks(userId: string) {
   try {
