@@ -33,13 +33,12 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
 
     console.log("Task exists:", taskData);
 
-    // Fetch offers with provider data using explicit join instead of relationship
-    // This fixes the "Could not find a relationship between 'offers' and 'provider_id'" error
+    // Fix the join syntax by using a proper join instead of relationship syntax
     const { data: offersData, error: offersError } = await supabase
       .from('offers')
       .select(`
         *,
-        profiles:profiles(id, full_name, avatar_url)
+        profiles(id, full_name, avatar_url)
       `)
       .eq('task_id', taskId);
 
