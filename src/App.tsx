@@ -24,6 +24,7 @@ import Account from "./pages/Account";
 import TaskOffers from "./pages/TaskOffers";
 import TaskDetail from "./pages/TaskDetail";
 import SubmitOffer from "./pages/SubmitOffer";
+import SpatialReferenceSystems from "./pages/SpatialReferenceSystems";
 
 const App = () => {
   // Create a new QueryClient instance inside the component
@@ -49,6 +50,7 @@ const App = () => {
                 <Route path="/tasks/:taskId/offers" element={<TaskOffers />} />
                 <Route path="/messages" element={<Messages />} />
                 <Route path="/account" element={<Account />} />
+                <Route path="/spatial-reference-systems" element={<SpatialReferenceSystems />} />
                 <Route path="/terms" element={<Terms />} />
                 <Route path="/privacy" element={<Privacy />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
