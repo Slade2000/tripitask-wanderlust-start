@@ -76,7 +76,11 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
     // Transform the offers with provider details included
     const offers: Offer[] = offersData.map((offer: OfferWithProvider) => {
       // Extract provider data from the joined table
-      const provider = offer.provider || {};
+      const provider = offer.provider || {
+        id: offer.provider_id,
+        full_name: undefined,
+        avatar_url: undefined
+      };
       
       return {
         id: offer.id,
