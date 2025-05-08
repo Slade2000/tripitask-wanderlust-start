@@ -33,10 +33,13 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
 
     console.log("Task exists:", taskData);
 
-    // Simply fetch all offers for the task without provider details
+    // Fetch offers with provider data using a JOIN query
     const { data: offersData, error: offersError } = await supabase
       .from('offers')
-      .select('*')
+      .select(`
+        *,
+        provider:profiles(id, full_name, avatar_url)
+      `)
       .eq('task_id', taskId);
 
     if (offersError) {
@@ -44,15 +47,18 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
       throw new Error(`Failed to fetch offers: ${offersError.message}`);
     }
 
-    console.log("Raw offers data:", offersData);
+    console.log("Raw offers data with provider:", offersData);
 
     if (!offersData || offersData.length === 0) {
       console.log("No offers found for task:", taskId);
       return [];
     }
 
-    // Transform the offers without provider details (these will be fetched by the component)
+    // Transform the offers with provider details included
     const offers: Offer[] = offersData.map(offer => {
+      // Extract provider data from the joined table
+      const provider = offer.provider || {};
+      
       return {
         id: offer.id,
         task_id: offer.task_id,
@@ -62,16 +68,17 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
         message: offer.message || undefined,
         status: offer.status as 'pending' | 'accepted' | 'rejected',
         created_at: offer.created_at,
-        // Provide minimal provider info, the component will fetch the rest
         provider: {
           id: offer.provider_id,
+          name: provider.full_name || undefined,
+          avatar_url: provider.avatar_url || undefined,
           rating: 4.5, // Placeholder rating
           success_rate: "95%" // Placeholder success rate
         }
       };
     });
 
-    console.log("Transformed offers (without provider details):", offers);
+    console.log("Transformed offers with provider details:", offers);
     return offers;
   } catch (error) {
     console.error("Error in getTaskOffers:", error);

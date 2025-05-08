@@ -25,16 +25,21 @@ export default function OfferCard({
   const [providerName, setProviderName] = useState<string>("Loading...");
   const [avatarUrl, setAvatarUrl] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   
   // Fetch provider data separately
   useEffect(() => {
     async function fetchProviderData() {
       if (!offer.provider_id) {
+        console.error("No provider_id in offer:", offer);
         setProviderName("Unknown Provider");
+        setIsLoading(false);
         return;
       }
       
       try {
+        console.log("Fetching provider data for ID:", offer.provider_id);
+        
         // Get provider profile directly
         const { data, error } = await supabase
           .from('profiles')
@@ -44,16 +49,22 @@ export default function OfferCard({
         
         if (error) {
           console.error("Error fetching provider:", error);
+          setError(`Failed to load provider: ${error.message}`);
           setProviderName("Unknown Provider");
         } else if (data) {
+          console.log("Provider data received:", data);
           setProviderName(data.full_name || "Unknown Provider");
           setAvatarUrl(data.avatar_url || "");
+          setError(null);
         } else {
+          console.log("No provider data found for ID:", offer.provider_id);
           setProviderName("Unknown Provider");
+          setError("Provider not found");
         }
       } catch (err) {
         console.error("Exception fetching provider:", err);
         setProviderName("Unknown Provider");
+        setError(`Error: ${err instanceof Error ? err.message : String(err)}`);
       } finally {
         setIsLoading(false);
       }
@@ -71,8 +82,6 @@ export default function OfferCard({
     success_rate: "95%"
   };
   
-  console.log("Final provider name being displayed:", providerName);
-  
   // Get first letter of provider name for avatar fallback
   const providerInitial = providerName.charAt(0) || 'P';
   
@@ -89,6 +98,11 @@ export default function OfferCard({
   
   return (
     <div className="bg-white rounded-lg shadow-md p-4 border border-gray-100">
+      {error && (
+        <div className="mb-2 p-2 bg-red-50 text-red-600 text-xs rounded">
+          {error}
+        </div>
+      )}
       <div className="flex items-start justify-between">
         <div className="flex items-center">
           <Avatar className="h-12 w-12 mr-3">
