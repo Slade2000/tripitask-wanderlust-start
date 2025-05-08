@@ -33,6 +33,25 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
 
     console.log("Task exists:", taskData);
 
+    // Define the type for the Supabase response
+    interface ProviderResponse {
+      id: string;
+      full_name?: string;
+      avatar_url?: string;
+    }
+    
+    interface OfferWithProvider {
+      id: string;
+      task_id: string;
+      provider_id: string;
+      amount: number;
+      expected_delivery_date: string;
+      message?: string;
+      status: string;
+      created_at: string;
+      provider: ProviderResponse | null;
+    }
+
     // Fetch offers with provider data using a JOIN query
     const { data: offersData, error: offersError } = await supabase
       .from('offers')
@@ -55,7 +74,7 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
     }
 
     // Transform the offers with provider details included
-    const offers: Offer[] = offersData.map(offer => {
+    const offers: Offer[] = offersData.map((offer: OfferWithProvider) => {
       // Extract provider data from the joined table
       const provider = offer.provider || {};
       
