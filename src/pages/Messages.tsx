@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import BottomNav from "@/components/BottomNav";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
@@ -10,9 +10,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { getMessageThreads } from "@/services/message";
 import { MessageThreadSummary } from "@/services/message/types";
+import { Loader2 } from "lucide-react";
 
 const Messages = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [threads, setThreads] = useState<MessageThreadSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
@@ -29,7 +31,9 @@ const Messages = () => {
     
     setLoading(true);
     try {
+      console.log("Loading message threads for user:", user.id);
       const threadData = await getMessageThreads(user.id);
+      console.log("Received thread data:", threadData);
       setThreads(threadData);
     } catch (error) {
       console.error("Error loading message threads:", error);
@@ -41,6 +45,17 @@ const Messages = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleThreadClick = (thread: MessageThreadSummary) => {
+    // Navigate to MessageDetail page with the task ID and other user ID
+    navigate(`/messages/${thread.task_id}`, {
+      state: {
+        taskId: thread.task_id,
+        taskOwnerId: thread.other_user_id,
+        taskTitle: thread.task_title
+      }
+    });
   };
   
   return (
@@ -59,13 +74,17 @@ const Messages = () => {
           <TabsContent value="all">
             {loading ? (
               <div className="text-center py-12">
-                <div className="animate-spin h-8 w-8 border-4 border-teal border-t-transparent rounded-full mx-auto mb-4"></div>
+                <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-teal" />
                 <p>Loading messages...</p>
               </div>
             ) : threads.length > 0 ? (
               <div className="space-y-4">
                 {threads.map((thread) => (
-                  <MessageThreadCard key={`${thread.task_id}-${thread.other_user_id}`} thread={thread} />
+                  <MessageThreadCard 
+                    key={`${thread.task_id}-${thread.other_user_id}`} 
+                    thread={thread} 
+                    onClick={() => handleThreadClick(thread)}
+                  />
                 ))}
               </div>
             ) : (
@@ -81,7 +100,7 @@ const Messages = () => {
           <TabsContent value="unread">
             {loading ? (
               <div className="text-center py-12">
-                <div className="animate-spin h-8 w-8 border-4 border-teal border-t-transparent rounded-full mx-auto mb-4"></div>
+                <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-teal" />
                 <p>Loading messages...</p>
               </div>
             ) : threads.filter(t => t.unread_count > 0).length > 0 ? (
@@ -89,7 +108,11 @@ const Messages = () => {
                 {threads
                   .filter(thread => thread.unread_count > 0)
                   .map((thread) => (
-                    <MessageThreadCard key={`${thread.task_id}-${thread.other_user_id}`} thread={thread} />
+                    <MessageThreadCard 
+                      key={`${thread.task_id}-${thread.other_user_id}`} 
+                      thread={thread}
+                      onClick={() => handleThreadClick(thread)}
+                    />
                   ))}
               </div>
             ) : (
@@ -107,14 +130,18 @@ const Messages = () => {
 
 interface MessageThreadCardProps {
   thread: MessageThreadSummary;
+  onClick: () => void;
 }
 
-function MessageThreadCard({ thread }: MessageThreadCardProps) {
+function MessageThreadCard({ thread, onClick }: MessageThreadCardProps) {
   const timeAgo = formatDistanceToNow(new Date(thread.last_message_date), { addSuffix: true });
   const userInitial = (thread.other_user_name || "U").charAt(0).toUpperCase();
   
   return (
-    <Card className="p-4 hover:shadow-md transition-shadow cursor-pointer">
+    <Card 
+      className="p-4 hover:shadow-md transition-shadow cursor-pointer"
+      onClick={onClick}
+    >
       <div className="flex items-center">
         <Avatar className="h-12 w-12 mr-4">
           <AvatarImage src={thread.other_user_avatar} alt={thread.other_user_name} />
