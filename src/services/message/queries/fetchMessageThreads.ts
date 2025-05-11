@@ -9,6 +9,9 @@ export async function fetchMessageThreads(userId: string): Promise<MessageThread
   try {
     console.log("Fetching message threads for user:", userId);
     
+    // Convert userId to lowercase once at the beginning for consistency
+    const userIdLower = String(userId).toLowerCase();
+    
     // First query: Get all unique conversations the user is involved in
     const { data: messageData, error: messageError } = await supabase
       .from('messages')
@@ -43,7 +46,6 @@ export async function fetchMessageThreads(userId: string): Promise<MessageThread
       // Ensure IDs are consistently treated as strings and lowercase for comparison
       const senderIdStr = String(message.sender_id).toLowerCase();
       const receiverIdStr = String(message.receiver_id).toLowerCase();
-      const userIdLower = String(userId).toLowerCase();
       
       const otherUserId = senderIdStr === userIdLower ? receiverIdStr : senderIdStr;
       otherUserIds.add(otherUserId);
@@ -107,7 +109,6 @@ export async function fetchMessageThreads(userId: string): Promise<MessageThread
       // Ensure consistent ID format - always lowercase strings
       const senderIdStr = String(message.sender_id).toLowerCase();
       const receiverIdStr = String(message.receiver_id).toLowerCase();
-      const userIdLower = String(userId).toLowerCase();
       
       const otherUserId = senderIdStr === userIdLower ? receiverIdStr : senderIdStr;
       
