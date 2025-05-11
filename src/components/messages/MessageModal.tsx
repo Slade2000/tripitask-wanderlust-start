@@ -26,6 +26,7 @@ export default function MessageModal({
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [tasksByIds, setTasksByIds] = useState<Record<string, string>>({});
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -41,8 +42,26 @@ export default function MessageModal({
     
     setLoading(true);
     try {
-      const fetchedMessages = await getMessages(taskId, user.id, taskOwnerId);
+      // Get all messages between the two users
+      const fetchedMessages = await getMessages(user.id, taskOwnerId);
       setMessages(fetchedMessages);
+      
+      // Set current task title in the tasksByIds map
+      setTasksByIds({
+        [taskId]: taskTitle
+      });
+      
+      // Create a map of all task IDs from the fetched messages
+      const tasksMap: Record<string, string> = {};
+      fetchedMessages.forEach(msg => {
+        if (msg.task_id && !tasksMap[msg.task_id] && msg.task_id !== taskId) {
+          tasksMap[msg.task_id] = `Task ${msg.task_id.slice(0, 8)}`;
+        }
+      });
+      
+      // Add the current task to the map
+      tasksMap[taskId] = taskTitle;
+      setTasksByIds(tasksMap);
     } catch (error) {
       console.error("Error loading messages:", error);
       toast({
@@ -113,7 +132,7 @@ export default function MessageModal({
         </DialogHeader>
         
         <div className="flex-1 flex flex-col overflow-hidden">
-          <MessageList messages={messages} loading={loading} />
+          <MessageList messages={messages} loading={loading} tasksByIds={tasksByIds} />
           <MessageInput onSendMessage={handleSendMessage} isSubmitting={sending} />
         </div>
       </DialogContent>

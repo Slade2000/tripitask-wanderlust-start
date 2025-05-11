@@ -13,6 +13,7 @@ export async function fetchMessageThreads(userId: string): Promise<MessageThread
     const { data, error } = await supabase
       .from('message_threads')
       .select('*')
+      .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
       .order('last_message_date', { ascending: false });
 
     if (error) {
@@ -31,21 +32,24 @@ export async function fetchMessageThreads(userId: string): Promise<MessageThread
     const userThreadsMap: Record<string, MessageThreadSummary> = {};
     
     data.forEach((thread: any) => {
-      const otherUserId = thread.other_user_id || "";
+      // Determine who the other user is based on sender/receiver IDs
+      const otherUserId = thread.sender_id === userId ? thread.receiver_id : thread.sender_id;
+      const otherUserName = thread.sender_id === userId ? thread.receiver_name : thread.sender_name;
+      const otherUserAvatar = thread.sender_id === userId ? thread.receiver_avatar : thread.sender_avatar;
       
       // If we haven't seen this user yet, or this is a more recent message
       if (!userThreadsMap[otherUserId] || 
           new Date(thread.last_message_date) > new Date(userThreadsMap[otherUserId].last_message_date)) {
         
         userThreadsMap[otherUserId] = {
-          task_id: thread.task_id,
+          task_id: thread.task_id, // Keep the most recent task_id for context
           task_title: thread.task_title || "Unknown Task",
           last_message_content: thread.last_message_content || "",
           last_message_date: thread.last_message_date || new Date().toISOString(),
           unread_count: thread.unread_count || 0,
           other_user_id: otherUserId,
-          other_user_name: thread.other_user_name || "Unknown User",
-          other_user_avatar: thread.other_user_avatar
+          other_user_name: otherUserName || "Unknown User",
+          other_user_avatar: otherUserAvatar
         };
       } else {
         // If we've seen this user, add to their unread count

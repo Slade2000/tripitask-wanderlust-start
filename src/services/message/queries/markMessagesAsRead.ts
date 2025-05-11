@@ -3,23 +3,30 @@ import { supabase } from "@/integrations/supabase/client";
 
 /**
  * Marks all messages from a specific sender to the current user as read
- * @param taskId The ID of the task associated with the messages
+ * @param taskId The ID of the task associated with the messages. If null, marks all messages from the sender as read.
  * @param userId The current user's ID
  * @param senderId The ID of the user who sent the messages
  */
-export async function markMessagesAsRead(taskId: string, userId: string, senderId: string) {
+export async function markMessagesAsRead(taskId: string | null, userId: string, senderId: string) {
   try {
-    console.log(`Marking messages as read - Task: ${taskId}, User: ${userId}, Sender: ${senderId}`);
+    console.log(`Marking messages as read - Task: ${taskId || 'all'}, User: ${userId}, Sender: ${senderId}`);
     
-    const { data, error } = await supabase
+    // Start building the query
+    let query = supabase
       .from('messages')
       .update({ read: true })
       .match({
-        task_id: taskId,
         receiver_id: userId,
         sender_id: senderId,
         read: false
       });
+      
+    // If taskId is provided, add it to the match criteria
+    if (taskId) {
+      query = query.eq('task_id', taskId);
+    }
+    
+    const { data, error } = await query;
       
     if (error) {
       console.error("Error marking messages as read:", error);

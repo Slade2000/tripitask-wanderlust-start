@@ -4,17 +4,16 @@ import { Message } from "../types";
 import { fetchMessageAttachments, fetchUserProfiles, transformMessagesToDto } from "../helpers/messageHelpers";
 
 /**
- * Fetches messages between two users for a specific task
+ * Fetches all messages between two users, regardless of task
  */
-export async function fetchMessages(taskId: string, userId: string, otherId: string): Promise<Message[]> {
+export async function fetchMessages(userId: string, otherId: string, taskId?: string): Promise<Message[]> {
   try {
-    console.log(`Fetching messages for task: ${taskId} between users: ${userId} and ${otherId}`);
+    console.log(`Fetching all messages between users: ${userId} and ${otherId}`);
     
-    // Get messages for the specific task between the two users
+    // Get all messages between the two users
     const { data: messagesData, error: messagesError } = await supabase
       .from('messages')
       .select()
-      .eq('task_id', taskId)
       .or(`sender_id.eq.${userId},sender_id.eq.${otherId}`)
       .or(`receiver_id.eq.${userId},receiver_id.eq.${otherId}`)
       .order('created_at', { ascending: true });
@@ -30,7 +29,7 @@ export async function fetchMessages(taskId: string, userId: string, otherId: str
       (message.sender_id === otherId && message.receiver_id === userId)
     ) || [];
 
-    console.log(`Found ${filteredMessages.length} messages between users ${userId} and ${otherId} for task ${taskId}`);
+    console.log(`Found ${filteredMessages.length} messages between users ${userId} and ${otherId}`);
 
     if (!filteredMessages || filteredMessages.length === 0) {
       console.log("No messages found");

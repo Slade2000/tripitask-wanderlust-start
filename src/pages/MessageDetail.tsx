@@ -10,19 +10,22 @@ export default function MessageDetail() {
   const navigate = useNavigate();
   
   // Get the data from location state
-  const taskOwnerId = location.state?.taskOwnerId;
+  const otherUserId = location.state?.taskOwnerId || location.state?.otherUserId;
   const otherUserName = location.state?.otherUserName;
   const initialTaskTitle = location.state?.taskTitle;
+  const taskId = location.state?.taskId;
   
   const {
     messages,
     loading,
     sending,
     taskTitle,
+    tasksByIds,
     handleSendMessage
   } = useMessageDetail({
-    taskOwnerId,
-    initialTaskTitle
+    otherUserId,
+    initialTaskTitle,
+    taskId
   });
   
   const goBack = () => {
@@ -38,7 +41,7 @@ export default function MessageDetail() {
       />
       
       <div className="flex-1 flex flex-col overflow-hidden">
-        <MessageList messages={messages} loading={loading} />
+        <MessageList messages={messages} loading={loading} tasksByIds={tasksByIds} />
         <MessageInput onSendMessage={handleSendMessage} isSubmitting={sending} />
       </div>
     </div>

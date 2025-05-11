@@ -54,11 +54,11 @@ const Messages = () => {
       taskTitle: thread.task_title
     });
     
-    // Navigate to MessageDetail page with task ID and other relevant info
-    navigate(`/messages/${thread.task_id}`, {
+    // Navigate to MessageDetail page with other user ID as the primary identifier
+    navigate(`/messages/${thread.other_user_id}`, {
       state: {
-        taskId: thread.task_id,
-        taskOwnerId: thread.other_user_id,
+        otherUserId: thread.other_user_id,
+        taskId: thread.task_id, // We still pass taskId for context
         taskTitle: thread.task_title,
         otherUserName: thread.other_user_name
       }

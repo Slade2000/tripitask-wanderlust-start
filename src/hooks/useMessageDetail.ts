@@ -8,27 +8,32 @@ import { Message } from "@/services/message/types";
 import { getTaskById } from "@/services/task/queries/getTaskById";
 
 interface UseMessageDetailProps {
-  taskOwnerId?: string;
+  otherUserId?: string;
   initialTaskTitle?: string;
+  taskId?: string;
 }
 
-export function useMessageDetail({ taskOwnerId: initialTaskOwnerId, initialTaskTitle }: UseMessageDetailProps = {}) {
-  const { taskId } = useParams<{ taskId: string }>();
+export function useMessageDetail({ otherUserId: initialOtherUserId, initialTaskTitle, taskId: propTaskId }: UseMessageDetailProps = {}) {
+  const { taskId: paramTaskId } = useParams<{ taskId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
+  
+  // Use taskId from props or from URL params
+  const taskId = propTaskId || paramTaskId;
   
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [taskTitle, setTaskTitle] = useState(initialTaskTitle || "");
-  const [taskOwnerId, setTaskOwnerId] = useState(initialTaskOwnerId || "");
+  const [otherUserId, setOtherUserId] = useState(initialOtherUserId || "");
+  const [tasksByIds, setTasksByIds] = useState<Record<string, string>>({});
   
   useEffect(() => {
-    console.log("useMessageDetail hook initializing with params:", { taskId, initialTaskOwnerId });
+    console.log("useMessageDetail hook initializing with params:", { taskId, initialOtherUserId });
     
-    if (!taskId || !initialTaskOwnerId) {
-      console.error("Missing taskId or taskOwnerId");
+    if (!initialOtherUserId) {
+      console.error("Missing otherUserId");
       toast({
         title: "Error",
         description: "Missing required information to load messages",
@@ -38,30 +43,51 @@ export function useMessageDetail({ taskOwnerId: initialTaskOwnerId, initialTaskT
       return;
     }
     
-    if (initialTaskOwnerId) {
-      setTaskOwnerId(initialTaskOwnerId);
+    if (initialOtherUserId) {
+      setOtherUserId(initialOtherUserId);
     }
     
     if (user) {
       loadMessages();
-      if (!initialTaskTitle) {
-        loadTaskDetails();
+      if (taskId) {
+        loadTaskDetails(taskId);
       }
     }
-  }, [user, taskId, initialTaskOwnerId]);
+  }, [user, taskId, initialOtherUserId]);
   
   const loadMessages = async () => {
-    if (!user || !taskId || !taskOwnerId) return;
+    if (!user || !otherUserId) return;
     
     setLoading(true);
     try {
-      console.log("Loading messages for task:", taskId, "between users:", user.id, "and", taskOwnerId);
-      const fetchedMessages = await getMessages(taskId, user.id, taskOwnerId);
+      console.log("Loading all messages between users:", user.id, "and", otherUserId);
+      const fetchedMessages = await getMessages(user.id, otherUserId);
       console.log("Fetched messages:", fetchedMessages.length);
       setMessages(fetchedMessages);
       
+      // Extract all unique task IDs from the messages
+      const uniqueTaskIds = Array.from(
+        new Set(fetchedMessages.map(message => message.task_id))
+      );
+      
+      // Load task titles for all tasks
+      const taskTitlesMap: Record<string, string> = {};
+      for (const tId of uniqueTaskIds) {
+        try {
+          const taskDetails = await getTaskById(tId);
+          if (taskDetails) {
+            taskTitlesMap[tId] = taskDetails.title;
+          }
+        } catch (err) {
+          console.error(`Error loading task ${tId}:`, err);
+        }
+      }
+      setTasksByIds(taskTitlesMap);
+      
       // Mark messages as read when they are loaded
-      await markMessagesAsRead(taskId, user.id, taskOwnerId);
+      if (otherUserId) {
+        await markMessagesAsReadFromUser(otherUserId);
+      }
     } catch (error) {
       console.error("Error loading messages:", error);
       toast({
@@ -74,9 +100,7 @@ export function useMessageDetail({ taskOwnerId: initialTaskOwnerId, initialTaskT
     }
   };
   
-  const loadTaskDetails = async () => {
-    if (!taskId) return;
-    
+  const loadTaskDetails = async (taskId: string) => {
     try {
       const task = await getTaskById(taskId);
       if (task) {
@@ -86,9 +110,20 @@ export function useMessageDetail({ taskOwnerId: initialTaskOwnerId, initialTaskT
       console.error("Error loading task details:", error);
     }
   };
+
+  const markMessagesAsReadFromUser = async (senderId: string) => {
+    if (!user) return;
+    
+    try {
+      // Mark all messages from sender as read (pass null for taskId to mark all)
+      await markMessagesAsRead(null, user.id, senderId);
+    } catch (error) {
+      console.error("Error marking messages as read:", error);
+    }
+  };
   
   const handleSendMessage = async (content: string, files: File[]) => {
-    if (!user || !taskId || !taskOwnerId) {
+    if (!user || !otherUserId) {
       toast({
         title: "Error",
         description: "Missing required information",
@@ -97,20 +132,32 @@ export function useMessageDetail({ taskOwnerId: initialTaskOwnerId, initialTaskT
       return;
     }
     
+    // Use the passed taskId or the first taskId from existing messages
+    const currentTaskId = taskId || messages[0]?.task_id;
+    
+    if (!currentTaskId) {
+      toast({
+        title: "Error",
+        description: "No task associated with this conversation",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setSending(true);
     try {
       console.log("Sending message:", {
-        task_id: taskId,
+        task_id: currentTaskId,
         sender_id: user.id,
-        receiver_id: taskOwnerId,
+        receiver_id: otherUserId,
         content
       });
       
       const result = await sendMessage(
         {
-          task_id: taskId,
+          task_id: currentTaskId,
           sender_id: user.id,
-          receiver_id: taskOwnerId,
+          receiver_id: otherUserId,
           content
         },
         files
@@ -142,7 +189,8 @@ export function useMessageDetail({ taskOwnerId: initialTaskOwnerId, initialTaskT
     loading,
     sending,
     taskTitle,
-    taskOwnerId,
+    otherUserId,
+    tasksByIds,
     handleSendMessage,
     loadMessages
   };

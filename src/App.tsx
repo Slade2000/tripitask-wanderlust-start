@@ -52,7 +52,9 @@ const App = () => {
                 <Route path="/tasks/:taskId/submit-offer" element={<SubmitOffer />} />
                 <Route path="/tasks/:taskId/offers" element={<TaskOffers />} />
                 <Route path="/messages" element={<Messages />} />
+                {/* Support both task-based and user-based message routes */}
                 <Route path="/messages/:taskId" element={<MessageDetail />} />
+                <Route path="/messages/user/:userId" element={<MessageDetail />} />
                 <Route path="/account" element={<Account />} />
                 <Route path="/spatial-reference-systems" element={<SpatialReferenceSystems />} />
                 <Route path="/terms" element={<Terms />} />
