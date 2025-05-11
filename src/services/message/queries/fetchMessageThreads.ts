@@ -12,7 +12,7 @@ export async function fetchMessageThreads(userId: string): Promise<MessageThread
     // Convert userId to lowercase for consistency
     const userIdLower = String(userId).toLowerCase();
     
-    // Query messages and join with profiles table correctly
+    // Use explicit joins instead of foreign key references
     const { data: threadsData, error } = await supabase
       .from('messages')
       .select(`
@@ -24,8 +24,7 @@ export async function fetchMessageThreads(userId: string): Promise<MessageThread
         created_at,
         read,
         tasks:task_id (title),
-        sender:sender_id(full_name, avatar_url),
-        receiver:receiver_id(full_name, avatar_url)
+        sender_profile:sender_id (*)
       `)
       .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
       .order('created_at', { ascending: false });
@@ -41,7 +40,33 @@ export async function fetchMessageThreads(userId: string): Promise<MessageThread
     }
 
     console.log(`Found ${threadsData.length} messages for user:`, userId);
-    console.log("Sample message data:", threadsData[0]);
+    console.log("Raw message data:", threadsData[0]);
+
+    // Get all unique user IDs from the messages (both senders and receivers)
+    const userIds = new Set<string>();
+    threadsData.forEach(message => {
+      userIds.add(String(message.sender_id));
+      userIds.add(String(message.receiver_id));
+    });
+    
+    // Fetch user profiles for all users in a single query
+    const { data: userProfiles, error: profilesError } = await supabase
+      .from('profiles')
+      .select('id, full_name, avatar_url')
+      .in('id', Array.from(userIds));
+
+    if (profilesError) {
+      console.error("Error fetching user profiles:", profilesError);
+      throw new Error(`Failed to fetch user profiles: ${profilesError.message}`);
+    }
+
+    // Create a map for quick profile lookup
+    const profilesMap: Record<string, any> = {};
+    userProfiles?.forEach(profile => {
+      profilesMap[String(profile.id)] = profile;
+    });
+
+    console.log("Fetched profiles for users:", Object.keys(profilesMap).length);
 
     // Group messages by conversation partner
     const conversationMap: Record<string, any[]> = {};
@@ -73,10 +98,8 @@ export async function fetchMessageThreads(userId: string): Promise<MessageThread
       // Determine if the other user is the sender or receiver of the latest message
       const isOtherUserSender = String(latestMessage.sender_id).toLowerCase() !== userIdLower;
       
-      // Get profile info based on whether other user is sender or receiver
-      const otherUserProfile = isOtherUserSender 
-        ? latestMessage.sender 
-        : latestMessage.receiver;
+      // Get profile info from our profiles map
+      const otherUserProfile = profilesMap[otherUserId];
       
       // Count unread messages from the other user
       const unreadCount = messages.filter(msg => 
