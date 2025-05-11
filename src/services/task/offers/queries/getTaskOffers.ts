@@ -64,48 +64,52 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
       
     if (providersError) {
       console.error("Error fetching profiles:", providersError);
-      // We'll continue without profile data and use fallbacks
+      throw new Error(`Failed to fetch provider profiles: ${providersError.message}`);
     }
+    
+    console.log("Providers data returned from DB:", providersData);
     
     // Create a map of provider data for quick lookup
     const providersMap: Record<string, any> = {};
     
-    // First add profile data - this is our primary source of names
     if (providersData && providersData.length > 0) {
-      console.log("Provider profiles data:", providersData);
+      console.log("Processing provider profile data. Count:", providersData.length);
+      
       providersData.forEach(provider => {
+        console.log(`Provider ${provider.id} profile data:`, provider);
         providersMap[provider.id] = {
-          ...provider
+          id: provider.id,
+          full_name: provider.full_name || "User", // Ensure there's a name
+          avatar_url: provider.avatar_url
         };
       });
     } else {
-      console.warn("No provider profiles found - provider names will be unknown");
+      console.warn("No provider profiles found in database");
     }
     
     // Try to get additional user details from auth.users if the RPC function exists
-    // This is optional - we'll still have provider names from the profiles table
-    interface UserDetails {
-      id: string;
-      email: string;
-      raw_user_meta_data?: {
-        full_name?: string;
-        name?: string;
-      };
-    }
-
     try {
+      interface UserDetails {
+        id: string;
+        email: string;
+        raw_user_meta_data?: {
+          full_name?: string;
+          name?: string;
+        };
+      }
+
       const { data: authUsersData, error: authUsersError } = await supabase.rpc('get_user_details', { 
         user_ids: providerIds
       });
         
       if (authUsersError) {
         console.error("Error fetching auth users:", authUsersError);
-        console.log("Continuing with profile data only - RPC function might not exist");
+        console.log("Continuing with profile data only");
         // Continue with profile data only
       } else if (authUsersData) {
         // Process auth user data if available
         const typedAuthUsersData = authUsersData as UserDetails[];
-        console.log("Auth user data:", typedAuthUsersData);
+        console.log("Auth user data received:", typedAuthUsersData);
         
         typedAuthUsersData.forEach((user) => {
           if (!user || !user.id) return;
@@ -113,18 +117,20 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
           const userData = user.raw_user_meta_data || {};
           const fullName = userData.full_name || userData.name;
           
+          console.log(`Auth user ${user.id} data:`, { fullName, email: user.email });
+          
+          // Only overwrite if we have some data in the providersMap already
           if (providersMap[user.id]) {
-            // Enhance existing entry
-            providersMap[user.id] = {
-              ...providersMap[user.id],
-              full_name: fullName || providersMap[user.id].full_name, // Prefer auth name if available
-              email: user.email
-            };
+            // If the profile didn't have a name, but auth does, use auth's name
+            if (!providersMap[user.id].full_name || providersMap[user.id].full_name === "User") {
+              providersMap[user.id].full_name = fullName || "User";
+            }
+            providersMap[user.id].email = user.email;
           } else {
-            // Create new entry
+            // Create new entry if we somehow have auth data but no profile data
             providersMap[user.id] = {
               id: user.id,
-              full_name: fullName || "Provider",
+              full_name: fullName || "User",
               email: user.email
             };
           }
@@ -135,28 +141,22 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
       console.log("RPC function get_user_details may not exist:", rpcError);
     }
 
-    console.log("Combined provider data map:", providersMap);
+    console.log("Final provider data map:", providersMap);
 
     // Transform the offers with provider details included
     const offers: Offer[] = offersData.map((offer: any) => {
       // Get provider data from the map, or use defaults
-      const providerData = providersMap[offer.provider_id] || null;
+      const providerData = providersMap[offer.provider_id] || { id: offer.provider_id, full_name: "User" };
       
-      // Make sure we have a name - prioritize full_name from profile or auth
-      let providerName = "Provider";
+      // Never use "Provider" as the name - use a better fallback
+      let providerName = providerData.full_name || "User";
       
-      if (providerData && providerData.full_name) {
-        providerName = providerData.full_name;
-      } else if (providerData && providerData.email) {
-        providerName = providerData.email;
+      // If we still don't have a name, try the email
+      if (!providerName || providerName === "User") {
+        providerName = providerData.email || `User ${offer.provider_id.substring(0, 4)}`;
       }
       
-      // Ensure we never show "Unknown Provider" if we have any identifying info
-      if (providerName === "Unknown Provider" && providerData && providerData.email) {
-        providerName = providerData.email;
-      }
-      
-      console.log(`Provider ${offer.provider_id} name: ${providerName}`);
+      console.log(`Final provider ${offer.provider_id} name: ${providerName}`);
       
       return {
         id: offer.id,
