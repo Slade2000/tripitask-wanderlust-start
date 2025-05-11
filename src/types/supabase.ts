@@ -1,4 +1,3 @@
-
 export type Json =
   | string
   | number
@@ -256,7 +255,19 @@ export interface Database {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_user_details: {
+        Args: { 
+          user_ids: string[] 
+        }
+        Returns: {
+          id: string;
+          email: string;
+          raw_user_meta_data?: {
+            full_name?: string;
+            name?: string;
+          };
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
