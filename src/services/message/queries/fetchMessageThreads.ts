@@ -43,9 +43,9 @@ export async function fetchMessageThreads(userId: string): Promise<MessageThread
       // Ensure IDs are consistently treated as strings and lowercase for comparison
       const senderIdStr = String(message.sender_id).toLowerCase();
       const receiverIdStr = String(message.receiver_id).toLowerCase();
-      const userIdStr = String(userId).toLowerCase();
+      const userIdLower = String(userId).toLowerCase();
       
-      const otherUserId = senderIdStr === userIdStr ? receiverIdStr : senderIdStr;
+      const otherUserId = senderIdStr === userIdLower ? receiverIdStr : senderIdStr;
       otherUserIds.add(otherUserId);
       console.log(`Message ID ${message.id}: Other user ID is ${otherUserId} (sender: ${senderIdStr}, receiver: ${receiverIdStr})`);
     });
@@ -107,9 +107,9 @@ export async function fetchMessageThreads(userId: string): Promise<MessageThread
       // Ensure consistent ID format - always lowercase strings
       const senderIdStr = String(message.sender_id).toLowerCase();
       const receiverIdStr = String(message.receiver_id).toLowerCase();
-      const userIdStr = String(userId).toLowerCase();
+      const userIdLower = String(userId).toLowerCase();
       
-      const otherUserId = senderIdStr === userIdStr ? receiverIdStr : senderIdStr;
+      const otherUserId = senderIdStr === userIdLower ? receiverIdStr : senderIdStr;
       
       if (!conversationsMap[otherUserId]) {
         conversationsMap[otherUserId] = [];
@@ -139,7 +139,7 @@ export async function fetchMessageThreads(userId: string): Promise<MessageThread
         // Check if this ID exists in the profiles table directly
         const { data: directProfile, error: directError } = await supabase
           .from('profiles')
-          .select('id, full_name')
+          .select('id, full_name, avatar_url')
           .eq('id', otherUserId)
           .single();
           
@@ -162,7 +162,7 @@ export async function fetchMessageThreads(userId: string): Promise<MessageThread
       
       // Count unread messages
       const unreadCount = messages.filter(msg => 
-        String(msg.sender_id).toLowerCase() !== userIdStr && !msg.read
+        String(msg.sender_id).toLowerCase() !== userIdLower && !msg.read
       ).length;
       
       const thread: MessageThreadSummary = {
