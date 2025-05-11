@@ -90,20 +90,16 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
     }
 
     // Using type assertion to work around TypeScript's limitations with RPC
-    const rpcCall = supabase.rpc('get_user_details', { 
-      user_ids: providerIds 
-    }) as unknown as {
-      then(onfulfilled: (value: { data: UserDetails[] | null; error: Error | null }) => any): any;
-    };
-
-    const { data: authUsersData, error: authUsersError } = await rpcCall;
+    const { data: authUsersData, error: authUsersError } = await supabase.rpc('get_user_details', { 
+      user_ids: providerIds as any
+    });
       
     if (authUsersError) {
       console.error("Error fetching auth users:", authUsersError);
       // Continue with profile data only
     } else if (authUsersData) {
       // Process auth user data if available
-      const usersArray = authUsersData;
+      const usersArray = authUsersData as UserDetails[];
       
       usersArray.forEach((user) => {
         if (!user || !user.id) return;
