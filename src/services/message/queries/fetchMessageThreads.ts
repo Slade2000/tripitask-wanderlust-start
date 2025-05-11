@@ -12,7 +12,7 @@ export async function fetchMessageThreads(userId: string): Promise<MessageThread
     // Convert userId to lowercase for consistency
     const userIdLower = String(userId).toLowerCase();
     
-    // Query messages and join with profiles for both sender and receiver
+    // Query messages and join with profiles table correctly
     const { data: threadsData, error } = await supabase
       .from('messages')
       .select(`
@@ -24,8 +24,8 @@ export async function fetchMessageThreads(userId: string): Promise<MessageThread
         created_at,
         read,
         tasks:task_id (title),
-        sender:profiles!sender_id (full_name, avatar_url),
-        receiver:profiles!receiver_id (full_name, avatar_url)
+        sender_profiles:sender_id (full_name, avatar_url),
+        receiver_profiles:receiver_id (full_name, avatar_url)
       `)
       .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
       .order('created_at', { ascending: false });
@@ -74,8 +74,8 @@ export async function fetchMessageThreads(userId: string): Promise<MessageThread
       
       // Get profile info based on whether other user is sender or receiver
       const otherUserProfile = isOtherUserSender 
-        ? latestMessage.sender 
-        : latestMessage.receiver;
+        ? latestMessage.sender_profiles 
+        : latestMessage.receiver_profiles;
       
       // Count unread messages from the other user
       const unreadCount = messages.filter(msg => 
