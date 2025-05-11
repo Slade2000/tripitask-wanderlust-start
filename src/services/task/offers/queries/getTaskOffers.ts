@@ -79,27 +79,30 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
     
     // For auth users data, we need to use a different approach
     // We'll use a raw SQL query to access the auth schema
-    // TypeScript can't determine the type of a custom RPC function, 
-    // so we need to cast it in multiple steps to avoid type errors
-    const { data: authUsersData, error: authUsersError } = await (supabase
-      .rpc('get_user_details', { user_ids: providerIds }) as unknown as Promise<{
-        data: Array<{
-          id: string;
-          email: string;
-          raw_user_meta_data?: {
-            full_name?: string;
-            name?: string;
-          };
-        }> | null;
-        error: Error | null;
-      }>);
+    // Create a type-safe way to call the RPC function
+    interface UserDetails {
+      id: string;
+      email: string;
+      raw_user_meta_data?: {
+        full_name?: string;
+        name?: string;
+      };
+    }
+
+    // Using type assertion to work around TypeScript's limitations with RPC
+    const rpcCall = supabase.rpc('get_user_details', { 
+      user_ids: providerIds 
+    }) as unknown as {
+      then(onfulfilled: (value: { data: UserDetails[] | null; error: Error | null }) => any): any;
+    };
+
+    const { data: authUsersData, error: authUsersError } = await rpcCall;
       
     if (authUsersError) {
       console.error("Error fetching auth users:", authUsersError);
       // Continue with profile data only
     } else if (authUsersData) {
       // Process auth user data if available
-      // Use type assertion to handle the unknown return type
       const usersArray = authUsersData;
       
       usersArray.forEach((user) => {
