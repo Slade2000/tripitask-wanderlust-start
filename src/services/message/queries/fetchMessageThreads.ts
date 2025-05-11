@@ -86,7 +86,7 @@ export async function fetchMessageThreads(userId: string): Promise<MessageThread
       });
     }
 
-    // Create a map of user profiles for easy lookup - using Map for better key handling
+    // Create a map of user profiles for easy lookup - use lowercase keys for consistent matching
     const profilesMap = new Map<string, { full_name: string; avatar_url: string | null }>();
     profileData?.forEach(profile => {
       // Convert all IDs to lowercase strings for consistent lookup
@@ -95,6 +95,7 @@ export async function fetchMessageThreads(userId: string): Promise<MessageThread
         full_name: profile.full_name || "Unknown User", 
         avatar_url: profile.avatar_url 
       });
+      console.log(`Added to profilesMap: ${profileId} -> ${profile.full_name || "Unknown User"}`);
     });
 
     console.log("Created profiles map with entries:", profilesMap.size);
@@ -130,12 +131,17 @@ export async function fetchMessageThreads(userId: string): Promise<MessageThread
       // Get the most recent message
       const latestMessage = messages[0];
       
-      // Get profile info for the other user - using lowercase for lookup
+      // Get profile info for the other user - make sure to use lowercase for lookup
       const otherUserIdLower = otherUserId.toLowerCase();
+      
+      console.log(`Looking up profile for user ID: ${otherUserIdLower}`);
       const otherUserProfile = profilesMap.get(otherUserIdLower);
       
+      console.log(`Profile lookup result for ${otherUserIdLower}:`, otherUserProfile);
+      
+      // Fall back to direct lookup if not found in the map
       if (!otherUserProfile) {
-        console.warn(`No profile found for user ID: ${otherUserId} (lowercase: ${otherUserIdLower})`);
+        console.warn(`No profile found for user ID: ${otherUserId} in the profilesMap`);
         console.log(`Available profile IDs in map:`, Array.from(profilesMap.keys()));
         
         // Check if this ID exists in the profiles table directly
@@ -157,7 +163,7 @@ export async function fetchMessageThreads(userId: string): Promise<MessageThread
               avatar_url: directProfile.avatar_url 
             });
             
-            console.log(`Added profile to map from direct lookup: ${otherUserIdLower} -> ${directProfile.full_name}`);
+            console.log(`Added profile to map from direct lookup: ${otherUserIdLower} -> ${directProfile.full_name || "Unknown User"}`);
           }
         }
       }
@@ -167,6 +173,9 @@ export async function fetchMessageThreads(userId: string): Promise<MessageThread
         String(msg.sender_id).toLowerCase() !== userIdLower && !msg.read
       ).length;
       
+      // Get the profile info, even if added from direct lookup
+      const profile = profilesMap.get(otherUserIdLower);
+      
       const thread: MessageThreadSummary = {
         task_id: latestMessage.task_id,
         task_title: latestMessage.tasks?.title || "Unknown Task",
@@ -174,8 +183,8 @@ export async function fetchMessageThreads(userId: string): Promise<MessageThread
         last_message_date: latestMessage.created_at || new Date().toISOString(),
         unread_count: unreadCount,
         other_user_id: otherUserId,
-        other_user_name: otherUserProfile?.full_name || `User ${otherUserId.slice(0, 8)}...`,
-        other_user_avatar: otherUserProfile?.avatar_url
+        other_user_name: profile ? profile.full_name : `User ${otherUserId.slice(0, 8)}...`,
+        other_user_avatar: profile ? profile.avatar_url : null
       };
       
       console.log(`Created thread summary for ${otherUserId}: name=${thread.other_user_name}`);
