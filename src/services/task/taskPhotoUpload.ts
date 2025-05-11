@@ -1,8 +1,16 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
-export async function uploadTaskPhotos(taskId: string, photos: File[]): Promise<void> {
+export async function uploadTaskPhotos(taskId: string, photos: (string | File)[]): Promise<void> {
   try {
+    // Filter out string URLs and only process File objects
+    const filePhotos = photos.filter((photo): photo is File => photo instanceof File);
+    
+    // If no File objects to upload, return early
+    if (filePhotos.length === 0) {
+      return;
+    }
+    
     // Ensure the bucket exists first to prevent errors
     const { data: buckets, error: bucketListError } = await supabase.storage.listBuckets();
     if (bucketListError) {
@@ -27,7 +35,7 @@ export async function uploadTaskPhotos(taskId: string, photos: File[]): Promise<
       }
     }
 
-    for (const photo of photos) {
+    for (const photo of filePhotos) {
       // Upload photo to storage
       const fileName = `${taskId}/${Date.now()}-${photo.name}`;
       const { error: storageError, data: storageData } = await supabase
