@@ -54,24 +54,65 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
     // Get unique provider IDs from the offers
     const providerIds = [...new Set(offersData.map(offer => offer.provider_id))];
     
-    // Fetch all provider profiles in a single query
+    // Fetch all provider profiles from profiles table
     const { data: providersData, error: providersError } = await supabase
       .from('profiles')
       .select('id, full_name, avatar_url')
       .in('id', providerIds);
       
     if (providersError) {
-      console.error("Error fetching providers:", providersError);
+      console.error("Error fetching profiles:", providersError);
       // Continue with default provider data
     }
     
-    // Create a map of provider data for quick lookup
+    // Fetch auth users data for display names
+    const { data: authUsersData, error: authUsersError } = await supabase
+      .from('auth.users')
+      .select('id, email, raw_user_meta_data')
+      .in('id', providerIds);
+    
+    if (authUsersError) {
+      console.error("Error fetching auth users:", authUsersError);
+      // Continue with profile data only
+    }
+    
+    // Create a map of provider data combining both sources for quick lookup
     const providersMap: Record<string, any> = {};
+    
+    // First add profile data
     if (providersData) {
       providersData.forEach(provider => {
-        providersMap[provider.id] = provider;
+        providersMap[provider.id] = {
+          ...provider
+        };
       });
     }
+    
+    // Then enhance with auth user data (prioritizing auth data for names)
+    if (authUsersData) {
+      authUsersData.forEach(user => {
+        const userData = user.raw_user_meta_data as any;
+        const fullName = userData?.full_name || userData?.name;
+        
+        if (providersMap[user.id]) {
+          // Enhance existing entry
+          providersMap[user.id] = {
+            ...providersMap[user.id],
+            full_name: fullName || providersMap[user.id].full_name, // Prefer auth name if available
+            email: user.email
+          };
+        } else {
+          // Create new entry
+          providersMap[user.id] = {
+            id: user.id,
+            full_name: fullName,
+            email: user.email
+          };
+        }
+      });
+    }
+
+    console.log("Combined provider data map:", providersMap);
 
     // Transform the offers with provider details included
     const offers: Offer[] = offersData.map((offer: any) => {
@@ -89,7 +130,7 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
         created_at: offer.created_at,
         provider: {
           id: offer.provider_id,
-          name: providerData?.full_name || undefined,
+          name: providerData?.full_name || providerData?.email || undefined,
           avatar_url: providerData?.avatar_url || undefined,
           rating: 4.5, // Placeholder rating
           success_rate: "95%" // Placeholder success rate
