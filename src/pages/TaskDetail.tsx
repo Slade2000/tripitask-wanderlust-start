@@ -145,29 +145,29 @@ export default function TaskDetail() {
 
         <Card className="bg-white shadow-md rounded-md overflow-hidden">
           <CardContent className="p-6">
-            <h1 className="text-2xl font-bold text-teal mb-4">{task.title}</h1>
+            <h1 className="text-2xl font-bold text-teal mb-4">{task?.title}</h1>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div className="flex items-center text-gray-600">
                 <MapPin className="h-5 w-5 mr-2" />
-                <span>{task.location}</span>
+                <span>{task?.location}</span>
               </div>
               <div className="flex items-center text-gray-600">
                 <Calendar className="h-5 w-5 mr-2" />
-                <span>Due Date: {formatDate(task.due_date)}</span>
+                <span>Due Date: {formatDate(task?.due_date)}</span>
               </div>
               <div className="flex items-center text-gray-600">
                 <Tag className="h-5 w-5 mr-2" />
-                <span>Budget: ${task.budget}</span>
+                <span>Budget: ${task?.budget}</span>
               </div>
             </div>
 
             <div className="mb-4">
               <h2 className="text-xl font-semibold text-gray-700 mb-2">Description</h2>
-              <p className="text-gray-600">{task.description}</p>
+              <p className="text-gray-600">{task?.description}</p>
             </div>
 
-            {task.photos && task.photos.length > 0 && (
+            {task && task.photos && task.photos.length > 0 && (
               <div className="mb-4">
                 <h2 className="text-xl font-semibold text-gray-700 mb-2">Photos</h2>
                 <Carousel className="w-full">
@@ -175,7 +175,7 @@ export default function TaskDetail() {
                     {task.photos.map((photo, index) => (
                       <CarouselItem key={index}>
                         <img
-                          src={photo}
+                          src={typeof photo === 'string' ? photo : URL.createObjectURL(photo)}
                           alt={`Task Photo ${index + 1}`}
                           className="object-cover rounded-md w-full h-64"
                         />

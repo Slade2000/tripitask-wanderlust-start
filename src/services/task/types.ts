@@ -9,8 +9,8 @@ export interface TaskData {
   due_date: string;
   status?: string;
   category_id: string;
-  photos?: (string | File)[]; // Changed to allow both File objects and string URLs
-  task_photos?: any[]; // Added to match database structure
+  photos?: (string | File)[]; // Allow both File objects and string URLs
+  task_photos?: { photo_url: string }[]; // Match database structure
   categories?: any;
   latitude?: number | null;
   longitude?: number | null;
