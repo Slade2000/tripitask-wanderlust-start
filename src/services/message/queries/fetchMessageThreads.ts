@@ -9,11 +9,11 @@ export async function fetchMessageThreads(userId: string): Promise<MessageThread
   try {
     console.log("Fetching message threads for user:", userId);
     
-    // Query the message_threads view
+    // Query the message_threads view - it already filters for the current user
+    // so we don't need to add a condition for sender_id or receiver_id
     const { data, error } = await supabase
       .from('message_threads')
       .select('*')
-      .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
       .order('last_message_date', { ascending: false });
 
     if (error) {
@@ -26,12 +26,14 @@ export async function fetchMessageThreads(userId: string): Promise<MessageThread
       return [];
     }
 
+    console.log("Raw message threads data:", data);
+
     // Convert to MessageThreadSummary objects
     const threads: MessageThreadSummary[] = data.map((thread: any) => {
       // Determine the other user in the conversation (not the current user)
-      const otherUserId = thread.sender_id === userId ? thread.receiver_id : thread.sender_id;
-      const otherUserName = thread.sender_id === userId ? thread.receiver_name : thread.sender_name;
-      const otherUserAvatar = thread.sender_id === userId ? thread.receiver_avatar : thread.sender_avatar;
+      const otherUserId = thread.other_user_id || "";
+      const otherUserName = thread.other_user_name || "Unknown User";
+      const otherUserAvatar = thread.other_user_avatar;
       
       return {
         task_id: thread.task_id,
@@ -39,16 +41,16 @@ export async function fetchMessageThreads(userId: string): Promise<MessageThread
         last_message_content: thread.last_message_content || "",
         last_message_date: thread.last_message_date || new Date().toISOString(),
         unread_count: thread.unread_count || 0,
-        other_user_id: otherUserId || "",
-        other_user_name: otherUserName || "Unknown User",
+        other_user_id: otherUserId,
+        other_user_name: otherUserName,
         other_user_avatar: otherUserAvatar
       };
     });
 
-    console.log("Processed message threads:", threads.length);
+    console.log("Processed message threads:", threads);
     return threads;
   } catch (error) {
     console.error("Error in fetchMessageThreads:", error);
-    throw error;
+    throw new Error("Failed to load messages: " + (error instanceof Error ? error.message : String(error)));
   }
 }

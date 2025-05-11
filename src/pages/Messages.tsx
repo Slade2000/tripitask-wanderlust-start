@@ -17,6 +17,7 @@ const Messages = () => {
   const navigate = useNavigate();
   const [threads, setThreads] = useState<MessageThreadSummary[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
   
@@ -30,6 +31,7 @@ const Messages = () => {
     if (!user) return;
     
     setLoading(true);
+    setError(null);
     try {
       console.log("Loading message threads for user:", user.id);
       const threadData = await getMessageThreads(user.id);
@@ -37,6 +39,7 @@ const Messages = () => {
       setThreads(threadData);
     } catch (error) {
       console.error("Error loading message threads:", error);
+      setError(error instanceof Error ? error.message : "Unknown error occurred");
       toast({
         title: "Error",
         description: "Failed to load messages",
@@ -48,6 +51,12 @@ const Messages = () => {
   };
 
   const handleThreadClick = (thread: MessageThreadSummary) => {
+    console.log("Navigating to message detail with:", {
+      taskId: thread.task_id,
+      otherUserId: thread.other_user_id,
+      taskTitle: thread.task_title
+    });
+    
     // Navigate to MessageDetail page with the task ID and other user ID
     navigate(`/messages/${thread.task_id}`, {
       state: {
@@ -56,6 +65,57 @@ const Messages = () => {
         taskTitle: thread.task_title
       }
     });
+  };
+  
+  const renderContent = () => {
+    if (loading) {
+      return (
+        <div className="text-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-teal" />
+          <p>Loading messages...</p>
+        </div>
+      );
+    }
+    
+    if (error) {
+      return (
+        <Card className="p-6 text-center">
+          <p className="text-gray-600 mb-2">Error loading messages</p>
+          <p className="text-sm text-gray-500">
+            {error}
+          </p>
+          <button 
+            onClick={loadThreads} 
+            className="mt-4 px-4 py-2 bg-teal text-white rounded hover:bg-teal-600"
+          >
+            Try Again
+          </button>
+        </Card>
+      );
+    }
+    
+    if (threads.length === 0) {
+      return (
+        <Card className="p-6 text-center">
+          <p className="text-gray-600 mb-2">No messages yet</p>
+          <p className="text-sm text-gray-500">
+            Messages from your tasks will appear here
+          </p>
+        </Card>
+      );
+    }
+    
+    return (
+      <div className="space-y-4">
+        {threads.map((thread) => (
+          <MessageThreadCard 
+            key={`${thread.task_id}-${thread.other_user_id}`} 
+            thread={thread} 
+            onClick={() => handleThreadClick(thread)}
+          />
+        ))}
+      </div>
+    );
   };
   
   return (
@@ -72,29 +132,7 @@ const Messages = () => {
           </TabsList>
           
           <TabsContent value="all">
-            {loading ? (
-              <div className="text-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-teal" />
-                <p>Loading messages...</p>
-              </div>
-            ) : threads.length > 0 ? (
-              <div className="space-y-4">
-                {threads.map((thread) => (
-                  <MessageThreadCard 
-                    key={`${thread.task_id}-${thread.other_user_id}`} 
-                    thread={thread} 
-                    onClick={() => handleThreadClick(thread)}
-                  />
-                ))}
-              </div>
-            ) : (
-              <Card className="p-6 text-center">
-                <p className="text-gray-600 mb-2">No messages yet</p>
-                <p className="text-sm text-gray-500">
-                  Messages from your tasks will appear here
-                </p>
-              </Card>
-            )}
+            {renderContent()}
           </TabsContent>
           
           <TabsContent value="unread">
@@ -103,6 +141,19 @@ const Messages = () => {
                 <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-teal" />
                 <p>Loading messages...</p>
               </div>
+            ) : error ? (
+              <Card className="p-6 text-center">
+                <p className="text-gray-600 mb-2">Error loading messages</p>
+                <p className="text-sm text-gray-500">
+                  {error}
+                </p>
+                <button 
+                  onClick={loadThreads} 
+                  className="mt-4 px-4 py-2 bg-teal text-white rounded hover:bg-teal-600"
+                >
+                  Try Again
+                </button>
+              </Card>
             ) : threads.filter(t => t.unread_count > 0).length > 0 ? (
               <div className="space-y-4">
                 {threads

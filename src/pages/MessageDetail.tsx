@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { ChevronLeft } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -11,35 +11,56 @@ import MessageList from "@/components/messages/MessageList";
 import MessageInput from "@/components/messages/MessageInput";
 
 export default function MessageDetail() {
-  const { taskId, userId } = useParams<{ taskId: string; userId: string }>();
+  const { taskId } = useParams<{ taskId: string }>();
+  const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
   
+  // Get the taskOwnerId from location state
+  const taskOwnerId = location.state?.taskOwnerId;
+  
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
-  const [taskTitle, setTaskTitle] = useState("");
+  const [taskTitle, setTaskTitle] = useState(location.state?.taskTitle || "");
   const [otherUserName, setOtherUserName] = useState("");
   
   useEffect(() => {
-    if (user && taskId && userId) {
-      loadMessages();
-      loadTaskDetails();
+    console.log("MessageDetail mounted with params:", { taskId, taskOwnerId });
+    
+    if (!taskId || !taskOwnerId) {
+      console.error("Missing taskId or taskOwnerId");
+      toast({
+        title: "Error",
+        description: "Missing required information to load messages",
+        variant: "destructive",
+      });
+      navigate('/messages');
+      return;
     }
-  }, [user, taskId, userId]);
+    
+    if (user) {
+      loadMessages();
+      if (!taskTitle) {
+        loadTaskDetails();
+      }
+    }
+  }, [user, taskId, taskOwnerId]);
   
   const loadMessages = async () => {
-    if (!user || !taskId || !userId) return;
+    if (!user || !taskId || !taskOwnerId) return;
     
     setLoading(true);
     try {
-      const fetchedMessages = await getMessages(taskId, user.id, userId);
+      console.log("Loading messages for task:", taskId, "between users:", user.id, "and", taskOwnerId);
+      const fetchedMessages = await getMessages(taskId, user.id, taskOwnerId);
+      console.log("Fetched messages:", fetchedMessages);
       setMessages(fetchedMessages);
       
       // Get other user's name from messages
       if (fetchedMessages.length > 0) {
-        const otherMessage = fetchedMessages.find(m => m.sender_id === userId);
+        const otherMessage = fetchedMessages.find(m => m.sender_id === taskOwnerId);
         if (otherMessage && otherMessage.sender_name) {
           setOtherUserName(otherMessage.sender_name);
         }
@@ -70,7 +91,7 @@ export default function MessageDetail() {
   };
   
   const handleSendMessage = async (content: string, files: File[]) => {
-    if (!user || !taskId || !userId) {
+    if (!user || !taskId || !taskOwnerId) {
       toast({
         title: "Error",
         description: "Missing required information",
@@ -81,11 +102,18 @@ export default function MessageDetail() {
     
     setSending(true);
     try {
+      console.log("Sending message:", {
+        task_id: taskId,
+        sender_id: user.id,
+        receiver_id: taskOwnerId,
+        content
+      });
+      
       const result = await sendMessage(
         {
           task_id: taskId,
           sender_id: user.id,
-          receiver_id: userId,
+          receiver_id: taskOwnerId,
           content
         },
         files
