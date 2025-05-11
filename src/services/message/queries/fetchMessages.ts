@@ -31,7 +31,7 @@ export async function fetchMessages(userId: string, otherId: string, taskId?: st
     
     if (messagesError) {
       console.error("Error fetching messages:", messagesError);
-      throw messagesError;
+      throw new Error(`Failed to fetch messages: ${messagesError.message}`);
     }
 
     console.log(`Found ${messagesData?.length || 0} messages between users ${userId} and ${otherId}`);
@@ -51,6 +51,6 @@ export async function fetchMessages(userId: string, otherId: string, taskId?: st
     return transformMessagesToDto(messagesData, attachmentsByMessageId);
   } catch (error) {
     console.error("Error in fetchMessages:", error);
-    throw error;
+    throw new Error(`Failed to load messages: ${error instanceof Error ? error.message : String(error)}`);
   }
 }

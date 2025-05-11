@@ -24,15 +24,15 @@ export async function fetchMessageThreads(userId: string): Promise<MessageThread
         created_at,
         read,
         tasks:task_id (title),
-        sender_profiles:sender_id (full_name, avatar_url),
-        receiver_profiles:receiver_id (full_name, avatar_url)
+        sender:sender_id(full_name, avatar_url),
+        receiver:receiver_id(full_name, avatar_url)
       `)
       .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
       .order('created_at', { ascending: false });
 
     if (error) {
       console.error("Error fetching message threads:", error);
-      throw error;
+      throw new Error(`Failed to fetch message threads: ${error.message}`);
     }
 
     if (!threadsData || threadsData.length === 0) {
@@ -41,6 +41,7 @@ export async function fetchMessageThreads(userId: string): Promise<MessageThread
     }
 
     console.log(`Found ${threadsData.length} messages for user:`, userId);
+    console.log("Sample message data:", threadsData[0]);
 
     // Group messages by conversation partner
     const conversationMap: Record<string, any[]> = {};
@@ -74,8 +75,8 @@ export async function fetchMessageThreads(userId: string): Promise<MessageThread
       
       // Get profile info based on whether other user is sender or receiver
       const otherUserProfile = isOtherUserSender 
-        ? latestMessage.sender_profiles 
-        : latestMessage.receiver_profiles;
+        ? latestMessage.sender 
+        : latestMessage.receiver;
       
       // Count unread messages from the other user
       const unreadCount = messages.filter(msg => 
