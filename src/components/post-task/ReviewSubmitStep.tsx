@@ -3,8 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Edit, FileText, Clock, MapPin, DollarSign, Camera } from "lucide-react";
 import { format } from "date-fns";
-import { TaskData } from "@/services/taskService";
+import { TaskData } from "@/services/task/types";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+
 interface ReviewSubmitStepProps {
   taskData: TaskData;
   onSubmit: () => void;
@@ -12,6 +13,7 @@ interface ReviewSubmitStepProps {
   onEditField: (field: string) => void;
   submitting?: boolean;
 }
+
 const ReviewSubmitStep = ({
   taskData,
   onSubmit,
@@ -21,7 +23,18 @@ const ReviewSubmitStep = ({
 }: ReviewSubmitStepProps) => {
   // Format dueDate from ISO string to Date for display if it exists
   const dueDate = taskData.due_date ? new Date(taskData.due_date) : undefined;
-  return <div className="space-y-6">
+  
+  // Function to generate preview URL for both File and string types
+  const getPhotoUrl = (photo: File | string): string => {
+    if (typeof photo === 'string') {
+      return photo; // It's already a URL string
+    } else {
+      return URL.createObjectURL(photo); // It's a File object
+    }
+  };
+  
+  return (
+    <div className="space-y-6">
       <h2 className="text-2xl font-semibold text-teal-dark text-center">
         Review and Submit
       </h2>
@@ -101,9 +114,15 @@ const ReviewSubmitStep = ({
                     </Button>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {taskData.photos.map((photo, index) => <div key={index} className="w-16 h-16 border rounded-md overflow-hidden">
-                        <img src={URL.createObjectURL(photo)} alt={`uploaded ${index + 1}`} className="w-full h-full object-cover" />
-                      </div>)}
+                    {taskData.photos.map((photo, index) => (
+                      <div key={index} className="w-16 h-16 border rounded-md overflow-hidden">
+                        <img 
+                          src={getPhotoUrl(photo)} 
+                          alt={`uploaded ${index + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>}
@@ -120,6 +139,8 @@ const ReviewSubmitStep = ({
           {submitting ? 'Submitting...' : 'Submit Task'}
         </Button>
       </div>
-    </div>;
+    </div>
+  );
 };
+
 export default ReviewSubmitStep;

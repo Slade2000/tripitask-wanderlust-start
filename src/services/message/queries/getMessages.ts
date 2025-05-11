@@ -9,7 +9,7 @@ export async function getMessages(taskId: string, userId: string, otherId: strin
   try {
     console.log(`Fetching messages for task: ${taskId} between users: ${userId} and ${otherId}`);
     
-    // Get messages directly using .eq and .or filters instead of table joins
+    // Get messages directly with conditional filters
     const { data: messagesData, error: messagesError } = await supabase
       .from('messages')
       .select('*')

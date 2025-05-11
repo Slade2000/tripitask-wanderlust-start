@@ -9,7 +9,6 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { useToast } from "@/hooks/use-toast";
 import { getTaskById } from "@/services/task/queries/getTaskById";
-import { uploadTaskPhotos } from "@/services/task/taskPhotoUpload";
 import { useAuth } from "@/contexts/AuthContext";
 import { TaskData } from "@/services/task/types";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -221,6 +220,7 @@ export default function TaskDetail() {
             )}
           </CardContent>
         </Card>
+        
         {task && (
           <MessageModal
             isOpen={messageModalOpen}

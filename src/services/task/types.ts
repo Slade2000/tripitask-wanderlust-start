@@ -9,7 +9,7 @@ export interface TaskData {
   due_date: string;
   status?: string;
   category_id: string;
-  photos?: string[]; // Changed from File[] to string[] for compatibility
+  photos?: (string | File)[]; // Changed to allow both File objects and string URLs
   task_photos?: any[]; // Added to match database structure
   categories?: any;
   latitude?: number | null;

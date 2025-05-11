@@ -33,7 +33,7 @@ const PostTaskStep = ({ onStepBack }: PostTaskStepProps) => {
       title: data.title,
       category_id: data.category_id,
       budget: data.budget,
-      photos: data.photos,
+      photos: data.photos as File[], // Ensure this is typed as File[]
     });
     setCurrentStep("location-date");
   };
@@ -100,7 +100,7 @@ const PostTaskStep = ({ onStepBack }: PostTaskStepProps) => {
           initialData={{
             title: taskData.title,
             category_id: taskData.category_id,
-            photos: taskData.photos || [],
+            photos: Array.isArray(taskData.photos) ? taskData.photos.filter(p => p instanceof File) as File[] : [], // Ensure we only pass File objects
             budget: taskData.budget,
           }}
           onSubmit={handleBasicInfoSubmit}
