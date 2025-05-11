@@ -1,6 +1,7 @@
 
 import { Link } from "react-router-dom";
 import { HelpCircle, Briefcase, LayoutDashboard, MessageSquare, User } from "lucide-react";
+import { useUnreadMessageCount } from "@/hooks/useUnreadMessageCount";
 
 interface NavItemProps {
   icon: React.ReactNode;
@@ -21,7 +22,7 @@ const NavItem = ({ icon, label, to, active = false, badge }: NavItemProps) => (
   >
     <div className="mb-1 relative">
       {icon}
-      {badge && badge > 0 && (
+      {badge !== undefined && badge > 0 && (
         <span className="absolute -top-2 -right-2 bg-[#FF6B00] text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
           {badge > 9 ? '9+' : badge}
         </span>
@@ -36,7 +37,7 @@ interface BottomNavProps {
 }
 
 const BottomNav = ({ currentPath }: BottomNavProps) => {
-  const messageBadge = 4; // Example badge count for messages
+  const { unreadCount } = useUnreadMessageCount();
   
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 py-2">
@@ -64,7 +65,7 @@ const BottomNav = ({ currentPath }: BottomNavProps) => {
           label="Messages"
           to="/messages"
           active={currentPath === "/messages"}
-          badge={messageBadge}
+          badge={unreadCount}
         />
         <NavItem
           icon={<User size={24} />}

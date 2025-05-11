@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { getMessages, sendMessage } from "@/services/message";
+import { getMessages, sendMessage, markMessagesAsRead } from "@/services/message";
 import { Message } from "@/services/message/types";
 import { getTaskById } from "@/services/task/queries/getTaskById";
 
@@ -59,6 +59,9 @@ export function useMessageDetail({ taskOwnerId: initialTaskOwnerId, initialTaskT
       const fetchedMessages = await getMessages(taskId, user.id, taskOwnerId);
       console.log("Fetched messages:", fetchedMessages.length);
       setMessages(fetchedMessages);
+      
+      // Mark messages as read when they are loaded
+      await markMessagesAsRead(taskId, user.id, taskOwnerId);
     } catch (error) {
       console.error("Error loading messages:", error);
       toast({
