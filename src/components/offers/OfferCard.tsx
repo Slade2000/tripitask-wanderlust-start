@@ -34,7 +34,7 @@ export default function OfferCard({
   const avatarUrl = provider.avatar_url || "";
   
   // Get first letter of provider name for avatar fallback
-  const providerInitial = providerName.charAt(0) || 'P';
+  const providerInitial = providerName.charAt(0).toUpperCase() || 'P';
   
   // Format date properly
   const formattedDate = new Date(offer.expected_delivery_date).toLocaleDateString(undefined, {

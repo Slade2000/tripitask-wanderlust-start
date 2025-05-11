@@ -18,12 +18,10 @@ export default function TaskOffersPage() {
   const [offers, setOffers] = useState<Offer[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [debugInfo, setDebugInfo] = useState<any>(null);
 
   const loadTaskAndOffers = async () => {
     setLoading(true);
     setError(null);
-    setDebugInfo(null);
     
     if (!taskId) {
       setError("Task ID is missing");
@@ -51,38 +49,10 @@ export default function TaskOffersPage() {
           
           if (offersData.length === 0) {
             console.log("No offers found for this task");
-            setDebugInfo({
-              message: `No offers found for this task (ID: ${taskId})`,
-              taskId: taskId
-            });
-          } else {
-            console.log(`Found ${offersData.length} offers for this task`);
-            
-            // Check if any offers are missing provider data
-            const missingProviderData = offersData.some(
-              offer => !offer.provider?.name || offer.provider.name === 'Unknown Provider'
-            );
-            
-            if (missingProviderData) {
-              setDebugInfo({
-                message: "Some offers are missing provider data",
-                offers: offersData.map(o => ({
-                  id: o.id,
-                  provider_id: o.provider_id,
-                  provider: o.provider
-                }))
-              });
-            } else {
-              setDebugInfo(null);
-            }
           }
         } catch (offerError) {
           console.error("Error fetching offers:", offerError);
           setError(`Failed to load offers: ${offerError instanceof Error ? offerError.message : 'Unknown error'}`);
-          setDebugInfo({
-            message: "Error occurred while fetching offers",
-            error: offerError instanceof Error ? offerError.message : String(offerError)
-          });
         }
       } else {
         setError("Task not found");
@@ -96,10 +66,6 @@ export default function TaskOffersPage() {
     } catch (error) {
       console.error("Error loading task or offers:", error);
       setError("Failed to load task offers");
-      setDebugInfo({
-        message: "Error occurred while loading task",
-        error: error instanceof Error ? error.message : String(error)
-      });
       toast({
         title: "Error",
         description: "Failed to load task offers",
@@ -117,8 +83,6 @@ export default function TaskOffersPage() {
   const handleBack = () => {
     navigate(-1);
   };
-
-  console.log("Current offers state:", offers);
 
   return (
     <div className="min-h-screen bg-cream p-4 pb-20">
@@ -140,15 +104,6 @@ export default function TaskOffersPage() {
       {error && (
         <div className="bg-red-100 text-red-800 p-4 rounded-md mb-4 text-center">
           {error}
-        </div>
-      )}
-      
-      {debugInfo && (
-        <div className="bg-yellow-100 text-yellow-800 p-4 rounded-md mb-4 text-center text-sm">
-          <p className="font-semibold">Debug Info</p>
-          <pre className="whitespace-pre-wrap text-left mt-2 bg-yellow-50 p-2 rounded overflow-auto max-h-40">
-            {JSON.stringify(debugInfo, null, 2)}
-          </pre>
         </div>
       )}
       
