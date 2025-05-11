@@ -11,7 +11,10 @@ interface MessageThreadCardProps {
 
 export default function MessageThreadCard({ thread, onClick }: MessageThreadCardProps) {
   const timeAgo = formatDistanceToNow(new Date(thread.last_message_date), { addSuffix: true });
-  const userInitial = (thread.other_user_name || "U").charAt(0).toUpperCase();
+  
+  // Improved way to get user initial - handle missing names better
+  const userName = thread.other_user_name || `User ${thread.other_user_id.slice(0, 8)}`;
+  const userInitial = (userName.charAt(0) || "?").toUpperCase();
   
   return (
     <Card 
@@ -20,13 +23,13 @@ export default function MessageThreadCard({ thread, onClick }: MessageThreadCard
     >
       <div className="flex items-center">
         <Avatar className="h-12 w-12 mr-4">
-          <AvatarImage src={thread.other_user_avatar} alt={thread.other_user_name} />
+          <AvatarImage src={thread.other_user_avatar} alt={userName} />
           <AvatarFallback className="bg-teal text-white">{userInitial}</AvatarFallback>
         </Avatar>
         
         <div className="flex-1">
           <div className="flex justify-between items-start">
-            <h3 className="font-medium">{thread.other_user_name}</h3>
+            <h3 className="font-medium">{userName}</h3>
             <span className="text-xs text-gray-500">{timeAgo}</span>
           </div>
           
