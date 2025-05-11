@@ -65,18 +65,7 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
       // Continue with default provider data
     }
     
-    // Fetch auth users data for display names
-    const { data: authUsersData, error: authUsersError } = await supabase
-      .from('auth.users')
-      .select('id, email, raw_user_meta_data')
-      .in('id', providerIds);
-    
-    if (authUsersError) {
-      console.error("Error fetching auth users:", authUsersError);
-      // Continue with profile data only
-    }
-    
-    // Create a map of provider data combining both sources for quick lookup
+    // Create a map of provider data for quick lookup
     const providersMap: Record<string, any> = {};
     
     // First add profile data
@@ -88,11 +77,21 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
       });
     }
     
-    // Then enhance with auth user data (prioritizing auth data for names)
-    if (authUsersData) {
-      authUsersData.forEach(user => {
-        const userData = user.raw_user_meta_data as any;
-        const fullName = userData?.full_name || userData?.name;
+    // For auth users data, we need to use a different approach
+    // We'll use a raw SQL query to access the auth schema
+    const { data: authUsersData, error: authUsersError } = await supabase
+      .rpc('get_user_details', { user_ids: providerIds });
+      
+    if (authUsersError) {
+      console.error("Error fetching auth users:", authUsersError);
+      // Continue with profile data only
+    } else if (authUsersData) {
+      // Process auth user data if available
+      authUsersData.forEach((user: any) => {
+        if (!user || !user.id) return;
+        
+        const userData = user.raw_user_meta_data || {};
+        const fullName = userData.full_name || userData.name;
         
         if (providersMap[user.id]) {
           // Enhance existing entry
