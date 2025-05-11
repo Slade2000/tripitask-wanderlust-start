@@ -40,9 +40,14 @@ export async function fetchMessageThreads(userId: string): Promise<MessageThread
     // Get all unique user IDs from the messages to fetch their profiles in a single query
     const otherUserIds = new Set<string>();
     messageData.forEach(message => {
-      const otherUserId = message.sender_id === userId ? message.receiver_id : message.sender_id;
+      // Ensure IDs are consistently treated as strings
+      const senderIdStr = String(message.sender_id);
+      const receiverIdStr = String(message.receiver_id);
+      const userIdStr = String(userId);
+      
+      const otherUserId = senderIdStr === userIdStr ? receiverIdStr : senderIdStr;
       otherUserIds.add(otherUserId);
-      console.log(`Message ID ${message.id}: Other user ID is ${otherUserId} (sender: ${message.sender_id}, receiver: ${message.receiver_id})`);
+      console.log(`Message ID ${message.id}: Other user ID is ${otherUserId} (sender: ${senderIdStr}, receiver: ${receiverIdStr})`);
     });
 
     console.log("Unique other user IDs found:", Array.from(otherUserIds));
@@ -60,10 +65,22 @@ export async function fetchMessageThreads(userId: string): Promise<MessageThread
 
     if (!profileData || profileData.length === 0) {
       console.error("No profiles found for user IDs:", Array.from(otherUserIds));
+      
+      // Additional debugging - check if profiles exist at all
+      const { data: allProfiles, error: allProfilesError } = await supabase
+        .from('profiles')
+        .select('id, full_name')
+        .limit(10);
+        
+      if (allProfilesError) {
+        console.error("Error checking profiles table:", allProfilesError);
+      } else {
+        console.log("Sample profiles in database:", allProfiles);
+      }
     } else {
       console.log(`Found ${profileData.length} profiles for ${otherUserIds.size} users`);
       profileData.forEach(profile => {
-        console.log(`Profile found - ID: ${profile.id}, Name: ${profile.full_name || 'null'}`);
+        console.log(`Profile found - ID: ${profile.id}, Name: ${profile.full_name || 'null'}, Type: ${typeof profile.id}`);
       });
     }
 
@@ -84,7 +101,11 @@ export async function fetchMessageThreads(userId: string): Promise<MessageThread
 
     messageData.forEach(message => {
       // Ensure consistent ID format - convert to string
-      const otherUserId = String(message.sender_id === userId ? message.receiver_id : message.sender_id);
+      const senderIdStr = String(message.sender_id);
+      const receiverIdStr = String(message.receiver_id);
+      const userIdStr = String(userId);
+      
+      const otherUserId = senderIdStr === userIdStr ? receiverIdStr : senderIdStr;
       
       if (!conversationsMap[otherUserId]) {
         conversationsMap[otherUserId] = [];
@@ -108,6 +129,20 @@ export async function fetchMessageThreads(userId: string): Promise<MessageThread
       
       if (!otherUserProfile) {
         console.warn(`No profile found for user ID: ${otherUserId}`);
+        console.log(`Available profile IDs in map:`, Object.keys(profilesMap));
+        
+        // Check if this ID exists in the profiles table directly
+        const { data: directProfile, error: directError } = await supabase
+          .from('profiles')
+          .select('id, full_name')
+          .eq('id', otherUserId)
+          .single();
+          
+        if (directError) {
+          console.error(`Error directly checking profile for ID ${otherUserId}:`, directError);
+        } else {
+          console.log(`Direct profile lookup result for ID ${otherUserId}:`, directProfile);
+        }
       }
       
       // Count unread messages

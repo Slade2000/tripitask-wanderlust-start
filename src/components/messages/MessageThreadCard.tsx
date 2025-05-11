@@ -16,6 +16,9 @@ export default function MessageThreadCard({ thread, onClick }: MessageThreadCard
   const userName = thread.other_user_name || `User ${thread.other_user_id.slice(0, 8)}`;
   const userInitial = (userName.charAt(0) || "?").toUpperCase();
   
+  // Check if we're in development mode
+  const isDevMode = process.env.NODE_ENV === 'development';
+  
   return (
     <Card 
       className="p-4 hover:shadow-md transition-shadow cursor-pointer"
@@ -40,6 +43,12 @@ export default function MessageThreadCard({ thread, onClick }: MessageThreadCard
           <p className="text-sm text-gray-500 truncate mt-1">
             {thread.last_message_content}
           </p>
+          
+          {isDevMode && (
+            <p className="text-xs text-blue-500 mt-1 truncate">
+              ID: {thread.other_user_id}
+            </p>
+          )}
         </div>
         
         {thread.unread_count > 0 && (
