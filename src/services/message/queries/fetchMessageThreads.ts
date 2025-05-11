@@ -102,8 +102,8 @@ export async function fetchMessageThreads(userId: string): Promise<MessageThread
     // For debugging, log the keys in the map
     console.log("Profile map keys:", Array.from(profilesMap.keys()));
 
-    // Group messages by conversation partner
-    const conversationsMap: Record<string, any[]> = {};
+    // Group messages by conversation partner using a Map instead of an object
+    const conversationsMap = new Map<string, any[]>();
 
     messageData.forEach(message => {
       // Ensure consistent ID format - always lowercase strings
@@ -112,17 +112,18 @@ export async function fetchMessageThreads(userId: string): Promise<MessageThread
       
       const otherUserId = senderIdStr === userIdLower ? receiverIdStr : senderIdStr;
       
-      if (!conversationsMap[otherUserId]) {
-        conversationsMap[otherUserId] = [];
+      if (!conversationsMap.has(otherUserId)) {
+        conversationsMap.set(otherUserId, []);
       }
       
-      conversationsMap[otherUserId].push(message);
+      conversationsMap.get(otherUserId)!.push(message);
     });
     
     // Create thread summaries from the grouped conversations
     const threads: MessageThreadSummary[] = [];
     
-    for (const [otherUserId, messages] of Object.entries(conversationsMap)) {
+    // Iterate through the Map entries
+    for (const [otherUserId, messages] of conversationsMap.entries()) {
       // Sort messages to get the latest first
       messages.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
       
