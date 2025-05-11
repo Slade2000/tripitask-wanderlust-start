@@ -25,6 +25,7 @@ export function useUnreadMessageCount() {
         return 0;
       }
 
+      console.log(`Found ${count} unread messages for user ${userId}`);
       return count || 0;
     } catch (error) {
       console.error("Error fetching unread messages:", error);

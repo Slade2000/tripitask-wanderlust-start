@@ -2,41 +2,42 @@
 import { supabase } from "@/integrations/supabase/client";
 
 /**
- * Marks all messages from a specific sender to the current user as read
- * @param taskId The ID of the task associated with the messages. If null, marks all messages from the sender as read.
- * @param userId The current user's ID
- * @param senderId The ID of the user who sent the messages
+ * Marks messages as read in a conversation
+ * @param taskId The task ID (can be null to mark all messages)
+ * @param receiverId The ID of the user receiving the messages
+ * @param senderId The ID of the user sending the messages
  */
-export async function markMessagesAsRead(taskId: string | null, userId: string, senderId: string) {
+export async function markMessagesAsRead(
+  taskId: string | null, 
+  receiverId: string, 
+  senderId: string
+): Promise<boolean> {
   try {
-    console.log(`Marking messages as read - Task: ${taskId || 'all'}, User: ${userId}, Sender: ${senderId}`);
+    console.log(`Marking messages as read from ${senderId} to ${receiverId}${taskId ? ` for task ${taskId}` : ''}`);
     
-    // Start building the query
     let query = supabase
       .from('messages')
       .update({ read: true })
-      .match({
-        receiver_id: userId,
-        sender_id: senderId,
-        read: false
-      });
-      
-    // If taskId is provided, add it to the match criteria
+      .eq('receiver_id', receiverId)
+      .eq('sender_id', senderId)
+      .eq('read', false);
+    
+    // If taskId is provided, add it to the query
     if (taskId) {
       query = query.eq('task_id', taskId);
     }
     
-    const { data, error } = await query;
-      
+    const { error, count } = await query;
+    
     if (error) {
       console.error("Error marking messages as read:", error);
-      throw error;
+      return false;
     }
     
-    console.log("Messages marked as read successfully");
-    return { success: true };
+    console.log(`Marked ${count} messages as read`);
+    return true;
   } catch (error) {
     console.error("Error in markMessagesAsRead:", error);
-    return { success: false, error: error instanceof Error ? error.message : String(error) };
+    throw new Error(`Failed to mark messages as read: ${error instanceof Error ? error.message : String(error)}`);
   }
 }

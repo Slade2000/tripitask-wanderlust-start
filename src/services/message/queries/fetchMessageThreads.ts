@@ -9,8 +9,8 @@ export async function fetchMessageThreads(userId: string): Promise<MessageThread
   try {
     console.log("Fetching message threads for user:", userId);
     
-    // Get all messages involving the user, grouped by conversation
-    const { data, error } = await supabase
+    // First query: Get all unique conversations the user is involved in
+    const { data: messageData, error: messageError } = await supabase
       .from('messages')
       .select(`
         id,
@@ -20,27 +20,52 @@ export async function fetchMessageThreads(userId: string): Promise<MessageThread
         content,
         created_at,
         read,
-        tasks:task_id (title),
-        sender_profile:sender_id (full_name, avatar_url),
-        receiver_profile:receiver_id (full_name, avatar_url)
+        tasks:task_id (title)
       `)
       .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
       .order('created_at', { ascending: false });
 
-    if (error) {
-      console.error("Error fetching message threads:", error);
-      throw error;
+    if (messageError) {
+      console.error("Error fetching message threads:", messageError);
+      throw messageError;
     }
 
-    if (!data || data.length === 0) {
+    if (!messageData || messageData.length === 0) {
       console.log("No message threads found for user:", userId);
       return [];
     }
 
+    // Get all unique user IDs from the messages to fetch their profiles in a single query
+    const otherUserIds = new Set<string>();
+    messageData.forEach(message => {
+      const otherUserId = message.sender_id === userId ? message.receiver_id : message.sender_id;
+      otherUserIds.add(otherUserId);
+    });
+
+    // Second query: Fetch all profiles for the other users
+    const { data: profileData, error: profileError } = await supabase
+      .from('profiles')
+      .select('id, full_name, avatar_url')
+      .in('id', Array.from(otherUserIds));
+
+    if (profileError) {
+      console.error("Error fetching user profiles:", profileError);
+      throw profileError;
+    }
+
+    // Create a map of user profiles for easy lookup
+    const profilesMap: Record<string, { full_name: string; avatar_url: string | null }> = {};
+    profileData?.forEach(profile => {
+      profilesMap[profile.id] = { 
+        full_name: profile.full_name || "Unknown User", 
+        avatar_url: profile.avatar_url 
+      };
+    });
+
     // Group messages by conversation partner
     const conversationsMap: Record<string, any[]> = {};
 
-    data.forEach(message => {
+    messageData.forEach(message => {
       const otherUserId = message.sender_id === userId ? message.receiver_id : message.sender_id;
       
       if (!conversationsMap[otherUserId]) {
@@ -54,13 +79,14 @@ export async function fetchMessageThreads(userId: string): Promise<MessageThread
     const threads: MessageThreadSummary[] = [];
     
     for (const [otherUserId, messages] of Object.entries(conversationsMap)) {
+      // Sort messages to get the latest first
+      messages.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      
       // Get the most recent message
       const latestMessage = messages[0];
       
-      // Determine user names and avatars
-      const otherUserProfile = latestMessage.sender_id === userId 
-        ? latestMessage.receiver_profile 
-        : latestMessage.sender_profile;
+      // Get profile info for the other user
+      const otherUserProfile = profilesMap[otherUserId] || { full_name: "Unknown User", avatar_url: null };
       
       // Count unread messages
       const unreadCount = messages.filter(msg => 
@@ -74,8 +100,8 @@ export async function fetchMessageThreads(userId: string): Promise<MessageThread
         last_message_date: latestMessage.created_at || new Date().toISOString(),
         unread_count: unreadCount,
         other_user_id: otherUserId,
-        other_user_name: otherUserProfile?.full_name || "Unknown User",
-        other_user_avatar: otherUserProfile?.avatar_url
+        other_user_name: otherUserProfile.full_name,
+        other_user_avatar: otherUserProfile.avatar_url
       });
     }
     
@@ -84,7 +110,7 @@ export async function fetchMessageThreads(userId: string): Promise<MessageThread
       new Date(b.last_message_date).getTime() - new Date(a.last_message_date).getTime()
     );
 
-    console.log("Consolidated message threads:", threads);
+    console.log("Returning thread summaries:", threads.length);
     return threads;
   } catch (error) {
     console.error("Error in fetchMessageThreads:", error);
