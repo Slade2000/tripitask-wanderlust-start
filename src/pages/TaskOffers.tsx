@@ -45,14 +45,28 @@ export default function TaskOffersPage() {
           const offersData = await getTaskOffers(taskId);
           console.log("Offers data received:", offersData);
           
-          setOffers(offersData);
-          
-          if (offersData.length === 0) {
-            console.log("No offers found for this task");
+          // Check if offersData is valid
+          if (Array.isArray(offersData)) {
+            setOffers(offersData);
+            console.log("Offers set in state:", offersData.length, "items");
+            
+            if (offersData.length === 0) {
+              console.log("No offers found for this task");
+            }
+          } else {
+            console.error("Offers data is not an array:", offersData);
+            setError("Invalid offers data format");
           }
         } catch (offerError) {
           console.error("Error fetching offers:", offerError);
           setError(`Failed to load offers: ${offerError instanceof Error ? offerError.message : 'Unknown error'}`);
+          
+          // Show error toast
+          toast({
+            title: "Error",
+            description: "Could not load offers for this task",
+            variant: "destructive",
+          });
         }
       } else {
         setError("Task not found");
@@ -78,10 +92,14 @@ export default function TaskOffersPage() {
 
   useEffect(() => {
     loadTaskAndOffers();
-  }, [taskId, navigate, toast]);
+  }, [taskId]);
 
   const handleBack = () => {
     navigate(-1);
+  };
+
+  const handleRetry = () => {
+    loadTaskAndOffers();
   };
 
   return (
@@ -103,7 +121,14 @@ export default function TaskOffersPage() {
       
       {error && (
         <div className="bg-red-100 text-red-800 p-4 rounded-md mb-4 text-center">
-          {error}
+          <p>{error}</p>
+          <Button 
+            variant="outline" 
+            className="mt-2 text-red-800 border-red-800 hover:bg-red-50"
+            onClick={handleRetry}
+          >
+            Retry
+          </Button>
         </div>
       )}
       

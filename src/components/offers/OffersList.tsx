@@ -17,6 +17,9 @@ export default function OffersList({ offers, taskId, loading, onRefresh }: Offer
   const { toast } = useToast();
   const [updatingOfferId, setUpdatingOfferId] = useState<string | null>(null);
   
+  // Debug log to see what offers we're getting
+  console.log("OffersList received offers:", offers, "isArray:", Array.isArray(offers), "length:", offers?.length);
+  
   const handleViewOfferDetails = (offerId: string) => {
     console.log("View details for offer:", offerId);
     
@@ -101,6 +104,7 @@ export default function OffersList({ offers, taskId, loading, onRefresh }: Offer
     return <div className="text-center p-6">Loading offers...</div>;
   }
   
+  // Check if offers is undefined/null before checking length
   if (!offers || offers.length === 0) {
     return <EmptyOffers />;
   }
