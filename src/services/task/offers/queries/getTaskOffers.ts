@@ -56,7 +56,7 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
     const providerIds = [...new Set(offersData.map(offer => offer.provider_id))];
     console.log("Provider IDs to fetch:", providerIds);
     
-    // Fetch all provider profiles from profiles table
+    // Fetch all provider profiles from profiles table - this is critical for provider names
     const { data: providersData, error: providersError } = await supabase
       .from('profiles')
       .select('id, full_name, avatar_url')
@@ -64,34 +64,36 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
       
     if (providersError) {
       console.error("Error fetching profiles:", providersError);
-      // Continue with default provider data
+      // We'll continue without profile data and use fallbacks
     }
     
     // Create a map of provider data for quick lookup
     const providersMap: Record<string, any> = {};
     
-    // First add profile data
-    if (providersData) {
+    // First add profile data - this is our primary source of names
+    if (providersData && providersData.length > 0) {
       console.log("Provider profiles data:", providersData);
       providersData.forEach(provider => {
         providersMap[provider.id] = {
           ...provider
         };
       });
+    } else {
+      console.warn("No provider profiles found - provider names will be unknown");
     }
     
     // Try to get additional user details from auth.users if the RPC function exists
     // This is optional - we'll still have provider names from the profiles table
-    try {
-      interface UserDetails {
-        id: string;
-        email: string;
-        raw_user_meta_data?: {
-          full_name?: string;
-          name?: string;
-        };
-      }
+    interface UserDetails {
+      id: string;
+      email: string;
+      raw_user_meta_data?: {
+        full_name?: string;
+        name?: string;
+      };
+    }
 
+    try {
       const { data: authUsersData, error: authUsersError } = await supabase.rpc('get_user_details', { 
         user_ids: providerIds
       });
@@ -104,6 +106,7 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
         // Process auth user data if available
         const typedAuthUsersData = authUsersData as UserDetails[];
         console.log("Auth user data:", typedAuthUsersData);
+        
         typedAuthUsersData.forEach((user) => {
           if (!user || !user.id) return;
           
@@ -121,7 +124,7 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
             // Create new entry
             providersMap[user.id] = {
               id: user.id,
-              full_name: fullName,
+              full_name: fullName || "Provider",
               email: user.email
             };
           }
@@ -138,7 +141,20 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
     const offers: Offer[] = offersData.map((offer: any) => {
       // Get provider data from the map, or use defaults
       const providerData = providersMap[offer.provider_id] || null;
-      const providerName = providerData?.full_name || providerData?.email || "Unknown Provider";
+      
+      // Make sure we have a name - prioritize full_name from profile or auth
+      let providerName = "Provider";
+      
+      if (providerData && providerData.full_name) {
+        providerName = providerData.full_name;
+      } else if (providerData && providerData.email) {
+        providerName = providerData.email;
+      }
+      
+      // Ensure we never show "Unknown Provider" if we have any identifying info
+      if (providerName === "Unknown Provider" && providerData && providerData.email) {
+        providerName = providerData.email;
+      }
       
       console.log(`Provider ${offer.provider_id} name: ${providerName}`);
       
