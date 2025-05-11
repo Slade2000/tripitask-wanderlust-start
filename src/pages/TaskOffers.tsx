@@ -18,10 +18,13 @@ export default function TaskOffersPage() {
   const [offers, setOffers] = useState<Offer[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [debugInfo, setDebugInfo] = useState<any>(null);
+  const [showDebugInfo, setShowDebugInfo] = useState(false);
 
   const loadTaskAndOffers = async () => {
     setLoading(true);
     setError(null);
+    setDebugInfo(null);
     
     if (!taskId) {
       setError("Task ID is missing");
@@ -43,7 +46,18 @@ export default function TaskOffersPage() {
           // Fetch offers for the task
           console.log("Fetching offers for task:", taskId);
           const offersData = await getTaskOffers(taskId);
-          console.log("Offers data received:", offersData);
+          
+          // Gather debug info
+          const debugData = {
+            taskId,
+            taskData,
+            offersDataType: typeof offersData,
+            offersIsArray: Array.isArray(offersData),
+            offersLength: Array.isArray(offersData) ? offersData.length : 'n/a',
+            offersData
+          };
+          setDebugInfo(debugData);
+          console.log("Debug info:", debugData);
           
           // Check if offersData is valid
           if (Array.isArray(offersData)) {
@@ -56,10 +70,12 @@ export default function TaskOffersPage() {
           } else {
             console.error("Offers data is not an array:", offersData);
             setError("Invalid offers data format");
+            setOffers([]);
           }
         } catch (offerError) {
           console.error("Error fetching offers:", offerError);
           setError(`Failed to load offers: ${offerError instanceof Error ? offerError.message : 'Unknown error'}`);
+          setOffers([]);
           
           // Show error toast
           toast({
@@ -102,6 +118,10 @@ export default function TaskOffersPage() {
     loadTaskAndOffers();
   };
 
+  const toggleDebugInfo = () => {
+    setShowDebugInfo(!showDebugInfo);
+  };
+
   return (
     <div className="min-h-screen bg-cream p-4 pb-20">
       <div className="flex items-center justify-between">
@@ -139,6 +159,28 @@ export default function TaskOffersPage() {
           loading={loading} 
           onRefresh={loadTaskAndOffers}
         />
+        
+        {!loading && !error && task && (
+          <div className="mt-8 text-center">
+            <button 
+              onClick={toggleDebugInfo} 
+              className="text-sm text-gray-500 hover:text-teal"
+            >
+              {showDebugInfo ? "Hide Debug Info" : "Show Debug Info"}
+            </button>
+            
+            {showDebugInfo && debugInfo && (
+              <div className="mt-2 p-4 bg-gray-100 rounded text-left text-xs overflow-auto max-h-60">
+                <p><strong>Task ID:</strong> {taskId}</p>
+                <p><strong>Task Title:</strong> {task.title}</p>
+                <p><strong>Offers Data Type:</strong> {debugInfo.offersDataType}</p>
+                <p><strong>Is Array:</strong> {String(debugInfo.offersIsArray)}</p>
+                <p><strong>Offers Length:</strong> {debugInfo.offersLength}</p>
+                <p><strong>Raw Offers Data:</strong> {JSON.stringify(debugInfo.offersData, null, 2)}</p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -31,39 +31,60 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
       throw new Error("Task not found");
     }
 
-    // Use explicit join syntax for better control and clarity
-    const { data, error } = await supabase
+    console.log("First query successful - Task exists:", taskData.id);
+
+    // First try: Get all offers for this task
+    const { data: offersData, error: offersError } = await supabase
       .from('offers')
-      .select(`
-        id,
-        task_id,
-        provider_id,
-        amount,
-        expected_delivery_date,
-        message,
-        status,
-        created_at,
-        profiles:provider_id (id, full_name, avatar_url)
-      `)
+      .select('*')
       .eq('task_id', taskId);
 
-    if (error) {
-      console.error("Error fetching offers:", error);
-      throw new Error(`Failed to fetch offers: ${error.message}`);
+    // Log raw offers data to see what we're working with
+    console.log("Raw offers data (no joins):", offersData);
+
+    if (offersError) {
+      console.error("Error fetching basic offers:", offersError);
+      throw new Error(`Failed to fetch basic offers: ${offersError.message}`);
     }
+    
+    // Then perform a separate query to get provider details
+    const providerIds = offersData?.map(offer => offer.provider_id) || [];
+    console.log("Provider IDs extracted:", providerIds);
 
-    // Log the raw data for debugging
-    console.log("Raw offers data:", data);
-
-    if (!data || data.length === 0) {
+    // If we have no offers, return early
+    if (providerIds.length === 0) {
       console.log("No offers found for task:", taskId);
       return [];
     }
+
+    // Get provider profiles in a separate query
+    const { data: profilesData, error: profilesError } = await supabase
+      .from('profiles')
+      .select('*')
+      .in('id', providerIds);
+
+    console.log("Profiles data:", profilesData);
+
+    if (profilesError) {
+      console.error("Error fetching provider profiles:", profilesError);
+      // Continue anyway, we can still show offers without profile details
+    }
+
+    // Create a map of profiles for easy lookup
+    const profileMap = new Map();
+    if (profilesData) {
+      profilesData.forEach(profile => {
+        profileMap.set(profile.id, profile);
+      });
+    }
+    
+    console.log("Profile map created:", [...profileMap.entries()]);
     
     // Transform the data into the expected Offer format
-    const offers: Offer[] = data.map((offer) => {
-      // Define the profile with explicit typing
-      const profile = offer.profiles as { id?: string; full_name?: string; avatar_url?: string } || {};
+    const offers: Offer[] = offersData.map((offer) => {
+      // Look up the profile from our map
+      const profile = profileMap.get(offer.provider_id) || {};
+      console.log(`Processing offer ${offer.id} for provider ${offer.provider_id}:`, profile);
       
       // Set a meaningful provider name with fallbacks
       let providerName = "Unknown Provider";
@@ -72,8 +93,6 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
       } else if (offer.provider_id) {
         providerName = `Provider ${offer.provider_id.substring(0, 8)}`;
       }
-      
-      console.log(`Provider ${offer.provider_id} display name: ${providerName}`, profile);
       
       return {
         id: offer.id,
@@ -87,7 +106,7 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
         provider: {
           id: offer.provider_id,
           name: providerName,
-          avatar_url: profile.avatar_url || undefined,
+          avatar_url: profile?.avatar_url || undefined,
           rating: 4.5, // Placeholder rating
           success_rate: "95%" // Placeholder success rate
         }
