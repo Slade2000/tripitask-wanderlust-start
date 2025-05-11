@@ -10,13 +10,13 @@ export async function fetchMessages(taskId: string, userId: string, otherId: str
   try {
     console.log(`Fetching messages for task: ${taskId} between users: ${userId} and ${otherId}`);
     
-    // Get messages directly with conditional filters
+    // Get messages for the specific task between the two users
     const { data: messagesData, error: messagesError } = await supabase
       .from('messages')
       .select()
       .eq('task_id', taskId)
-      .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
-      .or(`sender_id.eq.${otherId},receiver_id.eq.${otherId}`)
+      .or(`sender_id.eq.${userId},sender_id.eq.${otherId}`)
+      .or(`receiver_id.eq.${userId},receiver_id.eq.${otherId}`)
       .order('created_at', { ascending: true });
     
     if (messagesError) {
@@ -24,13 +24,21 @@ export async function fetchMessages(taskId: string, userId: string, otherId: str
       throw messagesError;
     }
 
-    if (!messagesData || messagesData.length === 0) {
+    // Further filter the messages to only include those between the two users
+    const filteredMessages = messagesData?.filter(message => 
+      (message.sender_id === userId && message.receiver_id === otherId) || 
+      (message.sender_id === otherId && message.receiver_id === userId)
+    ) || [];
+
+    console.log(`Found ${filteredMessages.length} messages between users ${userId} and ${otherId} for task ${taskId}`);
+
+    if (!filteredMessages || filteredMessages.length === 0) {
       console.log("No messages found");
       return [];
     }
 
     // Extract message IDs to fetch attachments
-    const messageIds = messagesData.map(message => message.id);
+    const messageIds = filteredMessages.map(message => message.id);
     
     // Fetch message attachments for all messages
     const attachmentsByMessageId = await fetchMessageAttachments(messageIds);
@@ -38,8 +46,8 @@ export async function fetchMessages(taskId: string, userId: string, otherId: str
     // Get unique user IDs from messages to fetch profiles
     const userIds = Array.from(
       new Set([
-        ...messagesData.map(message => message.sender_id),
-        ...messagesData.map(message => message.receiver_id)
+        ...filteredMessages.map(message => message.sender_id),
+        ...filteredMessages.map(message => message.receiver_id)
       ])
     );
 
@@ -47,7 +55,7 @@ export async function fetchMessages(taskId: string, userId: string, otherId: str
     const profilesById = await fetchUserProfiles(userIds);
 
     // Transform raw message data into DTO objects
-    return transformMessagesToDto(messagesData, attachmentsByMessageId, profilesById);
+    return transformMessagesToDto(filteredMessages, attachmentsByMessageId, profilesById);
   } catch (error) {
     console.error("Error in fetchMessages:", error);
     throw error;

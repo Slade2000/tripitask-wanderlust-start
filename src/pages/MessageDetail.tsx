@@ -55,7 +55,7 @@ export default function MessageDetail() {
     try {
       console.log("Loading messages for task:", taskId, "between users:", user.id, "and", taskOwnerId);
       const fetchedMessages = await getMessages(taskId, user.id, taskOwnerId);
-      console.log("Fetched messages:", fetchedMessages);
+      console.log("Fetched messages:", fetchedMessages.length);
       setMessages(fetchedMessages);
     } catch (error) {
       console.error("Error loading messages:", error);
