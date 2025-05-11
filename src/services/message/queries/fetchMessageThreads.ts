@@ -12,7 +12,7 @@ export async function fetchMessageThreads(userId: string): Promise<MessageThread
     // Convert userId to lowercase for consistency
     const userIdLower = String(userId).toLowerCase();
     
-    // Use explicit joins instead of foreign key references
+    // Use explicit select without relying on foreign key relationships for tasks
     const { data: threadsData, error } = await supabase
       .from('messages')
       .select(`
