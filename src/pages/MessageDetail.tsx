@@ -4,6 +4,7 @@ import { useMessageDetail } from "@/hooks/useMessageDetail";
 import MessageList from "@/components/messages/MessageList";
 import MessageInput from "@/components/messages/MessageInput";
 import MessageHeader from "@/components/messages/MessageHeader";
+import BottomNav from "@/components/BottomNav";
 
 export default function MessageDetail() {
   const location = useLocation();
@@ -40,10 +41,12 @@ export default function MessageDetail() {
         onBack={goBack} 
       />
       
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden pb-16">
         <MessageList messages={messages} loading={loading} tasksByIds={tasksByIds} />
         <MessageInput onSendMessage={handleSendMessage} isSubmitting={sending} />
       </div>
+      
+      <BottomNav currentPath="/messages" />
     </div>
   );
 }

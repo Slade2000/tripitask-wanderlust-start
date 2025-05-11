@@ -124,7 +124,7 @@ export default function MessageModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={() => onClose()}>
-      <DialogContent className="sm:max-w-md md:max-w-lg lg:max-w-2xl h-[80vh] flex flex-col p-0">
+      <DialogContent className="sm:max-w-md md:max-w-lg lg:max-w-2xl h-[80vh] flex flex-col p-0 mb-16">
         <DialogHeader className="p-4 border-b">
           <DialogTitle>
             Questions about: {taskTitle}

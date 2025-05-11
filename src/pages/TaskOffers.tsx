@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { ChevronLeft } from "lucide-react";
 import { getTaskById } from "@/services/task/queries/getTaskById";
 import { getTaskOffers } from "@/services/task/offers/queries/getTaskOffers";
@@ -9,10 +9,12 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import Logo from "@/components/Logo";
 import OffersList from "@/components/offers/OffersList";
+import BottomNav from "@/components/BottomNav";
 
 export default function TaskOffersPage() {
   const { taskId } = useParams<{ taskId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const [task, setTask] = useState<any>(null);
   const [offers, setOffers] = useState<Offer[]>([]);
@@ -182,6 +184,8 @@ export default function TaskOffersPage() {
           </div>
         )}
       </div>
+      
+      <BottomNav currentPath={location.pathname} />
     </div>
   );
 }
