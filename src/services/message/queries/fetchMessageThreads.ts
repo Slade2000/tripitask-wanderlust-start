@@ -12,7 +12,7 @@ export async function fetchMessageThreads(userId: string): Promise<MessageThread
     // Convert userId to lowercase for consistency
     const userIdLower = String(userId).toLowerCase();
     
-    // Query messages and join with profiles directly
+    // Query messages and join with profiles for both sender and receiver
     const { data: threadsData, error } = await supabase
       .from('messages')
       .select(`
@@ -24,8 +24,8 @@ export async function fetchMessageThreads(userId: string): Promise<MessageThread
         created_at,
         read,
         tasks:task_id (title),
-        sender:sender_id (full_name, avatar_url),
-        receiver:receiver_id (full_name, avatar_url)
+        sender:profiles!sender_id (full_name, avatar_url),
+        receiver:profiles!receiver_id (full_name, avatar_url)
       `)
       .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
       .order('created_at', { ascending: false });
