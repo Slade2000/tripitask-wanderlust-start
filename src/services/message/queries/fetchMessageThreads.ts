@@ -23,8 +23,7 @@ export async function fetchMessageThreads(userId: string): Promise<MessageThread
         content,
         created_at,
         read,
-        tasks:task_id (title),
-        sender_profile:sender_id (*)
+        tasks:task_id (title)
       `)
       .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
       .order('created_at', { ascending: false });
