@@ -9,11 +9,11 @@ export async function fetchMessageThreads(userId: string): Promise<MessageThread
   try {
     console.log("Fetching message threads for user:", userId);
     
-    // Convert userId to lowercase once at the beginning for consistency
+    // Convert userId to lowercase for consistency
     const userIdLower = String(userId).toLowerCase();
     
-    // First query: Get all unique conversations the user is involved in
-    const { data: messageData, error: messageError } = await supabase
+    // Query messages and join with profiles directly
+    const { data: threadsData, error } = await supabase
       .from('messages')
       .select(`
         id,
@@ -23,171 +23,77 @@ export async function fetchMessageThreads(userId: string): Promise<MessageThread
         content,
         created_at,
         read,
-        tasks:task_id (title)
+        tasks:task_id (title),
+        sender:sender_id (full_name, avatar_url),
+        receiver:receiver_id (full_name, avatar_url)
       `)
       .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
       .order('created_at', { ascending: false });
 
-    if (messageError) {
-      console.error("Error fetching message threads:", messageError);
-      throw messageError;
+    if (error) {
+      console.error("Error fetching message threads:", error);
+      throw error;
     }
 
-    if (!messageData || messageData.length === 0) {
+    if (!threadsData || threadsData.length === 0) {
       console.log("No message threads found for user:", userId);
       return [];
     }
 
-    console.log(`Found ${messageData.length} messages for user:`, userId);
-    
-    // Get all unique user IDs from the messages to fetch their profiles in a single query
-    const otherUserIds = new Set<string>();
-    messageData.forEach(message => {
-      // Ensure IDs are consistently treated as strings and lowercase for comparison
-      const senderIdStr = String(message.sender_id).toLowerCase();
-      const receiverIdStr = String(message.receiver_id).toLowerCase();
+    console.log(`Found ${threadsData.length} messages for user:`, userId);
+
+    // Group messages by conversation partner
+    const conversationMap: Record<string, any[]> = {};
+
+    threadsData.forEach(message => {
+      // Determine the other user involved in the conversation
+      const otherUserId = String(message.sender_id).toLowerCase() === userIdLower 
+        ? message.receiver_id 
+        : message.sender_id;
       
-      const otherUserId = senderIdStr === userIdLower ? receiverIdStr : senderIdStr;
-      otherUserIds.add(otherUserId);
-      console.log(`Message ID ${message.id}: Other user ID is ${otherUserId} (sender: ${senderIdStr}, receiver: ${receiverIdStr})`);
-    });
-
-    console.log("Unique other user IDs found:", Array.from(otherUserIds));
-
-    // Second query: Fetch all profiles for the other users
-    const { data: profileData, error: profileError } = await supabase
-      .from('profiles')
-      .select('id, full_name, avatar_url')
-      .in('id', Array.from(otherUserIds));
-
-    if (profileError) {
-      console.error("Error fetching user profiles:", profileError);
-      throw profileError;
-    }
-
-    if (!profileData || profileData.length === 0) {
-      console.error("No profiles found for user IDs:", Array.from(otherUserIds));
-      
-      // Additional debugging - check if profiles exist at all
-      const { data: allProfiles, error: allProfilesError } = await supabase
-        .from('profiles')
-        .select('id, full_name')
-        .limit(10);
-        
-      if (allProfilesError) {
-        console.error("Error checking profiles table:", allProfilesError);
-      } else {
-        console.log("Sample profiles in database:", allProfiles);
-      }
-    } else {
-      console.log(`Found ${profileData.length} profiles for ${otherUserIds.size} users`);
-      profileData.forEach(profile => {
-        console.log(`Profile found - ID: ${profile.id}, Name: ${profile.full_name || 'null'}, Type: ${typeof profile.id}`);
-      });
-    }
-
-    // Create a map of user profiles for easy lookup - use lowercase keys for consistent matching
-    const profilesMap = new Map<string, { full_name: string; avatar_url: string | null }>();
-    profileData?.forEach(profile => {
-      // Convert all IDs to lowercase strings for consistent lookup
-      const profileId = String(profile.id).toLowerCase();
-      profilesMap.set(profileId, { 
-        full_name: profile.full_name || "Unknown User", 
-        avatar_url: profile.avatar_url 
-      });
-      console.log(`Added to profilesMap: ${profileId} -> ${profile.full_name || "Unknown User"}`);
-    });
-
-    console.log("Created profiles map with entries:", profilesMap.size);
-    
-    // For debugging, log the keys in the map
-    console.log("Profile map keys:", Array.from(profilesMap.keys()));
-
-    // Group messages by conversation partner using a Map instead of an object
-    const conversationsMap = new Map<string, any[]>();
-
-    messageData.forEach(message => {
-      // Ensure consistent ID format - always lowercase strings
-      const senderIdStr = String(message.sender_id).toLowerCase();
-      const receiverIdStr = String(message.receiver_id).toLowerCase();
-      
-      const otherUserId = senderIdStr === userIdLower ? receiverIdStr : senderIdStr;
-      
-      if (!conversationsMap.has(otherUserId)) {
-        conversationsMap.set(otherUserId, []);
+      // Create a key for the conversation if it doesn't exist
+      if (!conversationMap[otherUserId]) {
+        conversationMap[otherUserId] = [];
       }
       
-      conversationsMap.get(otherUserId)!.push(message);
+      conversationMap[otherUserId].push(message);
     });
     
     // Create thread summaries from the grouped conversations
     const threads: MessageThreadSummary[] = [];
     
-    // Iterate through the Map entries
-    for (const [otherUserId, messages] of conversationsMap.entries()) {
+    for (const [otherUserId, messages] of Object.entries(conversationMap)) {
       // Sort messages to get the latest first
       messages.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
       
       // Get the most recent message
       const latestMessage = messages[0];
       
-      // Get profile info for the other user - make sure to use lowercase for lookup
-      const otherUserIdLower = otherUserId.toLowerCase();
+      // Determine if the other user is the sender or receiver of the latest message
+      const isOtherUserSender = String(latestMessage.sender_id).toLowerCase() !== userIdLower;
       
-      console.log(`Looking up profile for user ID: ${otherUserIdLower}`);
-      const otherUserProfile = profilesMap.get(otherUserIdLower);
+      // Get profile info based on whether other user is sender or receiver
+      const otherUserProfile = isOtherUserSender 
+        ? latestMessage.sender 
+        : latestMessage.receiver;
       
-      console.log(`Profile lookup result for ${otherUserIdLower}:`, otherUserProfile);
-      
-      // Fall back to direct lookup if not found in the map
-      if (!otherUserProfile) {
-        console.warn(`No profile found for user ID: ${otherUserId} in the profilesMap`);
-        console.log(`Available profile IDs in map:`, Array.from(profilesMap.keys()));
-        
-        // Check if this ID exists in the profiles table directly
-        const { data: directProfile, error: directError } = await supabase
-          .from('profiles')
-          .select('id, full_name, avatar_url')
-          .eq('id', otherUserId)
-          .single();
-          
-        if (directError) {
-          console.error(`Error directly checking profile for ID ${otherUserId}:`, directError);
-        } else {
-          console.log(`Direct profile lookup result for ID ${otherUserId}:`, directProfile);
-          
-          // If we found a profile directly, add it to the map for future use
-          if (directProfile) {
-            profilesMap.set(otherUserIdLower, { 
-              full_name: directProfile.full_name || "Unknown User", 
-              avatar_url: directProfile.avatar_url 
-            });
-            
-            console.log(`Added profile to map from direct lookup: ${otherUserIdLower} -> ${directProfile.full_name || "Unknown User"}`);
-          }
-        }
-      }
-      
-      // Count unread messages
+      // Count unread messages from the other user
       const unreadCount = messages.filter(msg => 
         String(msg.sender_id).toLowerCase() !== userIdLower && !msg.read
       ).length;
       
-      // Get the profile info, even if added from direct lookup
-      const profile = profilesMap.get(otherUserIdLower);
-      
+      // Create thread summary
       const thread: MessageThreadSummary = {
         task_id: latestMessage.task_id,
         task_title: latestMessage.tasks?.title || "Unknown Task",
         last_message_content: latestMessage.content || "",
-        last_message_date: latestMessage.created_at || new Date().toISOString(),
+        last_message_date: latestMessage.created_at,
         unread_count: unreadCount,
         other_user_id: otherUserId,
-        other_user_name: profile ? profile.full_name : `User ${otherUserId.slice(0, 8)}...`,
-        other_user_avatar: profile ? profile.avatar_url : null
+        other_user_name: otherUserProfile?.full_name || `User ${otherUserId.slice(0, 8)}...`,
+        other_user_avatar: otherUserProfile?.avatar_url
       };
       
-      console.log(`Created thread summary for ${otherUserId}: name=${thread.other_user_name}`);
       threads.push(thread);
     }
     

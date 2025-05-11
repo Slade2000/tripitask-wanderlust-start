@@ -5,4 +5,4 @@ export * from './queries/getMessages';
 export * from './queries/sendMessage';
 export * from './queries/uploadAttachment';
 export * from './queries/markMessagesAsRead';
-export * from './queries/fetchMessageThreads';  // Make sure this is exported
+export * from './queries/fetchMessageThreads';

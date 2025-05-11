@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { Message } from "../types";
-import { fetchMessageAttachments, fetchUserProfiles, transformMessagesToDto } from "../helpers/messageHelpers";
+import { fetchMessageAttachments, transformMessagesToDto } from "../helpers/messageHelpers";
 
 /**
  * Fetches all messages between two users, regardless of task
@@ -10,10 +10,14 @@ export async function fetchMessages(userId: string, otherId: string, taskId?: st
   try {
     console.log(`Fetching all messages between users: ${userId} and ${otherId}`);
     
-    // Build the query to get messages between the two users
+    // Build the query to get messages between the two users and join with profiles
     let query = supabase
       .from('messages')
-      .select()
+      .select(`
+        *,
+        sender:sender_id (full_name, avatar_url),
+        receiver:receiver_id (full_name, avatar_url)
+      `)
       .or(`and(sender_id.eq.${userId},receiver_id.eq.${otherId}),and(sender_id.eq.${otherId},receiver_id.eq.${userId})`)
       .order('created_at', { ascending: true });
     
@@ -43,19 +47,8 @@ export async function fetchMessages(userId: string, otherId: string, taskId?: st
     // Fetch message attachments for all messages
     const attachmentsByMessageId = await fetchMessageAttachments(messageIds);
 
-    // Get unique user IDs from messages to fetch profiles
-    const userIds = Array.from(
-      new Set([
-        ...messagesData.map(message => message.sender_id),
-        ...messagesData.map(message => message.receiver_id)
-      ])
-    );
-
-    // Fetch user profiles
-    const profilesById = await fetchUserProfiles(userIds);
-
     // Transform raw message data into DTO objects
-    return transformMessagesToDto(messagesData, attachmentsByMessageId, profilesById);
+    return transformMessagesToDto(messagesData, attachmentsByMessageId);
   } catch (error) {
     console.error("Error in fetchMessages:", error);
     throw error;

@@ -44,47 +44,13 @@ export async function fetchMessageAttachments(messageIds: string[]): Promise<Rec
 }
 
 /**
- * Fetches user profiles for a list of user IDs
- */
-export async function fetchUserProfiles(userIds: string[]): Promise<Record<string, any>> {
-  if (userIds.length === 0) return {};
-
-  try {
-    const { data: profilesData, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .in('id', userIds);
-
-    if (error) {
-      console.error("Error fetching profiles:", error);
-      return {};
-    }
-
-    // Map profiles by ID for easy lookup
-    const profilesById: Record<string, any> = {};
-    
-    profilesData?.forEach(profile => {
-      profilesById[profile.id] = profile;
-    });
-
-    return profilesById;
-  } catch (error) {
-    console.error("Error in fetchUserProfiles:", error);
-    return {};
-  }
-}
-
-/**
  * Transforms raw message data into structured Message objects
  */
 export function transformMessagesToDto(
   messagesData: any[], 
-  attachmentsByMessageId: Record<string, MessageAttachment[]>, 
-  profilesById: Record<string, any>
+  attachmentsByMessageId: Record<string, MessageAttachment[]>
 ): Message[] {
   return messagesData.map(message => {
-    const senderProfile = profilesById[message.sender_id] || {};
-    
     return {
       id: message.id,
       task_id: message.task_id,
@@ -93,8 +59,8 @@ export function transformMessagesToDto(
       content: message.content,
       created_at: message.created_at,
       attachments: attachmentsByMessageId[message.id] || [],
-      sender_name: senderProfile.full_name || "Unknown User",
-      sender_avatar: senderProfile.avatar_url
+      sender_name: message.sender?.full_name || "Unknown User",
+      sender_avatar: message.sender?.avatar_url
     };
   });
 }
