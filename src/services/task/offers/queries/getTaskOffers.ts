@@ -70,21 +70,26 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
       // Continue anyway, we can still show offers without profile details
     }
 
-    // Create a map of profiles for easy lookup
+    // Create a map of profiles for easy lookup - using Map() for better key handling
     const profileMap = new Map();
     if (profilesData) {
       profilesData.forEach(profile => {
-        profileMap.set(profile.id, profile);
+        // Standardize IDs to lowercase strings
+        const profileId = String(profile.id).toLowerCase();
+        profileMap.set(profileId, profile);
+        console.log(`Added profile to map: ${profileId} -> ${profile.full_name || 'No name'}`);
       });
     }
     
-    console.log("Profile map created:", [...profileMap.entries()]);
+    console.log("Profile map created with entries:", profileMap.size);
+    console.log("Profile map keys:", Array.from(profileMap.keys()));
     
     // Transform the data into the expected Offer format
     const offers: Offer[] = offersData.map((offer) => {
-      // Look up the profile from our map
-      const profile = profileMap.get(offer.provider_id) || {};
-      console.log(`Processing offer ${offer.id} for provider ${offer.provider_id}:`, profile);
+      // Look up the profile from our map - using lowercase for consistent lookup
+      const providerIdLower = String(offer.provider_id).toLowerCase();
+      const profile = profileMap.get(providerIdLower);
+      console.log(`Processing offer ${offer.id} for provider ${offer.provider_id} (lowercase: ${providerIdLower}):`, profile || 'Profile not found');
       
       // Set a meaningful provider name with fallbacks
       let providerName = "Unknown Provider";

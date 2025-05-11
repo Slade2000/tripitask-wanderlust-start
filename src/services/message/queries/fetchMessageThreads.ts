@@ -40,10 +40,10 @@ export async function fetchMessageThreads(userId: string): Promise<MessageThread
     // Get all unique user IDs from the messages to fetch their profiles in a single query
     const otherUserIds = new Set<string>();
     messageData.forEach(message => {
-      // Ensure IDs are consistently treated as strings
-      const senderIdStr = String(message.sender_id);
-      const receiverIdStr = String(message.receiver_id);
-      const userIdStr = String(userId);
+      // Ensure IDs are consistently treated as strings and lowercase for comparison
+      const senderIdStr = String(message.sender_id).toLowerCase();
+      const receiverIdStr = String(message.receiver_id).toLowerCase();
+      const userIdStr = String(userId).toLowerCase();
       
       const otherUserId = senderIdStr === userIdStr ? receiverIdStr : senderIdStr;
       otherUserIds.add(otherUserId);
@@ -84,26 +84,30 @@ export async function fetchMessageThreads(userId: string): Promise<MessageThread
       });
     }
 
-    // Create a map of user profiles for easy lookup - make sure IDs are strings
-    const profilesMap: Record<string, { full_name: string; avatar_url: string | null }> = {};
+    // Create a map of user profiles for easy lookup - using Map for better key handling
+    const profilesMap = new Map<string, { full_name: string; avatar_url: string | null }>();
     profileData?.forEach(profile => {
-      const profileId = String(profile.id);
-      profilesMap[profileId] = { 
+      // Convert all IDs to lowercase strings for consistent lookup
+      const profileId = String(profile.id).toLowerCase();
+      profilesMap.set(profileId, { 
         full_name: profile.full_name || "Unknown User", 
         avatar_url: profile.avatar_url 
-      };
+      });
     });
 
-    console.log("Created profiles map:", profilesMap);
+    console.log("Created profiles map with entries:", profilesMap.size);
+    
+    // For debugging, log the keys in the map
+    console.log("Profile map keys:", Array.from(profilesMap.keys()));
 
     // Group messages by conversation partner
     const conversationsMap: Record<string, any[]> = {};
 
     messageData.forEach(message => {
-      // Ensure consistent ID format - convert to string
-      const senderIdStr = String(message.sender_id);
-      const receiverIdStr = String(message.receiver_id);
-      const userIdStr = String(userId);
+      // Ensure consistent ID format - always lowercase strings
+      const senderIdStr = String(message.sender_id).toLowerCase();
+      const receiverIdStr = String(message.receiver_id).toLowerCase();
+      const userIdStr = String(userId).toLowerCase();
       
       const otherUserId = senderIdStr === userIdStr ? receiverIdStr : senderIdStr;
       
@@ -124,12 +128,13 @@ export async function fetchMessageThreads(userId: string): Promise<MessageThread
       // Get the most recent message
       const latestMessage = messages[0];
       
-      // Get profile info for the other user
-      const otherUserProfile = profilesMap[otherUserId];
+      // Get profile info for the other user - using lowercase for lookup
+      const otherUserIdLower = otherUserId.toLowerCase();
+      const otherUserProfile = profilesMap.get(otherUserIdLower);
       
       if (!otherUserProfile) {
-        console.warn(`No profile found for user ID: ${otherUserId}`);
-        console.log(`Available profile IDs in map:`, Object.keys(profilesMap));
+        console.warn(`No profile found for user ID: ${otherUserId} (lowercase: ${otherUserIdLower})`);
+        console.log(`Available profile IDs in map:`, Array.from(profilesMap.keys()));
         
         // Check if this ID exists in the profiles table directly
         const { data: directProfile, error: directError } = await supabase
@@ -142,12 +147,22 @@ export async function fetchMessageThreads(userId: string): Promise<MessageThread
           console.error(`Error directly checking profile for ID ${otherUserId}:`, directError);
         } else {
           console.log(`Direct profile lookup result for ID ${otherUserId}:`, directProfile);
+          
+          // If we found a profile directly, add it to the map for future use
+          if (directProfile) {
+            profilesMap.set(otherUserIdLower, { 
+              full_name: directProfile.full_name || "Unknown User", 
+              avatar_url: directProfile.avatar_url 
+            });
+            
+            console.log(`Added profile to map from direct lookup: ${otherUserIdLower} -> ${directProfile.full_name}`);
+          }
         }
       }
       
       // Count unread messages
       const unreadCount = messages.filter(msg => 
-        msg.sender_id !== userId && !msg.read
+        String(msg.sender_id).toLowerCase() !== userIdStr && !msg.read
       ).length;
       
       const thread: MessageThreadSummary = {
