@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -16,6 +15,9 @@ import { getTaskById } from "@/services/task/queries/getTaskById";
 import { submitOffer } from "@/services/task/offers/queries/submitOffer";
 import { useAuth } from "@/contexts/AuthContext";
 
+// Import our new MessageModal component
+import MessageModal from "@/components/messages/MessageModal";
+
 const SubmitOffer = () => {
   const { taskId } = useParams<{ taskId: string }>();
   const navigate = useNavigate();
@@ -26,6 +28,9 @@ const SubmitOffer = () => {
   const [deliveryDate, setDeliveryDate] = useState<Date | undefined>(undefined);
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // In the SubmitOffer component, add a state for the message modal
+  const [messageModalOpen, setMessageModalOpen] = useState(false);
 
   // Fetch task details
   const { data: task, isLoading, error } = useQuery({
@@ -232,7 +237,16 @@ const SubmitOffer = () => {
               You will be notified if your offer is accepted.
             </AlertDescription>
           </Alert>
-          
+
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full mb-4"
+            onClick={() => setMessageModalOpen(true)}
+          >
+            Ask Questions Before Submitting
+          </Button>
+
           <div className="pt-4">
             <Button 
               type="submit" 
@@ -248,6 +262,17 @@ const SubmitOffer = () => {
           </div>
         </form>
       </div>
+      
+      {/* Add the MessageModal component at the end of the return statement, before the closing tag */}
+      {task && (
+        <MessageModal
+          isOpen={messageModalOpen}
+          onClose={() => setMessageModalOpen(false)}
+          taskId={taskId || ''}
+          taskOwnerId={task.user_id}
+          taskTitle={task.title || ''}
+        />
+      )}
     </div>
   );
 };
