@@ -22,8 +22,7 @@ export async function fetchMessageThreads(userId: string): Promise<MessageThread
         receiver_id, 
         content,
         created_at,
-        read,
-        tasks:task_id (title)
+        read
       `)
       .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
       .order('created_at', { ascending: false });
@@ -67,6 +66,31 @@ export async function fetchMessageThreads(userId: string): Promise<MessageThread
 
     console.log("Fetched profiles for users:", Object.keys(profilesMap).length);
 
+    // Get all unique task IDs
+    const taskIds = new Set<string>();
+    threadsData.forEach(message => {
+      if (message.task_id) {
+        taskIds.add(String(message.task_id));
+      }
+    });
+
+    // Fetch task titles in a separate query
+    const { data: tasksData, error: tasksError } = await supabase
+      .from('tasks')
+      .select('id, title')
+      .in('id', Array.from(taskIds));
+
+    if (tasksError) {
+      console.error("Error fetching task details:", tasksError);
+      throw new Error(`Failed to fetch task details: ${tasksError.message}`);
+    }
+
+    // Create a map for quick task lookup
+    const tasksMap: Record<string, any> = {};
+    tasksData?.forEach(task => {
+      tasksMap[String(task.id)] = task;
+    });
+
     // Group messages by conversation partner
     const conversationMap: Record<string, any[]> = {};
 
@@ -105,10 +129,13 @@ export async function fetchMessageThreads(userId: string): Promise<MessageThread
         String(msg.sender_id).toLowerCase() !== userIdLower && !msg.read
       ).length;
       
+      // Get task info from our tasks map
+      const taskInfo = tasksMap[latestMessage.task_id];
+      
       // Create thread summary
       const thread: MessageThreadSummary = {
         task_id: latestMessage.task_id,
-        task_title: latestMessage.tasks?.title || "Unknown Task",
+        task_title: taskInfo?.title || "Unknown Task",
         last_message_content: latestMessage.content || "",
         last_message_date: latestMessage.created_at,
         unread_count: unreadCount,
