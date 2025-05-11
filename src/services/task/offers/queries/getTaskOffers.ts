@@ -89,8 +89,8 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
       };
     }
 
-    // Call the RPC function with proper typing
-    const { data: authUsersData, error: authUsersError } = await supabase.rpc<UserDetails[]>('get_user_details', { 
+    // Call the RPC function with proper typing - providing both required type parameters
+    const { data: authUsersData, error: authUsersError } = await supabase.rpc<UserDetails[], { user_ids: string[] }>('get_user_details', { 
       user_ids: providerIds
     });
       
