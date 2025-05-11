@@ -33,32 +33,10 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
 
     console.log("Task exists:", taskData);
 
-    // Define the type for the Supabase response
-    interface ProviderResponse {
-      id: string;
-      full_name?: string;
-      avatar_url?: string;
-    }
-    
-    interface OfferWithProvider {
-      id: string;
-      task_id: string;
-      provider_id: string;
-      amount: number;
-      expected_delivery_date: string;
-      message?: string;
-      status: string;
-      created_at: string;
-      provider: ProviderResponse | null;
-    }
-
-    // Fetch offers with provider data using a JOIN query
+    // Fetch the offers first
     const { data: offersData, error: offersError } = await supabase
       .from('offers')
-      .select(`
-        *,
-        provider:profiles(id, full_name, avatar_url)
-      `)
+      .select('*')
       .eq('task_id', taskId);
 
     if (offersError) {
@@ -66,21 +44,39 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
       throw new Error(`Failed to fetch offers: ${offersError.message}`);
     }
 
-    console.log("Raw offers data with provider:", offersData);
+    console.log("Raw offers data:", offersData);
 
     if (!offersData || offersData.length === 0) {
       console.log("No offers found for task:", taskId);
       return [];
     }
+    
+    // Get unique provider IDs from the offers
+    const providerIds = [...new Set(offersData.map(offer => offer.provider_id))];
+    
+    // Fetch all provider profiles in a single query
+    const { data: providersData, error: providersError } = await supabase
+      .from('profiles')
+      .select('id, full_name, avatar_url')
+      .in('id', providerIds);
+      
+    if (providersError) {
+      console.error("Error fetching providers:", providersError);
+      // Continue with default provider data
+    }
+    
+    // Create a map of provider data for quick lookup
+    const providersMap: Record<string, any> = {};
+    if (providersData) {
+      providersData.forEach(provider => {
+        providersMap[provider.id] = provider;
+      });
+    }
 
     // Transform the offers with provider details included
-    const offers: Offer[] = offersData.map((offer: OfferWithProvider) => {
-      // Extract provider data from the joined table
-      const provider = offer.provider || {
-        id: offer.provider_id,
-        full_name: undefined,
-        avatar_url: undefined
-      };
+    const offers: Offer[] = offersData.map((offer: any) => {
+      // Get provider data from the map, or use defaults
+      const providerData = providersMap[offer.provider_id] || null;
       
       return {
         id: offer.id,
@@ -93,8 +89,8 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
         created_at: offer.created_at,
         provider: {
           id: offer.provider_id,
-          name: provider.full_name || undefined,
-          avatar_url: provider.avatar_url || undefined,
+          name: providerData?.full_name || undefined,
+          avatar_url: providerData?.avatar_url || undefined,
           rating: 4.5, // Placeholder rating
           success_rate: "95%" // Placeholder success rate
         }
