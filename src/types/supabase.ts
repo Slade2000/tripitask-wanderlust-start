@@ -1,3 +1,4 @@
+
 export type Json =
   | string
   | number
@@ -225,7 +226,60 @@ export interface Database {
           }
         ]
       }
-      // Add spatial_ref_sys table type definition
+      messages: {
+        Row: {
+          id: string
+          task_id: string
+          sender_id: string
+          receiver_id: string
+          content: string
+          created_at: string
+          read: boolean
+        }
+        Insert: {
+          id?: string
+          task_id: string
+          sender_id: string
+          receiver_id: string
+          content: string
+          created_at?: string
+          read?: boolean
+        }
+        Update: {
+          id?: string
+          task_id?: string
+          sender_id?: string
+          receiver_id?: string
+          content?: string
+          created_at?: string
+          read?: boolean
+        }
+        Relationships: []
+      }
+      message_attachments: {
+        Row: {
+          id: string
+          message_id: string
+          file_url: string
+          file_type: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          message_id: string
+          file_url: string
+          file_type: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          message_id?: string
+          file_url?: string
+          file_type?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
       spatial_ref_sys: {
         Row: {
           srid: number
@@ -252,7 +306,43 @@ export interface Database {
       }
     }
     Views: {
-      [_ in never]: never
+      message_threads: {
+        Row: {
+          task_id: string | null
+          task_title: string | null
+          last_message_content: string | null
+          last_message_date: string | null
+          unread_count: number | null
+          other_user_id: string | null
+          other_user_name: string | null
+          other_user_avatar: string | null
+          sender_id: string | null
+          receiver_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_receiver_id_fkey"
+            columns: ["receiver_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Functions: {
       get_user_details: {

@@ -7,10 +7,12 @@ import { MessageThreadSummary } from "../types";
  */
 export async function fetchMessageThreads(userId: string): Promise<MessageThreadSummary[]> {
   try {
-    // Query the message_threads view that we created in the SQL migration
+    console.log("Fetching message threads for user:", userId);
+    
+    // Query the message_threads view
     const { data, error } = await supabase
       .from('message_threads')
-      .select()
+      .select('*')
       .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
       .order('last_message_date', { ascending: false });
 
@@ -24,7 +26,7 @@ export async function fetchMessageThreads(userId: string): Promise<MessageThread
     }
 
     // Convert to MessageThreadSummary objects
-    const threads: MessageThreadSummary[] = data.map(thread => ({
+    const threads: MessageThreadSummary[] = data.map((thread: any) => ({
       task_id: thread.task_id,
       task_title: thread.task_title || "Unknown Task",
       last_message_content: thread.last_message_content || "",
