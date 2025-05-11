@@ -62,8 +62,8 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
     
     // Transform the data into the expected Offer format
     const offers: Offer[] = data.map((offer) => {
-      // Get profile data safely
-      const profile = offer.profiles || {};
+      // Define the profile with explicit typing
+      const profile = offer.profiles as { id?: string; full_name?: string; avatar_url?: string } || {};
       
       // Set a meaningful provider name with fallbacks
       let providerName = "Unknown Provider";
