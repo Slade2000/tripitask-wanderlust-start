@@ -79,15 +79,27 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
     
     // For auth users data, we need to use a different approach
     // We'll use a raw SQL query to access the auth schema
+    // Using a type assertion to handle the custom RPC function
+    type UserDetailsParams = { user_ids: string[] };
     const { data: authUsersData, error: authUsersError } = await supabase
-      .rpc('get_user_details', { user_ids: providerIds } as any);
+      .rpc('get_user_details', { user_ids: providerIds } as UserDetailsParams as unknown as never);
       
     if (authUsersError) {
       console.error("Error fetching auth users:", authUsersError);
       // Continue with profile data only
     } else if (authUsersData) {
       // Process auth user data if available
-      (authUsersData as any[]).forEach((user: any) => {
+      // Use type assertion to handle the unknown return type
+      const usersArray = authUsersData as Array<{
+        id: string;
+        email: string;
+        raw_user_meta_data?: {
+          full_name?: string;
+          name?: string;
+        };
+      }>;
+      
+      usersArray.forEach((user) => {
         if (!user || !user.id) return;
         
         const userData = user.raw_user_meta_data || {};

@@ -7,7 +7,8 @@ import { supabase } from "@/integrations/supabase/client";
  */
 export async function createGetUserDetailsFunction() {
   // This function requires SUPABASE_SERVICE_ROLE_KEY to create
-  const { error } = await supabase.rpc('create_get_user_details_function' as any);
+  // Using type assertion with unknown as an intermediate step to avoid direct any to never assignment
+  const { error } = await supabase.rpc('create_get_user_details_function' as unknown as never);
   
   if (error) {
     console.error("Failed to create get_user_details function:", error);
