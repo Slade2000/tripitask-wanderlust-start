@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import type { Offer } from "@/types/offer";
+import type { Database } from "@/types/supabase";
 
 /**
  * Fetches all offers for a specific task
@@ -89,8 +90,8 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
       };
     }
 
-    // Call the RPC function with proper typing - providing both required type parameters
-    const { data: authUsersData, error: authUsersError } = await supabase.rpc<UserDetails[], { user_ids: string[] }>('get_user_details', { 
+    // Call the RPC function with the correct typing approach
+    const { data: authUsersData, error: authUsersError } = await supabase.rpc('get_user_details', { 
       user_ids: providerIds
     });
       
@@ -99,7 +100,8 @@ export async function getTaskOffers(taskId: string): Promise<Offer[]> {
       // Continue with profile data only
     } else if (authUsersData) {
       // Process auth user data if available
-      authUsersData.forEach((user) => {
+      const typedAuthUsersData = authUsersData as UserDetails[];
+      typedAuthUsersData.forEach((user) => {
         if (!user || !user.id) return;
         
         const userData = user.raw_user_meta_data || {};
