@@ -9,9 +9,12 @@ export interface TaskData {
   due_date: string;
   status?: string;
   category_id: string;
-  photos: File[];
+  photos?: string[]; // Changed from File[] to string[] for compatibility
+  task_photos?: any[]; // Added to match database structure
+  categories?: any;
   latitude?: number | null;
   longitude?: number | null;
+  created_at?: string;
 }
 
 export interface TaskFilterParams {

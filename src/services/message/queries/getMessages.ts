@@ -9,7 +9,7 @@ export async function getMessages(taskId: string, userId: string, otherId: strin
   try {
     console.log(`Fetching messages for task: ${taskId} between users: ${userId} and ${otherId}`);
     
-    // Get messages
+    // Get messages directly using .eq and .or filters instead of table joins
     const { data: messagesData, error: messagesError } = await supabase
       .from('messages')
       .select('*')
@@ -30,62 +30,78 @@ export async function getMessages(taskId: string, userId: string, otherId: strin
 
     // Extract message IDs to fetch attachments
     const messageIds = messagesData.map(message => message.id);
-
-    // Get attachments for these messages
-    const { data: attachmentsData, error: attachmentsError } = await supabase
-      .from('message_attachments')
-      .select('*')
-      .in('message_id', messageIds);
-
-    if (attachmentsError) {
-      console.error("Error fetching message attachments:", attachmentsError);
-      // Continue anyway, we can still show messages without attachments
+    let attachmentsData: any[] = [];
+    
+    // Fetch message attachments if there are any messages
+    if (messageIds.length > 0) {
+      const { data, error: attachmentsError } = await supabase
+        .from('message_attachments')
+        .select('*')
+        .in('message_id', messageIds);
+      
+      if (attachmentsError) {
+        console.error("Error fetching message attachments:", attachmentsError);
+      } else if (data) {
+        attachmentsData = data;
+      }
     }
 
     // Group attachments by message_id
     const attachmentsByMessageId: Record<string, MessageAttachment[]> = {};
-    if (attachmentsData) {
-      attachmentsData.forEach(attachment => {
-        if (!attachmentsByMessageId[attachment.message_id]) {
-          attachmentsByMessageId[attachment.message_id] = [];
-        }
-        attachmentsByMessageId[attachment.message_id].push(attachment as MessageAttachment);
+    attachmentsData.forEach(attachment => {
+      if (!attachmentsByMessageId[attachment.message_id]) {
+        attachmentsByMessageId[attachment.message_id] = [];
+      }
+      attachmentsByMessageId[attachment.message_id].push({
+        id: attachment.id,
+        message_id: attachment.message_id,
+        file_url: attachment.file_url,
+        file_type: attachment.file_type,
+        created_at: attachment.created_at
       });
-    }
+    });
 
-    // Get sender profiles to display names and avatars
+    // Get unique user IDs from messages to fetch profiles
     const userIds = Array.from(
-      new Set(messagesData.map(message => message.sender_id))
+      new Set([
+        ...messagesData.map(message => message.sender_id),
+        ...messagesData.map(message => message.receiver_id)
+      ])
     );
 
-    const { data: profiles, error: profilesError } = await supabase
+    // Fetch user profiles
+    const { data: profilesData, error: profilesError } = await supabase
       .from('profiles')
       .select('*')
       .in('id', userIds);
 
     if (profilesError) {
       console.error("Error fetching profiles:", profilesError);
-      // Continue anyway, we can still show messages without sender details
     }
 
     // Map profiles by ID for easy lookup
     const profilesById: Record<string, any> = {};
-    if (profiles) {
-      profiles.forEach(profile => {
+    if (profilesData) {
+      profilesData.forEach(profile => {
         profilesById[profile.id] = profile;
       });
     }
 
     // Combine messages with their attachments and sender details
-    const messages = messagesData.map(message => {
-      const profile = profilesById[message.sender_id] || {};
+    const messages: Message[] = messagesData.map(message => {
+      const senderProfile = profilesById[message.sender_id] || {};
       
       return {
-        ...message,
+        id: message.id,
+        task_id: message.task_id,
+        sender_id: message.sender_id,
+        receiver_id: message.receiver_id,
+        content: message.content,
+        created_at: message.created_at,
         attachments: attachmentsByMessageId[message.id] || [],
-        sender_name: profile.full_name || "Unknown User",
-        sender_avatar: profile.avatar_url
-      } as Message;
+        sender_name: senderProfile.full_name || "Unknown User",
+        sender_avatar: senderProfile.avatar_url
+      };
     });
 
     return messages;
@@ -100,56 +116,96 @@ export async function getMessages(taskId: string, userId: string, otherId: strin
  */
 export async function getMessageThreads(userId: string) {
   try {
-    // This is a complex query that would be better suited for a PostgreSQL function
-    // Here's a simplified approach that gets the latest message for each task-user pair
-    const { data: latestMessages, error } = await supabase
+    // This gets messages where the current user is either sender or receiver
+    const { data: userMessages, error: messagesError } = await supabase
       .from('messages')
-      .select(`
-        *,
-        tasks!messages_task_id_fkey(
-          id,
-          title
-        )
-      `)
+      .select('*')
       .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
       .order('created_at', { ascending: false });
 
-    if (error) {
-      console.error("Error fetching message threads:", error);
-      throw error;
+    if (messagesError) {
+      console.error("Error fetching message threads:", messagesError);
+      throw messagesError;
     }
 
-    // Transform the data to create thread summaries
-    // In a real app, you'd use a more efficient approach, possibly using SQL window functions
-    const threads = new Map();
-    
-    await Promise.all(latestMessages?.map(async (message: any) => {
-      const otherUserId = message.sender_id === userId ? message.receiver_id : message.sender_id;
-      const taskId = message.task_id;
-      const threadKey = `${taskId}-${otherUserId}`;
-      
-      if (!threads.has(threadKey)) {
-        // Get user details
-        const { data: otherUserData } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', otherUserId)
-          .single();
+    if (!userMessages || userMessages.length === 0) {
+      return [];
+    }
 
-        threads.set(threadKey, {
-          task_id: taskId,
-          task_title: message.tasks?.title || "Unknown Task",
+    // Get all task IDs from messages to fetch task details
+    const taskIds = [...new Set(userMessages.map(msg => msg.task_id))];
+    const { data: tasksData, error: tasksError } = await supabase
+      .from('tasks')
+      .select('id, title')
+      .in('id', taskIds);
+
+    if (tasksError) {
+      console.error("Error fetching tasks:", tasksError);
+    }
+
+    // Map tasks by ID for easy lookup
+    const tasksById: Record<string, any> = {};
+    if (tasksData) {
+      tasksData.forEach(task => {
+        tasksById[task.id] = task;
+      });
+    }
+
+    // Create a map to track unique thread combinations (taskId + otherUserId)
+    const threadMap = new Map();
+    
+    // Process messages to create thread summaries
+    userMessages.forEach(message => {
+      const otherUserId = message.sender_id === userId ? message.receiver_id : message.sender_id;
+      const threadKey = `${message.task_id}-${otherUserId}`;
+      
+      // Only add this message if it's more recent than what we already have
+      if (!threadMap.has(threadKey) || 
+          new Date(message.created_at) > new Date(threadMap.get(threadKey).last_message_date)) {
+        threadMap.set(threadKey, {
+          task_id: message.task_id,
+          task_title: (tasksById[message.task_id] && tasksById[message.task_id].title) || "Unknown Task",
           last_message_content: message.content,
           last_message_date: message.created_at,
-          unread_count: 0, // This would need to be calculated from a read_receipts table
+          unread_count: 0, // Would need a read_receipts table to track this
           other_user_id: otherUserId,
-          other_user_name: otherUserData?.full_name || "Unknown User",
-          other_user_avatar: otherUserData?.avatar_url
+          other_user_name: "Loading...", // Will be filled in later
+          other_user_avatar: undefined
         });
       }
-    }) || []);
+    });
+
+    // Get all the other user IDs to fetch their profiles
+    const otherUserIds = Array.from(threadMap.values()).map(thread => thread.other_user_id);
     
-    return Array.from(threads.values());
+    const { data: profilesData, error: profilesError } = await supabase
+      .from('profiles')
+      .select('*')
+      .in('id', otherUserIds);
+
+    if (profilesError) {
+      console.error("Error fetching user profiles:", profilesError);
+    }
+
+    // Map profiles by ID
+    const profilesById: Record<string, any> = {};
+    if (profilesData) {
+      profilesData.forEach(profile => {
+        profilesById[profile.id] = profile;
+      });
+    }
+
+    // Update thread summaries with user details
+    const threads = Array.from(threadMap.values()).map(thread => {
+      const profile = profilesById[thread.other_user_id] || {};
+      return {
+        ...thread,
+        other_user_name: profile.full_name || "Unknown User",
+        other_user_avatar: profile.avatar_url
+      };
+    });
+
+    return threads;
   } catch (error) {
     console.error("Error in getMessageThreads:", error);
     throw error;

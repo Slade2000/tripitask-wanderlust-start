@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import MessageInput from "./MessageInput";
 import MessageList from "./MessageList";
@@ -30,11 +30,11 @@ export default function MessageModal({
   const { user } = useAuth();
 
   // Load messages when the modal opens
-  useState(() => {
+  useEffect(() => {
     if (isOpen && user) {
       loadMessages();
     }
-  });
+  }, [isOpen, user, taskId, taskOwnerId]);
 
   const loadMessages = async () => {
     if (!user) return;

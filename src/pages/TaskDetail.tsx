@@ -14,7 +14,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { TaskData } from "@/services/task/types";
 import { Skeleton } from "@/components/ui/skeleton";
 
-// Import our new MessageModal component
+// Import our MessageModal component
 import MessageModal from "@/components/messages/MessageModal";
 
 export default function TaskDetail() {
@@ -27,7 +27,7 @@ export default function TaskDetail() {
   const [error, setError] = useState<string | null>(null);
   const [isProviderPage, setIsProviderPage] = useState(false);
 
-  // In the TaskDetail component, add a state for the message modal
+  // State for the message modal
   const [messageModalOpen, setMessageModalOpen] = useState(false);
 
   useEffect(() => {
@@ -44,7 +44,12 @@ export default function TaskDetail() {
       try {
         const taskData = await getTaskById(taskId);
         if (taskData) {
-          setTask(taskData);
+          // Transform task_photos array into photos array of URLs
+          const transformedTask: TaskData = {
+            ...taskData,
+            photos: taskData.task_photos?.map(photo => photo.photo_url) || []
+          };
+          setTask(transformedTask);
         } else {
           setError("Task not found");
           toast({
