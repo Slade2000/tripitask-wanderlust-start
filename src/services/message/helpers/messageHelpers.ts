@@ -51,6 +51,11 @@ export function transformMessagesToDto(
   attachmentsByMessageId: Record<string, MessageAttachment[]>
 ): Message[] {
   return messagesData.map(message => {
+    // Extract sender name and avatar properly, ensuring we don't use optional chaining for these fields
+    // as they should be reliably set by the fetchMessages function
+    const senderName = message.sender && message.sender.full_name ? message.sender.full_name : "Unknown User";
+    const senderAvatar = message.sender && message.sender.avatar_url ? message.sender.avatar_url : undefined;
+
     return {
       id: message.id,
       task_id: message.task_id,
@@ -59,8 +64,8 @@ export function transformMessagesToDto(
       content: message.content,
       created_at: message.created_at,
       attachments: attachmentsByMessageId[message.id] || [],
-      sender_name: message.sender?.full_name || "Unknown User",
-      sender_avatar: message.sender?.avatar_url
+      sender_name: senderName,
+      sender_avatar: senderAvatar
     };
   });
 }

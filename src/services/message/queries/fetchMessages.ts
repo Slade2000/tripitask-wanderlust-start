@@ -63,6 +63,11 @@ export async function fetchMessages(userId: string, otherId: string, taskId?: st
       profilesMap[String(profile.id)] = profile;
     });
 
+    console.log("Fetched user profiles:", userProfiles?.length || 0);
+    for (const profile of userProfiles || []) {
+      console.log(`User ${profile.id}: ${profile.full_name || 'No name'}`);
+    }
+
     // Extract message IDs to fetch attachments
     const messageIds = messagesData.map(message => message.id);
     
@@ -72,6 +77,14 @@ export async function fetchMessages(userId: string, otherId: string, taskId?: st
     // Add profile information to the message data
     const messagesWithProfiles = messagesData.map(message => {
       const senderProfile = profilesMap[message.sender_id];
+      
+      // Log for debugging
+      if (!senderProfile) {
+        console.warn(`No profile found for sender ID: ${message.sender_id}`);
+      } else {
+        console.log(`Profile for ${message.sender_id}: ${JSON.stringify(senderProfile)}`);
+      }
+      
       return {
         ...message,
         sender: {
@@ -79,7 +92,7 @@ export async function fetchMessages(userId: string, otherId: string, taskId?: st
           avatar_url: senderProfile?.avatar_url
         },
         receiver: {
-          full_name: profilesMap[message.receiver_id]?.full_name,
+          full_name: profilesMap[message.receiver_id]?.full_name || "Unknown User",
           avatar_url: profilesMap[message.receiver_id]?.avatar_url
         }
       };
