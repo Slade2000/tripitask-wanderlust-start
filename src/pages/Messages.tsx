@@ -10,7 +10,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { getMessageThreads } from "@/services/message";
 import { MessageThreadSummary } from "@/services/message/types";
-import { Loader2 } from "lucide-react";
+import { Loader2, RefreshCcw } from "lucide-react";
 
 const Messages = () => {
   const location = useLocation();
@@ -52,17 +52,18 @@ const Messages = () => {
 
   const handleThreadClick = (thread: MessageThreadSummary) => {
     console.log("Navigating to message detail with:", {
-      taskId: thread.task_id,
       otherUserId: thread.other_user_id,
+      taskId: thread.task_id,
       taskTitle: thread.task_title
     });
     
-    // Navigate to MessageDetail page with the task ID and other user ID
+    // Navigate to MessageDetail page with other user ID first, and task ID as secondary
     navigate(`/messages/${thread.task_id}`, {
       state: {
         taskId: thread.task_id,
         taskOwnerId: thread.other_user_id,
-        taskTitle: thread.task_title
+        taskTitle: thread.task_title,
+        otherUserName: thread.other_user_name
       }
     });
   };
@@ -86,8 +87,9 @@ const Messages = () => {
           </p>
           <button 
             onClick={loadThreads} 
-            className="mt-4 px-4 py-2 bg-teal text-white rounded hover:bg-teal-600"
+            className="mt-4 px-4 py-2 bg-teal text-white rounded hover:bg-teal-600 flex items-center justify-center mx-auto"
           >
+            <RefreshCcw size={16} className="mr-2" />
             Try Again
           </button>
         </Card>
@@ -109,7 +111,7 @@ const Messages = () => {
       <div className="space-y-4">
         {threads.map((thread) => (
           <MessageThreadCard 
-            key={`${thread.task_id}-${thread.other_user_id}`} 
+            key={`${thread.other_user_id}`} 
             thread={thread} 
             onClick={() => handleThreadClick(thread)}
           />
@@ -149,8 +151,9 @@ const Messages = () => {
                 </p>
                 <button 
                   onClick={loadThreads} 
-                  className="mt-4 px-4 py-2 bg-teal text-white rounded hover:bg-teal-600"
+                  className="mt-4 px-4 py-2 bg-teal text-white rounded hover:bg-teal-600 flex items-center justify-center mx-auto"
                 >
+                  <RefreshCcw size={16} className="mr-2" />
                   Try Again
                 </button>
               </Card>
@@ -160,7 +163,7 @@ const Messages = () => {
                   .filter(thread => thread.unread_count > 0)
                   .map((thread) => (
                     <MessageThreadCard 
-                      key={`${thread.task_id}-${thread.other_user_id}`} 
+                      key={`${thread.other_user_id}`} 
                       thread={thread}
                       onClick={() => handleThreadClick(thread)}
                     />

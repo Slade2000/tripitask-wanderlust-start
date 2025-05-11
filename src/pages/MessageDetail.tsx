@@ -17,17 +17,17 @@ export default function MessageDetail() {
   const { user } = useAuth();
   const { toast } = useToast();
   
-  // Get the taskOwnerId from location state
+  // Get the data from location state
   const taskOwnerId = location.state?.taskOwnerId;
+  const otherUserName = location.state?.otherUserName;
   
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [taskTitle, setTaskTitle] = useState(location.state?.taskTitle || "");
-  const [otherUserName, setOtherUserName] = useState("");
   
   useEffect(() => {
-    console.log("MessageDetail mounted with params:", { taskId, taskOwnerId });
+    console.log("MessageDetail mounted with params:", { taskId, taskOwnerId, otherUserName });
     
     if (!taskId || !taskOwnerId) {
       console.error("Missing taskId or taskOwnerId");
@@ -57,14 +57,6 @@ export default function MessageDetail() {
       const fetchedMessages = await getMessages(taskId, user.id, taskOwnerId);
       console.log("Fetched messages:", fetchedMessages);
       setMessages(fetchedMessages);
-      
-      // Get other user's name from messages
-      if (fetchedMessages.length > 0) {
-        const otherMessage = fetchedMessages.find(m => m.sender_id === taskOwnerId);
-        if (otherMessage && otherMessage.sender_name) {
-          setOtherUserName(otherMessage.sender_name);
-        }
-      }
     } catch (error) {
       console.error("Error loading messages:", error);
       toast({

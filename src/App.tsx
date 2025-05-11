@@ -21,6 +21,7 @@ import FindWork from "./pages/FindWork";
 import MyJobs from "./pages/MyJobs";
 import Dashboard from "./pages/Dashboard";
 import Messages from "./pages/Messages";
+import MessageDetail from "./pages/MessageDetail";
 import Account from "./pages/Account";
 import TaskOffers from "./pages/TaskOffers";
 import TaskDetail from "./pages/TaskDetail";
@@ -51,6 +52,7 @@ const App = () => {
                 <Route path="/tasks/:taskId/submit-offer" element={<SubmitOffer />} />
                 <Route path="/tasks/:taskId/offers" element={<TaskOffers />} />
                 <Route path="/messages" element={<Messages />} />
+                <Route path="/messages/:taskId" element={<MessageDetail />} />
                 <Route path="/account" element={<Account />} />
                 <Route path="/spatial-reference-systems" element={<SpatialReferenceSystems />} />
                 <Route path="/terms" element={<Terms />} />
