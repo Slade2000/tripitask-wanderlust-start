@@ -9,12 +9,23 @@ export async function fetchMessageThreads(userId: string): Promise<MessageThread
   try {
     console.log("Fetching message threads for user:", userId);
     
-    // Get all threads from the message_threads view
+    // Get all messages involving the user, grouped by conversation
     const { data, error } = await supabase
-      .from('message_threads')
-      .select('*')
+      .from('messages')
+      .select(`
+        id,
+        task_id,
+        sender_id,
+        receiver_id, 
+        content,
+        created_at,
+        read,
+        tasks:task_id (title),
+        sender_profile:sender_id (full_name, avatar_url),
+        receiver_profile:receiver_id (full_name, avatar_url)
+      `)
       .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
-      .order('last_message_date', { ascending: false });
+      .order('created_at', { ascending: false });
 
     if (error) {
       console.error("Error fetching message threads:", error);
@@ -26,39 +37,50 @@ export async function fetchMessageThreads(userId: string): Promise<MessageThread
       return [];
     }
 
-    console.log("Raw message threads data:", data);
+    // Group messages by conversation partner
+    const conversationsMap: Record<string, any[]> = {};
 
-    // Group threads by other_user_id to consolidate by user
-    const userThreadsMap: Record<string, MessageThreadSummary> = {};
-    
-    data.forEach((thread: any) => {
-      // Determine who the other user is based on sender/receiver IDs
-      const otherUserId = thread.sender_id === userId ? thread.receiver_id : thread.sender_id;
-      const otherUserName = thread.sender_id === userId ? thread.receiver_name : thread.sender_name;
-      const otherUserAvatar = thread.sender_id === userId ? thread.receiver_avatar : thread.sender_avatar;
+    data.forEach(message => {
+      const otherUserId = message.sender_id === userId ? message.receiver_id : message.sender_id;
       
-      // If we haven't seen this user yet, or this is a more recent message
-      if (!userThreadsMap[otherUserId] || 
-          new Date(thread.last_message_date) > new Date(userThreadsMap[otherUserId].last_message_date)) {
-        
-        userThreadsMap[otherUserId] = {
-          task_id: thread.task_id, // Keep the most recent task_id for context
-          task_title: thread.task_title || "Unknown Task",
-          last_message_content: thread.last_message_content || "",
-          last_message_date: thread.last_message_date || new Date().toISOString(),
-          unread_count: thread.unread_count || 0,
-          other_user_id: otherUserId,
-          other_user_name: otherUserName || "Unknown User",
-          other_user_avatar: otherUserAvatar
-        };
-      } else {
-        // If we've seen this user, add to their unread count
-        userThreadsMap[otherUserId].unread_count += thread.unread_count || 0;
+      if (!conversationsMap[otherUserId]) {
+        conversationsMap[otherUserId] = [];
       }
+      
+      conversationsMap[otherUserId].push(message);
     });
-
-    // Convert the map back to an array and sort by last message date
-    const threads = Object.values(userThreadsMap).sort((a, b) => 
+    
+    // Create thread summaries from the grouped conversations
+    const threads: MessageThreadSummary[] = [];
+    
+    for (const [otherUserId, messages] of Object.entries(conversationsMap)) {
+      // Get the most recent message
+      const latestMessage = messages[0];
+      
+      // Determine user names and avatars
+      const otherUserProfile = latestMessage.sender_id === userId 
+        ? latestMessage.receiver_profile 
+        : latestMessage.sender_profile;
+      
+      // Count unread messages
+      const unreadCount = messages.filter(msg => 
+        msg.sender_id !== userId && !msg.read
+      ).length;
+      
+      threads.push({
+        task_id: latestMessage.task_id,
+        task_title: latestMessage.tasks?.title || "Unknown Task",
+        last_message_content: latestMessage.content || "",
+        last_message_date: latestMessage.created_at || new Date().toISOString(),
+        unread_count: unreadCount,
+        other_user_id: otherUserId,
+        other_user_name: otherUserProfile?.full_name || "Unknown User",
+        other_user_avatar: otherUserProfile?.avatar_url
+      });
+    }
+    
+    // Sort threads by last message date
+    threads.sort((a, b) => 
       new Date(b.last_message_date).getTime() - new Date(a.last_message_date).getTime()
     );
 

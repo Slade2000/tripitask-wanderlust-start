@@ -154,7 +154,7 @@ export default function TaskOffersPage() {
         </div>
       )}
       
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-4xl mx-auto mb-16">
         <OffersList 
           offers={offers} 
           taskId={taskId || ''} 
