@@ -19,12 +19,11 @@ const options = {
       'apikey': SUPABASE_PUBLISHABLE_KEY
     },
     fetch: (url: RequestInfo | URL, options?: RequestInit) => {
+      // FIX: Pass headers untouched instead of spreading them
       return fetch(url, {
         ...options,
-        headers: {
-          ...options?.headers,
-          // Add custom headers like for debugging if needed
-        }
+        // Do not modify headers - pass them through directly
+        headers: options?.headers
       }).then(response => {
         if (!response.ok && response.status !== 404) { // Don't log 404s as they're common
           console.warn(`Supabase response not OK: ${response.status} for ${url}`);
