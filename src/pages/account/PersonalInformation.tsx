@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 
 const PersonalInformation = () => {
   const navigate = useNavigate();
@@ -22,6 +23,7 @@ const PersonalInformation = () => {
   
   const [loading, setLoading] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(true);
   
   // Form state
   const [formData, setFormData] = useState({
@@ -65,9 +67,28 @@ const PersonalInformation = () => {
   });
 
   useEffect(() => {
+    console.log("PersonalInformation mounted, current user:", user?.id);
+    console.log("Current profile data:", profile);
+    
+    setProfileLoading(true);
+    
+    // Enhanced initial profile fetch
+    const fetchInitialProfile = async () => {
+      if (user && !profile) {
+        console.log("No profile data yet, manually refreshing...");
+        await refreshProfile();
+      }
+      setProfileLoading(false);
+    };
+    
+    fetchInitialProfile();
+  }, [user, refreshProfile]);
+
+  useEffect(() => {
     // Load the most recent profile data whenever the component mounts or profile changes
     if (profile) {
-      console.log("Loading profile data:", profile);
+      console.log("Loading profile data into form:", profile);
+      
       setFormData({
         full_name: profile.full_name || "",
         business_name: profile.business_name || "",
@@ -83,6 +104,8 @@ const PersonalInformation = () => {
         rating: profile.rating !== null ? profile.rating : prev.rating,
         jobsCompleted: profile.jobs_completed !== null ? profile.jobs_completed : prev.jobsCompleted
       }));
+      
+      setProfileLoading(false);
     }
   }, [profile]);
   
@@ -186,6 +209,33 @@ const PersonalInformation = () => {
     }
   };
 
+  // Get user's name with fallbacks
+  const getUserName = () => {
+    // Try profile full_name first
+    if (profile?.full_name) return profile.full_name;
+    
+    // Try combining first and last name from profile
+    if (profile?.first_name) {
+      return `${profile.first_name} ${profile.last_name || ''}`.trim();
+    }
+    
+    // Try user metadata
+    if (user?.user_metadata?.full_name) return user.user_metadata.full_name;
+    if (user?.user_metadata?.first_name) {
+      return `${user.user_metadata.first_name} ${user.user_metadata.last_name || ''}`.trim();
+    }
+    
+    // Try email as last resort
+    if (user?.email) return user.email.split('@')[0];
+    
+    // Final fallback
+    return "Your Name";
+  };
+
+  const getBusinessName = () => {
+    return profile?.business_name || "Your Business";
+  };
+
   return (
     <div className="bg-cream min-h-screen pb-20">
       {/* Header */}
@@ -212,7 +262,19 @@ const PersonalInformation = () => {
       </div>
       
       <div className="px-4 py-6 space-y-6">
-        {isEditMode ? (
+        {profileLoading ? (
+          <Card className="overflow-hidden">
+            <CardContent className="p-6">
+              <div className="flex flex-col items-center space-y-4">
+                <div className="h-24 w-24 rounded-full bg-gray-200 animate-pulse"></div>
+                <div className="h-6 w-32 bg-gray-200 rounded animate-pulse"></div>
+                <div className="h-4 w-24 bg-gray-200 rounded animate-pulse"></div>
+                <Progress value={45} className="w-full h-1" />
+                <p className="text-sm text-gray-500">Loading profile data...</p>
+              </div>
+            </CardContent>
+          </Card>
+        ) : isEditMode ? (
           <Card>
             <CardHeader>
               <CardTitle>Edit Profile</CardTitle>
@@ -223,7 +285,7 @@ const PersonalInformation = () => {
                   <Avatar className="h-24 w-24 border-4 border-white shadow">
                     <AvatarImage src={formData.avatar_url} />
                     <AvatarFallback className="text-2xl bg-gray-200">
-                      {formData.full_name.charAt(0)}
+                      {formData.full_name.charAt(0) || "U"}
                     </AvatarFallback>
                   </Avatar>
                   <label htmlFor="profile-upload" className="absolute bottom-0 right-0 bg-primary text-white p-1 rounded-full cursor-pointer">
@@ -334,13 +396,13 @@ const PersonalInformation = () => {
                     <Avatar className="h-24 w-24 border-4 border-white shadow">
                       <AvatarImage src={profile?.avatar_url || ""} />
                       <AvatarFallback className="text-2xl bg-gray-200">
-                        {profile?.full_name?.charAt(0) || "U"}
+                        {profile?.full_name?.charAt(0) || getUserName().charAt(0)}
                       </AvatarFallback>
                     </Avatar>
                   </div>
                   
-                  <h2 className="text-xl font-semibold mb-1">{profile?.full_name || "Your Name"}</h2>
-                  <p className="text-gray-500 mb-2">{profile?.business_name || "Your Business"}</p>
+                  <h2 className="text-xl font-semibold mb-1">{getUserName()}</h2>
+                  <p className="text-gray-500 mb-2">{getBusinessName()}</p>
                   
                   <div className="flex items-center gap-2 mb-2">
                     <Star size={16} className="text-yellow-500 fill-yellow-500" />
