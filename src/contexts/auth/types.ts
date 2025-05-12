@@ -29,7 +29,7 @@ export interface AuthContextType {
   signOut: () => Promise<void>;
   loading: boolean;
   authError: Error | null;
-  refreshProfile: () => Promise<void>;
+  refreshProfile: () => Promise<Profile | null>;
   isLoading: boolean;
   session: User | null;
   signInWithProvider: (provider: string) => Promise<void>;

@@ -32,7 +32,7 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const navigate = useNavigate();
 
   // Refresh profile function with improved error handling
-  const refreshProfile = async () => {
+  const refreshProfile = async (): Promise<Profile | null> => {
     console.log("Refreshing profile for user:", user?.id);
     if (!user) {
       console.error("Cannot refresh profile: No user logged in");
