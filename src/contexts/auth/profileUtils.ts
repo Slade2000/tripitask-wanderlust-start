@@ -21,7 +21,7 @@ export const fetchUserProfile = async (userId: string): Promise<Profile | null> 
         return await createInitialProfile(userId);
       }
       
-      return null;
+      throw error; // Let the error be caught by the caller
     }
     
     console.log('Profile data received:', data);
@@ -40,7 +40,7 @@ export const fetchUserProfile = async (userId: string): Promise<Profile | null> 
     return profileData;
   } catch (error) {
     console.error('Exception fetching profile:', error);
-    return null;
+    throw error; // Let the error be caught by the caller
   }
 };
 
@@ -49,11 +49,17 @@ export const createInitialProfile = async (userId: string): Promise<Profile | nu
   console.log(`Creating initial profile for user: ${userId}`);
   try {
     // Get user details from auth to use as initial data
-    const { data: userData, error: userError } = await supabase.auth.admin.getUserById(userId);
+    // Using getUserById without admin as that requires special privileges
+    const { data: userData, error: userError } = await supabase.auth.getUser();
     
     if (userError) {
       console.error('Error getting user details for profile creation:', userError);
-      return null;
+      throw userError;
+    }
+
+    if (!userData.user || userData.user.id !== userId) {
+      console.error('User data mismatch or missing during profile creation');
+      throw new Error('Unable to create profile: user data mismatch');
     }
     
     // Prepare initial profile data
@@ -61,7 +67,13 @@ export const createInitialProfile = async (userId: string): Promise<Profile | nu
       id: userId,
       full_name: userData.user.user_metadata?.full_name || userData.user.user_metadata?.name || null,
       avatar_url: userData.user.user_metadata?.avatar_url || null,
+      services: [],
+      about: '',
+      location: '',
+      business_name: '',
     };
+    
+    console.log('Attempting to create profile with data:', initialData);
     
     // Insert the initial profile
     const { data, error } = await supabase
@@ -72,10 +84,10 @@ export const createInitialProfile = async (userId: string): Promise<Profile | nu
       
     if (error) {
       console.error('Error creating initial profile:', error);
-      return null;
+      throw error;
     }
     
-    console.log('Initial profile created:', data);
+    console.log('Initial profile created successfully:', data);
     
     // Create profile with computed properties
     const profileData = {
@@ -91,6 +103,6 @@ export const createInitialProfile = async (userId: string): Promise<Profile | nu
     return profileData;
   } catch (error) {
     console.error('Exception creating initial profile:', error);
-    return null;
+    throw error; // Let the error be caught by the caller
   }
 };

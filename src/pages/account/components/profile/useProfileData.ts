@@ -69,22 +69,24 @@ export const useProfileData = () => {
     console.log("PersonalInformation mounted, current user:", user?.id);
     console.log("Current profile data:", profile);
     
-    setLoading(true);
-    setError(false);
-    
-    // Enhanced initial profile fetch
     const fetchInitialProfile = async () => {
+      setLoading(true);
+      setError(false);
+      
       try {
-        if (user && !profile) {
-          console.log("No profile data yet, manually refreshing...");
+        if (user) {
+          console.log("Fetching profile for user:", user.id);
           await refreshProfile();
+        } else {
+          console.log("No user available, cannot fetch profile");
+          setError(true);
         }
-      } catch (error) {
-        console.error("Error fetching profile:", error);
+      } catch (err) {
+        console.error("Error fetching profile:", err);
         setError(true);
         toast.error("Failed to load profile data");
       } finally {
-        // Always set loading to false, even if an error occurred
+        // Always set loading to false, regardless of result
         setLoading(false);
       }
     };
@@ -115,12 +117,8 @@ export const useProfileData = () => {
       
       setLoading(false);
       setError(false);
-    } else if (user) {
-      // If we have a user but no profile, we should still stop loading
-      // This gives us a chance to show a "create profile" UI instead of infinite loading
-      setLoading(false);
     }
-  }, [profile, user]);
+  }, [profile]);
 
   // Get user's name with fallbacks
   const getUserName = () => {

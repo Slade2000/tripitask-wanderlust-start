@@ -47,6 +47,16 @@ const PersonalInformation = () => {
     }
   };
 
+  const handleRetryLoadProfile = async () => {
+    try {
+      await refreshProfile();
+      toast.success("Profile loaded successfully");
+    } catch (err) {
+      console.error("Failed to load profile:", err);
+      toast.error("Failed to load profile data. Please try again.");
+    }
+  };
+
   return (
     <div className="bg-cream min-h-screen pb-20">
       {/* Header */}
@@ -60,7 +70,7 @@ const PersonalInformation = () => {
           <ArrowLeft size={22} />
         </Button>
         <h1 className="text-xl font-semibold">Personal Information</h1>
-        {!isEditMode && !loading && !error && (
+        {!isEditMode && !loading && !error && profile && (
           <div className="ml-auto flex gap-2">
             <Button 
               variant="ghost"
@@ -85,7 +95,12 @@ const PersonalInformation = () => {
         {loading ? (
           <ProfileLoading />
         ) : error ? (
-          <ProfileLoading error={true} />
+          <ProfileLoading error={true} onRetry={handleRetryLoadProfile} />
+        ) : !profile ? (
+          <div className="text-center py-10">
+            <p className="text-gray-500 mb-4">No profile information found</p>
+            <Button onClick={handleRetryLoadProfile}>Create Profile</Button>
+          </div>
         ) : isEditMode ? (
           <ProfileForm 
             user={user}
