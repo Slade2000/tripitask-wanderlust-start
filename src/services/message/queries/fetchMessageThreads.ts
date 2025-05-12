@@ -38,7 +38,6 @@ export async function fetchMessageThreads(userId: string): Promise<MessageThread
         created_at,
         read
       `)
-      // Fix: Use the filter() method instead of or() with string arguments
       .or(`sender_id.eq.${userIdLower},receiver_id.eq.${userIdLower}`)
       .order('created_at', { ascending: false });
 
