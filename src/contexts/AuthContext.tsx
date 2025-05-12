@@ -17,25 +17,9 @@ interface Profile {
   rating?: number | null;
   jobs_completed?: number | null;
   updated_at?: string | null;
-  // Add first_name and last_name getters for backward compatibility
-  get first_name(): string | null {
-    // If full_name exists and contains a space, return the part before the space
-    if (this.full_name && this.full_name.includes(' ')) {
-      return this.full_name.split(' ')[0];
-    }
-    // Otherwise return the full name as the first name
-    return this.full_name;
-  }
-  
-  get last_name(): string | null {
-    // If full_name exists and contains a space, return the part after the space
-    if (this.full_name && this.full_name.includes(' ')) {
-      const parts = this.full_name.split(' ');
-      return parts.slice(1).join(' ');
-    }
-    // Otherwise return null as the last name
-    return null;
-  }
+  // Instead of getters, we'll use computed properties in the implementation
+  first_name: string | null;
+  last_name: string | null;
 }
 
 interface AuthContextType {
@@ -92,25 +76,18 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
       }
       console.log('Profile data received:', data);
       
-      // Convert the plain data object to a Profile object with getters
-      const profileWithGetters = {
+      // Create profile with computed properties instead of getters
+      const profileData = {
         ...data,
-        get first_name() {
-          if (data.full_name && data.full_name.includes(' ')) {
-            return data.full_name.split(' ')[0];
-          }
-          return data.full_name;
-        },
-        get last_name() {
-          if (data.full_name && data.full_name.includes(' ')) {
-            const parts = data.full_name.split(' ');
-            return parts.slice(1).join(' ');
-          }
-          return null;
-        }
+        first_name: data.full_name && data.full_name.includes(' ') 
+          ? data.full_name.split(' ')[0] 
+          : data.full_name,
+        last_name: data.full_name && data.full_name.includes(' ')
+          ? data.full_name.split(' ').slice(1).join(' ')
+          : null
       } as Profile;
       
-      return profileWithGetters;
+      return profileData;
     } catch (error) {
       console.error('Exception fetching profile:', error);
       return null;

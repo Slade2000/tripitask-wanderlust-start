@@ -202,22 +202,43 @@ export type Database = {
       }
       profiles: {
         Row: {
+          about: string | null
           avatar_url: string | null
+          business_name: string | null
           created_at: string | null
           full_name: string | null
           id: string
+          jobs_completed: number | null
+          location: string | null
+          rating: number | null
+          services: string[] | null
+          updated_at: string | null
         }
         Insert: {
+          about?: string | null
           avatar_url?: string | null
+          business_name?: string | null
           created_at?: string | null
           full_name?: string | null
           id: string
+          jobs_completed?: number | null
+          location?: string | null
+          rating?: number | null
+          services?: string[] | null
+          updated_at?: string | null
         }
         Update: {
+          about?: string | null
           avatar_url?: string | null
+          business_name?: string | null
           created_at?: string | null
           full_name?: string | null
           id?: string
+          jobs_completed?: number | null
+          location?: string | null
+          rating?: number | null
+          services?: string[] | null
+          updated_at?: string | null
         }
         Relationships: []
       }
