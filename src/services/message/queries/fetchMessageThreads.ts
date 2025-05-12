@@ -149,8 +149,9 @@ export async function fetchMessageThreads(userId: string): Promise<MessageThread
       // Determine if the other user is the sender of the latest message
       const isOtherUserSender = latestMessageSenderId !== userIdLower;
       
-      // Get profile info from our profiles map
-      const otherUserProfile = profilesMap[otherUserId];
+      // Get profile info from our profiles map - ensure otherUserId is lowercase for lookup
+      const otherUserIdLower = String(otherUserId).toLowerCase();
+      const otherUserProfile = profilesMap[otherUserIdLower];
       
       // Count unread messages from the other user
       const unreadCount = messages.filter(msg => 
@@ -168,7 +169,7 @@ export async function fetchMessageThreads(userId: string): Promise<MessageThread
         last_message_date: latestMessage.created_at,
         unread_count: unreadCount,
         other_user_id: otherUserId,
-        other_user_name: otherUserProfile?.full_name || `User ${otherUserId.slice(0, 8)}...`,
+        other_user_name: otherUserProfile?.full_name || `User ${otherUserIdLower.slice(0, 8)}…`,
         other_user_avatar: otherUserProfile?.avatar_url
       };
       
