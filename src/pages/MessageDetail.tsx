@@ -9,6 +9,8 @@ import MessageList from "@/components/messages/MessageList";
 import MessageInput from "@/components/messages/MessageInput";
 import MessageHeader from "@/components/messages/MessageHeader";
 import BottomNav from "@/components/BottomNav";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { InfoIcon } from "lucide-react";
 
 export default function MessageDetail() {
   const location = useLocation();
@@ -51,7 +53,8 @@ export default function MessageDetail() {
       toast({
         title: "You're offline",
         description: "Messages may not be up to date until you reconnect",
-        variant: "warning"
+        // Change from "warning" to "default" since warning is not a valid variant
+        variant: "default"
       });
     }
   }, [isOnline]);
@@ -67,6 +70,16 @@ export default function MessageDetail() {
         taskTitle={taskTitle || initialTaskTitle} 
         onBack={goBack} 
       />
+      
+      {!isOnline && (
+        <Alert className="mx-4 mt-2 bg-orange/10 border-orange">
+          <InfoIcon className="h-4 w-4 text-orange" />
+          <AlertTitle>Offline Mode</AlertTitle>
+          <AlertDescription>
+            You're currently offline. Messages will sync when you reconnect.
+          </AlertDescription>
+        </Alert>
+      )}
       
       <div className="flex-1 flex flex-col overflow-hidden pb-16">
         <MessageList 
