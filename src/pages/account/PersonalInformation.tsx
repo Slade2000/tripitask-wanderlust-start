@@ -25,18 +25,18 @@ const PersonalInformation = () => {
   
   // Form state
   const [formData, setFormData] = useState({
-    full_name: profile?.full_name || "",
-    business_name: profile?.business_name || "",
-    about: profile?.about || "",
-    location: profile?.location || "",
-    services: profile?.services?.join(", ") || "",
-    avatar_url: profile?.avatar_url || ""
+    full_name: "",
+    business_name: "",
+    about: "",
+    location: "",
+    services: "",
+    avatar_url: ""
   });
   
   // Mock data that would eventually come from the database
   const [profileData, setProfileData] = useState({
-    rating: profile?.rating || 4.9,
-    jobsCompleted: profile?.jobs_completed || 23,
+    rating: 4.9,
+    jobsCompleted: 23,
     certifications: [
       { name: "Electrical License", verified: true },
       { name: "Plumbing Certificate", verified: true },
@@ -65,8 +65,9 @@ const PersonalInformation = () => {
   });
 
   useEffect(() => {
-    // Load the most recent profile data whenever the component mounts
+    // Load the most recent profile data whenever the component mounts or profile changes
     if (profile) {
+      console.log("Loading profile data:", profile);
       setFormData({
         full_name: profile.full_name || "",
         business_name: profile.business_name || "",
@@ -75,6 +76,13 @@ const PersonalInformation = () => {
         services: profile.services?.join(", ") || "",
         avatar_url: profile.avatar_url || ""
       });
+      
+      // Update mock data with real data where available
+      setProfileData(prev => ({
+        ...prev,
+        rating: profile.rating !== null ? profile.rating : prev.rating,
+        jobsCompleted: profile.jobs_completed !== null ? profile.jobs_completed : prev.jobsCompleted
+      }));
     }
   }, [profile]);
   
