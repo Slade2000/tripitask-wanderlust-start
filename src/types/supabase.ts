@@ -1,4 +1,3 @@
-
 export type Json =
   | string
   | number
@@ -16,18 +15,39 @@ export interface Database {
           full_name: string | null
           avatar_url: string | null
           created_at: string | null
+          business_name: string | null
+          about: string | null
+          location: string | null
+          services: string[] | null
+          rating: number | null
+          jobs_completed: number | null
+          updated_at: string | null
         }
         Insert: {
           id: string
           full_name?: string | null
           avatar_url?: string | null
           created_at?: string | null
+          business_name?: string | null
+          about?: string | null
+          location?: string | null
+          services?: string[] | null
+          rating?: number | null
+          jobs_completed?: number | null
+          updated_at?: string | null
         }
         Update: {
           id?: string
           full_name?: string | null
           avatar_url?: string | null
           created_at?: string | null
+          business_name?: string | null
+          about?: string | null
+          location?: string | null
+          services?: string[] | null
+          rating?: number | null
+          jobs_completed?: number | null
+          updated_at?: string | null
         }
         Relationships: [
           {
