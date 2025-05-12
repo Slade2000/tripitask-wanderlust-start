@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect, useCallback, FC, ReactNode } from 'react';
 import { supabase } from '../integrations/supabase/client';
 import { User as SupabaseUser } from '@supabase/supabase-js';
@@ -18,6 +17,25 @@ interface Profile {
   rating?: number | null;
   jobs_completed?: number | null;
   updated_at?: string | null;
+  // Add first_name and last_name getters for backward compatibility
+  get first_name(): string | null {
+    // If full_name exists and contains a space, return the part before the space
+    if (this.full_name && this.full_name.includes(' ')) {
+      return this.full_name.split(' ')[0];
+    }
+    // Otherwise return the full name as the first name
+    return this.full_name;
+  }
+  
+  get last_name(): string | null {
+    // If full_name exists and contains a space, return the part after the space
+    if (this.full_name && this.full_name.includes(' ')) {
+      const parts = this.full_name.split(' ');
+      return parts.slice(1).join(' ');
+    }
+    // Otherwise return null as the last name
+    return null;
+  }
 }
 
 interface AuthContextType {
@@ -28,7 +46,11 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   loading: boolean;
   authError: Error | null;
-  refreshProfile: () => Promise<void>; // Add this method
+  refreshProfile: () => Promise<void>;
+  // Add these missing properties
+  isLoading: boolean;
+  session: User | null;
+  signInWithProvider: (provider: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -40,6 +62,10 @@ const AuthContext = createContext<AuthContextType>({
   loading: false,
   authError: null,
   refreshProfile: async () => Promise.resolve(),
+  // Add these missing properties to the default context
+  isLoading: false,
+  session: null,
+  signInWithProvider: async () => Promise.resolve(),
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -65,7 +91,26 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
         return null;
       }
       console.log('Profile data received:', data);
-      return data;
+      
+      // Convert the plain data object to a Profile object with getters
+      const profileWithGetters = {
+        ...data,
+        get first_name() {
+          if (data.full_name && data.full_name.includes(' ')) {
+            return data.full_name.split(' ')[0];
+          }
+          return data.full_name;
+        },
+        get last_name() {
+          if (data.full_name && data.full_name.includes(' ')) {
+            const parts = data.full_name.split(' ');
+            return parts.slice(1).join(' ');
+          }
+          return null;
+        }
+      } as Profile;
+      
+      return profileWithGetters;
     } catch (error) {
       console.error('Exception fetching profile:', error);
       return null;
@@ -181,6 +226,36 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
       setLoading(false);
     }
   };
+  
+  // Add the signInWithProvider function
+  const signInWithProvider = async (provider: string) => {
+    setLoading(true);
+    setAuthError(null);
+    try {
+      if (provider === 'google') {
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+        });
+        if (error) {
+          setAuthError(error);
+          console.error('Google sign-in error:', error);
+        }
+      } else if (provider === 'facebook') {
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: 'facebook',
+        });
+        if (error) {
+          setAuthError(error);
+          console.error('Facebook sign-in error:', error);
+        }
+      }
+    } catch (error) {
+      console.error(`Unexpected ${provider} sign-in error:`, error);
+      setAuthError(error as Error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     const fetchInitialSession = async () => {
@@ -234,10 +309,13 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
       signOut,
       loading,
       authError,
-      refreshProfile, // Add the refresh function to the context
+      refreshProfile,
+      // Add these missing properties to the context value
+      isLoading: loading,
+      session: user,
+      signInWithProvider,
     }}>
       {children}
     </AuthContext.Provider>
   );
 };
-

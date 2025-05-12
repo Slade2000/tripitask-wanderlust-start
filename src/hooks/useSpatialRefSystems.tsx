@@ -19,12 +19,12 @@ export function useSpatialRefSystems({ initialPage = 1, pageSize = 20 }: UseSpat
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState<number>(initialPage);
   const [totalCount, setTotalCount] = useState<number | null>(null);
-  const { session } = useAuth();
+  const { user } = useAuth();
 
   // Load spatial reference systems
   useEffect(() => {
     async function loadSpatialSystems() {
-      if (!session) {
+      if (!user) {
         setError("Authentication required to access spatial reference systems");
         setLoading(false);
         return;
@@ -45,11 +45,11 @@ export function useSpatialRefSystems({ initialPage = 1, pageSize = 20 }: UseSpat
     }
     
     loadSpatialSystems();
-  }, [page, pageSize, session]);
+  }, [page, pageSize, user]);
   
   // Function to load a specific spatial reference system
   const loadSpatialSystem = async (srid: number): Promise<SpatialRefSys | null> => {
-    if (!session) {
+    if (!user) {
       setError("Authentication required to access spatial reference systems");
       return null;
     }
@@ -69,7 +69,7 @@ export function useSpatialRefSystems({ initialPage = 1, pageSize = 20 }: UseSpat
   
   // Function to search spatial reference systems
   const searchSystems = async (searchTerm: string): Promise<SpatialRefSys[]> => {
-    if (!session) {
+    if (!user) {
       setError("Authentication required to access spatial reference systems");
       return [];
     }
