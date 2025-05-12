@@ -22,7 +22,9 @@ export const useProfileData = () => {
   const { user, profile, refreshProfile } = useAuth();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const [isEditMode, setIsEditMode] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
   
   // Form state
   const [formData, setFormData] = useState({
@@ -65,32 +67,45 @@ export const useProfileData = () => {
     ]
   });
 
+  // Force a refresh when retryCount changes
   useEffect(() => {
-    console.log("PersonalInformation mounted, current user:", user?.id);
-    console.log("Current profile data:", profile);
+    if (retryCount > 0) {
+      fetchInitialProfile();
+    }
+  }, [retryCount]);
+
+  const fetchInitialProfile = async () => {
+    console.log("PersonalInformation loading profile, current user:", user?.id);
     
-    const fetchInitialProfile = async () => {
+    // Only set loading to true if we're not retrying
+    if (retryCount === 0) {
       setLoading(true);
-      setError(false);
-      
-      try {
-        if (user) {
-          console.log("Fetching profile for user:", user.id);
-          await refreshProfile();
-        } else {
-          console.log("No user available, cannot fetch profile");
-          setError(true);
-        }
-      } catch (err) {
-        console.error("Error fetching profile:", err);
-        setError(true);
-        toast.error("Failed to load profile data");
-      } finally {
-        // Always set loading to false, regardless of result
-        setLoading(false);
-      }
-    };
+    }
+    setError(false);
+    setErrorMessage("");
     
+    try {
+      if (user) {
+        console.log("Fetching profile for user:", user.id);
+        const result = await refreshProfile();
+        console.log("Profile refresh result:", result !== undefined ? result : "undefined");
+      } else {
+        console.log("No user available, cannot fetch profile");
+        setError(true);
+        setErrorMessage("User not logged in. Please log in to view your profile.");
+      }
+    } catch (err: any) {
+      console.error("Error fetching profile in useProfileData:", err);
+      setError(true);
+      setErrorMessage(err?.message || "Failed to load profile data");
+      toast.error("Failed to load profile data");
+    } finally {
+      // Always set loading to false, regardless of result
+      setLoading(false);
+    }
+  };
+  
+  useEffect(() => {
     fetchInitialProfile();
   }, [user, refreshProfile]);
 
@@ -133,7 +148,7 @@ export const useProfileData = () => {
     // Try user metadata
     if (user?.user_metadata?.full_name) return user.user_metadata.full_name;
     if (user?.user_metadata?.first_name) {
-      return `${user.user_metadata.first_name} ${user.user_metadata.last_name || ''}`.trim();
+      return `${user.user_metadata.first_name as string} ${user.user_metadata.last_name || ''}`.trim();
     }
     
     // Try email as last resort
@@ -146,12 +161,17 @@ export const useProfileData = () => {
   const getBusinessName = () => {
     return profile?.business_name || "Your Business";
   };
+
+  const handleRetryLoadProfile = () => {
+    setRetryCount(prev => prev + 1);
+  };
   
   return {
     user,
     profile,
     loading,
     error,
+    errorMessage,
     isEditMode,
     formData,
     profileData,
@@ -159,6 +179,7 @@ export const useProfileData = () => {
     setFormData,
     getUserName,
     getBusinessName,
-    refreshProfile
+    refreshProfile,
+    handleRetryLoadProfile
   };
 };

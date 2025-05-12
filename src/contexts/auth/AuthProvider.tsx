@@ -6,6 +6,7 @@ import { User } from '../../types/user';
 import { AuthContextType, Profile } from './types';
 import { fetchUserProfile } from './profileUtils';
 import { signInWithEmail, signUpWithEmail, signOutUser, signInWithProvider as signInWithProviderMethod } from './authMethods';
+import { toast } from 'sonner';
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
@@ -15,7 +16,7 @@ const AuthContext = createContext<AuthContextType>({
   signOut: async () => Promise.resolve(),
   loading: false,
   authError: null,
-  refreshProfile: async () => Promise.resolve(),
+  refreshProfile: async () => Promise.resolve(null),
   isLoading: false,
   session: null,
   signInWithProvider: async () => Promise.resolve(),
@@ -30,13 +31,29 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const [authError, setAuthError] = useState<Error | null>(null);
   const navigate = useNavigate();
 
-  // Refresh profile function
+  // Refresh profile function with improved error handling
   const refreshProfile = async () => {
-    if (user) {
+    console.log("Refreshing profile for user:", user?.id);
+    if (!user) {
+      console.error("Cannot refresh profile: No user logged in");
+      return null;
+    }
+    
+    try {
       const updatedProfile = await fetchUserProfile(user.id);
+      console.log("Refresh profile result:", updatedProfile);
+      
       if (updatedProfile) {
         setProfile(updatedProfile);
+        return updatedProfile;
+      } else {
+        console.warn("Failed to fetch updated profile - returned null");
+        return null;
       }
+    } catch (error) {
+      console.error("Error refreshing profile:", error);
+      toast.error("Failed to refresh profile data");
+      return null;
     }
   };
 
@@ -82,10 +99,17 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
         const { data: { session } } = await supabase.auth.getSession();
         
         if (session?.user) {
+          console.log("Initial session found for user:", session.user.id);
           setUser(session.user);
-          const userProfile = await fetchUserProfile(session.user.id);
-          setProfile(userProfile);
+          try {
+            const userProfile = await fetchUserProfile(session.user.id);
+            console.log("Initial profile loaded:", userProfile);
+            setProfile(userProfile);
+          } catch (profileError) {
+            console.error("Error fetching initial profile:", profileError);
+          }
         } else {
+          console.log("No initial session found, user is not logged in");
           setUser(null);
           setProfile(null);
         }
@@ -102,10 +126,17 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
         if (session?.user) {
+          console.log("Auth state changed for user:", session.user.id);
           setUser(session.user);
-          const userProfile = await fetchUserProfile(session.user.id);
-          setProfile(userProfile);
+          try {
+            const userProfile = await fetchUserProfile(session.user.id);
+            console.log("Profile loaded after auth change:", userProfile);
+            setProfile(userProfile);
+          } catch (profileError) {
+            console.error("Error fetching profile after auth change:", profileError);
+          }
         } else {
+          console.log("Auth state changed: No user logged in");
           setUser(null);
           setProfile(null);
         }

@@ -22,6 +22,7 @@ const PersonalInformation = () => {
     profile, 
     loading, 
     error,
+    errorMessage,
     isEditMode, 
     formData, 
     profileData, 
@@ -29,7 +30,8 @@ const PersonalInformation = () => {
     setFormData, 
     getUserName, 
     getBusinessName, 
-    refreshProfile 
+    refreshProfile,
+    handleRetryLoadProfile
   } = useProfileData();
   
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -44,16 +46,6 @@ const PersonalInformation = () => {
       toast.error("Failed to refresh profile data");
     } finally {
       setIsRefreshing(false);
-    }
-  };
-
-  const handleRetryLoadProfile = async () => {
-    try {
-      await refreshProfile();
-      toast.success("Profile loaded successfully");
-    } catch (err) {
-      console.error("Failed to load profile:", err);
-      toast.error("Failed to load profile data. Please try again.");
     }
   };
 
@@ -93,9 +85,13 @@ const PersonalInformation = () => {
       
       <div className="px-4 py-6 space-y-6">
         {loading ? (
-          <ProfileLoading />
+          <ProfileLoading loadingMessage="Loading your profile information..." />
         ) : error ? (
-          <ProfileLoading error={true} onRetry={handleRetryLoadProfile} />
+          <ProfileLoading 
+            error={true} 
+            errorMessage={errorMessage || "There was a problem loading your profile data."} 
+            onRetry={handleRetryLoadProfile} 
+          />
         ) : !profile ? (
           <div className="text-center py-10">
             <p className="text-gray-500 mb-4">No profile information found</p>

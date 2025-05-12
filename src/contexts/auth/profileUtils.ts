@@ -5,6 +5,12 @@ import { Profile } from './types';
 // Fetch user profile
 export const fetchUserProfile = async (userId: string): Promise<Profile | null> => {
   console.log(`Fetching profile for user: ${userId}`);
+  
+  if (!userId) {
+    console.error('Cannot fetch profile: userId is null or undefined');
+    return null;
+  }
+  
   try {
     const { data, error } = await supabase
       .from('profiles')
@@ -14,6 +20,7 @@ export const fetchUserProfile = async (userId: string): Promise<Profile | null> 
 
     if (error) {
       console.error('Error fetching user profile:', error);
+      console.log('Error code:', error.code, 'Error message:', error.message);
       
       // Check if this is a "not found" error - if so, we may need to create a profile
       if (error.code === 'PGRST116') {
@@ -21,7 +28,7 @@ export const fetchUserProfile = async (userId: string): Promise<Profile | null> 
         return await createInitialProfile(userId);
       }
       
-      throw error; // Let the error be caught by the caller
+      return null; // Return null instead of throwing error
     }
     
     console.log('Profile data received:', data);
@@ -40,7 +47,7 @@ export const fetchUserProfile = async (userId: string): Promise<Profile | null> 
     return profileData;
   } catch (error) {
     console.error('Exception fetching profile:', error);
-    throw error; // Let the error be caught by the caller
+    return null; // Return null instead of throwing error
   }
 };
 
@@ -49,17 +56,18 @@ export const createInitialProfile = async (userId: string): Promise<Profile | nu
   console.log(`Creating initial profile for user: ${userId}`);
   try {
     // Get user details from auth to use as initial data
-    // Using getUserById without admin as that requires special privileges
     const { data: userData, error: userError } = await supabase.auth.getUser();
     
     if (userError) {
       console.error('Error getting user details for profile creation:', userError);
-      throw userError;
+      console.log('Error code:', userError.code, 'Error message:', userError.message);
+      return null;
     }
 
     if (!userData.user || userData.user.id !== userId) {
       console.error('User data mismatch or missing during profile creation');
-      throw new Error('Unable to create profile: user data mismatch');
+      console.log('User from getUser:', userData.user?.id, 'Expected userId:', userId);
+      return null;
     }
     
     // Prepare initial profile data
@@ -84,7 +92,8 @@ export const createInitialProfile = async (userId: string): Promise<Profile | nu
       
     if (error) {
       console.error('Error creating initial profile:', error);
-      throw error;
+      console.log('Error code:', error.code, 'Error message:', error.message);
+      return null;
     }
     
     console.log('Initial profile created successfully:', data);
@@ -103,6 +112,6 @@ export const createInitialProfile = async (userId: string): Promise<Profile | nu
     return profileData;
   } catch (error) {
     console.error('Exception creating initial profile:', error);
-    throw error; // Let the error be caught by the caller
+    return null; // Return null instead of throwing error
   }
 };
