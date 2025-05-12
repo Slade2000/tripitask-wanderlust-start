@@ -26,6 +26,9 @@ export async function fetchMessageThreads(userId: string): Promise<MessageThread
     
     console.log("Session verified, user authenticated. Querying with ID:", userIdLower);
     
+    // Log the query we're about to run for debugging purposes
+    console.log(`Building query to fetch messages where sender_id = ${userIdLower} OR receiver_id = ${userIdLower}`);
+    
     // Use explicit select without relying on foreign key relationships for tasks
     const { data: threadsData, error } = await supabase
       .from('messages')
