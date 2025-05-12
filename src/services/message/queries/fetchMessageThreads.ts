@@ -1,5 +1,5 @@
 
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from '@/integrations/supabase/client';
 import { MessageThreadSummary } from "../types";
 
 /**
@@ -8,6 +8,11 @@ import { MessageThreadSummary } from "../types";
 export async function fetchMessageThreads(userId: string): Promise<MessageThreadSummary[]> {
   try {
     console.log("Fetching message threads for user:", userId);
+    
+    if (!userId) {
+      console.error('fetchMessageThreads called with empty userId');
+      return [];
+    }
     
     // Convert userId to lowercase for consistency
     const userIdLower = String(userId).toLowerCase();
@@ -38,7 +43,6 @@ export async function fetchMessageThreads(userId: string): Promise<MessageThread
     }
 
     console.log(`Found ${threadsData.length} messages for user:`, userId);
-    console.log("Raw message data:", threadsData[0]);
 
     // Get all unique user IDs from the messages (both senders and receivers)
     const userIds = new Set<string>();
@@ -65,9 +69,6 @@ export async function fetchMessageThreads(userId: string): Promise<MessageThread
     });
 
     console.log("Fetched profiles for users:", Object.keys(profilesMap).length);
-    for (const profile of userProfiles || []) {
-      console.log(`User ${profile.id}: ${profile.full_name || 'No name'} (normalized to ${String(profile.id).toLowerCase()})`);
-    }
 
     // Get all unique task IDs
     const taskIds = new Set<string>();
@@ -136,11 +137,6 @@ export async function fetchMessageThreads(userId: string): Promise<MessageThread
       
       // Get profile info from our profiles map
       const otherUserProfile = profilesMap[otherUserId];
-      
-      // Log profile lookup
-      if (!otherUserProfile) {
-        console.warn(`No profile found for other user ID: ${otherUserId}`);
-      }
       
       // Count unread messages from the other user
       const unreadCount = messages.filter(msg => 

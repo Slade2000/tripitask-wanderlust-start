@@ -7,9 +7,10 @@ interface MessageListProps {
   messages: Message[];
   loading: boolean;
   tasksByIds?: Record<string, string>;
+  currentUserName?: string;
 }
 
-export default function MessageList({ messages, loading, tasksByIds = {} }: MessageListProps) {
+export default function MessageList({ messages, loading, tasksByIds = {}, currentUserName }: MessageListProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [hasScrolled, setHasScrolled] = useState(false);
   const [messagesWithSeparators, setMessagesWithSeparators] = useState<(Message | { isTaskSeparator: true; taskId: string; taskName: string })[]>([]);
@@ -87,7 +88,11 @@ export default function MessageList({ messages, loading, tasksByIds = {} }: Mess
             </div>
           </div>
         ) : (
-          <MessageItem key={item.id || index} message={item} />
+          <MessageItem 
+            key={item.id || index} 
+            message={item} 
+            currentUserName={currentUserName} 
+          />
         )
       ))}
       <div ref={messagesEndRef} />

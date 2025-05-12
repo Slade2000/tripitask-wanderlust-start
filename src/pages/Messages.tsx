@@ -4,6 +4,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import BottomNav from "@/components/BottomNav";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
+import { useProfile } from "@/contexts/profile/ProfileProvider"; // Import the profile context
+import { useNetworkStatus } from "@/components/NetworkStatusMonitor"; // Import network status
 import { useToast } from "@/hooks/use-toast";
 import { getMessageThreads } from "@/services/message";
 import { MessageThreadSummary } from "@/services/message/types";
@@ -16,6 +18,8 @@ const Messages = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
+  const { profile } = useProfile(); // Use the profile from context
+  const { isOnline } = useNetworkStatus(); // Check network status
   const { toast } = useToast();
   
   useEffect(() => {
@@ -23,6 +27,14 @@ const Messages = () => {
       loadThreads();
     }
   }, [user]);
+
+  // Add effect to handle online status changes
+  useEffect(() => {
+    if (isOnline && error && user) {
+      console.log("Back online, retrying message thread load");
+      loadThreads();
+    }
+  }, [isOnline]);
   
   const loadThreads = async () => {
     if (!user) return;
@@ -47,7 +59,7 @@ const Messages = () => {
       setError(error instanceof Error ? error.message : "Unknown error occurred");
       toast({
         title: "Error",
-        description: "Failed to load messages",
+        description: "Failed to load messages" + (isOnline ? "" : " - You appear to be offline"),
         variant: "destructive",
       });
     } finally {
@@ -81,7 +93,7 @@ const Messages = () => {
     <div className="min-h-screen bg-cream p-4 pb-20">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold text-teal mb-6 text-center">
-          Messages
+          Messages {profile && ` for ${profile.full_name || 'You'}`}
         </h1>
         
         {isDevMode && error && (

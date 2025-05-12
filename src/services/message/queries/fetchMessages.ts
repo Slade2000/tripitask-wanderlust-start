@@ -1,5 +1,5 @@
 
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from '@/integrations/supabase/client';
 import { Message } from "../types";
 import { fetchMessageAttachments, transformMessagesToDto } from "../helpers/messageHelpers";
 
@@ -10,13 +10,22 @@ export async function fetchMessages(userId: string, otherId: string, taskId?: st
   try {
     console.log(`Fetching all messages between users: ${userId} and ${otherId}`);
     
+    if (!userId || !otherId) {
+      console.error('fetchMessages called with invalid parameters:', { userId, otherId });
+      return [];
+    }
+    
+    // Normalize user IDs to lowercase to ensure consistent comparisons
+    const userIdLower = String(userId).toLowerCase();
+    const otherIdLower = String(otherId).toLowerCase();
+    
     // Build the query to get messages between the two users
     let query = supabase
       .from('messages')
       .select(`
         *
       `)
-      .or(`and(sender_id.eq.${userId},receiver_id.eq.${otherId}),and(sender_id.eq.${otherId},receiver_id.eq.${userId})`)
+      .or(`and(sender_id.eq.${userIdLower},receiver_id.eq.${otherIdLower}),and(sender_id.eq.${otherIdLower},receiver_id.eq.${userIdLower})`)
       .order('created_at', { ascending: true });
     
     // If taskId is provided, filter by task
@@ -64,10 +73,7 @@ export async function fetchMessages(userId: string, otherId: string, taskId?: st
     });
 
     console.log("Fetched user profiles:", userProfiles?.length || 0);
-    for (const profile of userProfiles || []) {
-      console.log(`User ${profile.id}: ${profile.full_name || 'No name'} (normalized to ${String(profile.id).toLowerCase()})`);
-    }
-
+    
     // Extract message IDs to fetch attachments
     const messageIds = messagesData.map(message => message.id);
     
@@ -81,13 +87,6 @@ export async function fetchMessages(userId: string, otherId: string, taskId?: st
       const receiverIdLower = String(message.receiver_id).toLowerCase();
       
       const senderProfile = profilesMap[senderIdLower];
-      
-      // Log for debugging
-      if (!senderProfile) {
-        console.warn(`No profile found for sender ID: ${message.sender_id} (normalized to ${senderIdLower})`);
-      } else {
-        console.log(`Profile found for ${message.sender_id} (${senderIdLower}): ${senderProfile.full_name}`);
-      }
       
       return {
         ...message,

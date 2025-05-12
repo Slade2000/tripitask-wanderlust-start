@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useProfile } from "@/contexts/profile/ProfileProvider";
 import { useToast } from "@/hooks/use-toast";
 import { getMessages, sendMessage, markMessagesAsRead } from "@/services/message";
 import { Message } from "@/services/message/types";
@@ -17,6 +18,7 @@ export function useMessageDetail({ otherUserId: initialOtherUserId, initialTaskT
   const { taskId: paramTaskId } = useParams<{ taskId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { profile } = useProfile(); // Use the centralized profile
   const { toast } = useToast();
   
   // Use taskId from props or from URL params
@@ -30,7 +32,7 @@ export function useMessageDetail({ otherUserId: initialOtherUserId, initialTaskT
   const [tasksByIds, setTasksByIds] = useState<Record<string, string>>({});
   
   useEffect(() => {
-    console.log("useMessageDetail hook initializing with params:", { taskId, initialOtherUserId });
+    console.log("useMessageDetail hook initializing with params:", { taskId, initialOtherUserId, profile });
     
     if (!initialOtherUserId) {
       console.error("Missing otherUserId");

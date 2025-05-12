@@ -7,6 +7,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Message } from "@/services/message/types";
 import { sendMessage, getMessages } from "@/services/message";
 import { useAuth } from "@/contexts/AuthContext";
+import { useProfile } from "@/contexts/profile/ProfileProvider";
+import { useNetworkStatus } from "@/components/NetworkStatusMonitor";
 
 interface MessageModalProps {
   isOpen: boolean;
@@ -29,6 +31,8 @@ export default function MessageModal({
   const [tasksByIds, setTasksByIds] = useState<Record<string, string>>({});
   const { toast } = useToast();
   const { user } = useAuth();
+  const { profile } = useProfile();
+  const { isOnline } = useNetworkStatus();
 
   // Load messages when the modal opens
   useEffect(() => {
@@ -66,7 +70,7 @@ export default function MessageModal({
       console.error("Error loading messages:", error);
       toast({
         title: "Error",
-        description: "Failed to load messages",
+        description: "Failed to load messages" + (!isOnline ? " - You appear to be offline" : ""),
         variant: "destructive",
       });
     } finally {
@@ -132,8 +136,17 @@ export default function MessageModal({
         </DialogHeader>
         
         <div className="flex-1 flex flex-col overflow-hidden">
-          <MessageList messages={messages} loading={loading} tasksByIds={tasksByIds} />
-          <MessageInput onSendMessage={handleSendMessage} isSubmitting={sending} />
+          <MessageList 
+            messages={messages} 
+            loading={loading} 
+            tasksByIds={tasksByIds}
+            currentUserName={profile?.full_name} 
+          />
+          <MessageInput 
+            onSendMessage={handleSendMessage} 
+            isSubmitting={sending}
+            disabled={!isOnline}
+          />
         </div>
       </DialogContent>
     </Dialog>

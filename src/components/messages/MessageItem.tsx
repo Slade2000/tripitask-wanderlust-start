@@ -7,27 +7,33 @@ import { FileImage, FileVideo } from "lucide-react";
 
 interface MessageItemProps {
   message: Message;
+  currentUserName?: string;
 }
 
-export default function MessageItem({ message }: MessageItemProps) {
+export default function MessageItem({ message, currentUserName }: MessageItemProps) {
   const { user } = useAuth();
   const isOutgoing = message.sender_id === user?.id;
   const timeAgo = formatDistanceToNow(new Date(message.created_at || Date.now()), { addSuffix: true });
   
-  const senderInitial = (message.sender_name || "U").charAt(0).toUpperCase();
+  // Use centralized profile data or message data
+  const senderName = isOutgoing 
+    ? (currentUserName || user?.user_metadata?.name || "You") 
+    : (message.sender_name || "Unknown");
+  
+  const senderInitial = (senderName || "U").charAt(0).toUpperCase();
   
   return (
     <div className={`flex ${isOutgoing ? 'justify-end' : 'justify-start'} mb-4`}>
       {!isOutgoing && (
         <Avatar className="h-8 w-8 mr-2">
-          <AvatarImage src={message.sender_avatar} alt={message.sender_name} />
+          <AvatarImage src={message.sender_avatar} alt={senderName} />
           <AvatarFallback className="bg-teal text-white">{senderInitial}</AvatarFallback>
         </Avatar>
       )}
       
       <div className={`max-w-[75%] ${isOutgoing ? 'bg-teal text-white' : 'bg-gray-100'} rounded-lg px-4 py-2`}>
         <div className="text-sm font-medium mb-1">
-          {isOutgoing ? 'You' : message.sender_name}
+          {isOutgoing ? 'You' : senderName}
         </div>
         
         <p className="text-sm mb-2">{message.content}</p>
@@ -69,7 +75,7 @@ export default function MessageItem({ message }: MessageItemProps) {
       {isOutgoing && (
         <Avatar className="h-8 w-8 ml-2">
           <AvatarImage src={user?.user_metadata?.avatar_url} alt="You" />
-          <AvatarFallback className="bg-teal text-white">{user?.user_metadata?.name?.charAt(0) || "Y"}</AvatarFallback>
+          <AvatarFallback className="bg-teal text-white">{senderInitial}</AvatarFallback>
         </Avatar>
       )}
     </div>
