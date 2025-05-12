@@ -42,8 +42,8 @@ export async function fetchMessages(userId: string, otherId: string, taskId?: st
     // Get all unique user IDs from the messages (both senders and receivers)
     const userIds = new Set<string>();
     messagesData.forEach(message => {
-      userIds.add(String(message.sender_id));
-      userIds.add(String(message.receiver_id));
+      userIds.add(String(message.sender_id).toLowerCase());
+      userIds.add(String(message.receiver_id).toLowerCase());
     });
     
     // Fetch user profiles for all users in a single query
@@ -57,15 +57,15 @@ export async function fetchMessages(userId: string, otherId: string, taskId?: st
       throw new Error(`Failed to fetch user profiles: ${profilesError.message}`);
     }
 
-    // Create a map for quick profile lookup
+    // Create a map for quick profile lookup, normalizing IDs to lowercase
     const profilesMap: Record<string, any> = {};
     userProfiles?.forEach(profile => {
-      profilesMap[String(profile.id)] = profile;
+      profilesMap[String(profile.id).toLowerCase()] = profile;
     });
 
     console.log("Fetched user profiles:", userProfiles?.length || 0);
     for (const profile of userProfiles || []) {
-      console.log(`User ${profile.id}: ${profile.full_name || 'No name'}`);
+      console.log(`User ${profile.id}: ${profile.full_name || 'No name'} (normalized to ${String(profile.id).toLowerCase()})`);
     }
 
     // Extract message IDs to fetch attachments
@@ -76,13 +76,17 @@ export async function fetchMessages(userId: string, otherId: string, taskId?: st
 
     // Add profile information to the message data
     const messagesWithProfiles = messagesData.map(message => {
-      const senderProfile = profilesMap[message.sender_id];
+      // Normalize IDs for lookups
+      const senderIdLower = String(message.sender_id).toLowerCase();
+      const receiverIdLower = String(message.receiver_id).toLowerCase();
+      
+      const senderProfile = profilesMap[senderIdLower];
       
       // Log for debugging
       if (!senderProfile) {
-        console.warn(`No profile found for sender ID: ${message.sender_id}`);
+        console.warn(`No profile found for sender ID: ${message.sender_id} (normalized to ${senderIdLower})`);
       } else {
-        console.log(`Profile for ${message.sender_id}: ${JSON.stringify(senderProfile)}`);
+        console.log(`Profile found for ${message.sender_id} (${senderIdLower}): ${senderProfile.full_name}`);
       }
       
       return {
@@ -92,8 +96,8 @@ export async function fetchMessages(userId: string, otherId: string, taskId?: st
           avatar_url: senderProfile?.avatar_url
         },
         receiver: {
-          full_name: profilesMap[message.receiver_id]?.full_name || "Unknown User",
-          avatar_url: profilesMap[message.receiver_id]?.avatar_url
+          full_name: profilesMap[receiverIdLower]?.full_name || "Unknown User",
+          avatar_url: profilesMap[receiverIdLower]?.avatar_url
         }
       };
     });

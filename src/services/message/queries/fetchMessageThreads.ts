@@ -43,8 +43,8 @@ export async function fetchMessageThreads(userId: string): Promise<MessageThread
     // Get all unique user IDs from the messages (both senders and receivers)
     const userIds = new Set<string>();
     threadsData.forEach(message => {
-      userIds.add(String(message.sender_id));
-      userIds.add(String(message.receiver_id));
+      userIds.add(String(message.sender_id).toLowerCase());
+      userIds.add(String(message.receiver_id).toLowerCase());
     });
     
     // Fetch user profiles for all users in a single query
@@ -58,13 +58,16 @@ export async function fetchMessageThreads(userId: string): Promise<MessageThread
       throw new Error(`Failed to fetch user profiles: ${profilesError.message}`);
     }
 
-    // Create a map for quick profile lookup
+    // Create a map for quick profile lookup, using lowercase keys
     const profilesMap: Record<string, any> = {};
     userProfiles?.forEach(profile => {
-      profilesMap[String(profile.id)] = profile;
+      profilesMap[String(profile.id).toLowerCase()] = profile;
     });
 
     console.log("Fetched profiles for users:", Object.keys(profilesMap).length);
+    for (const profile of userProfiles || []) {
+      console.log(`User ${profile.id}: ${profile.full_name || 'No name'} (normalized to ${String(profile.id).toLowerCase()})`);
+    }
 
     // Get all unique task IDs
     const taskIds = new Set<string>();
@@ -96,16 +99,23 @@ export async function fetchMessageThreads(userId: string): Promise<MessageThread
 
     threadsData.forEach(message => {
       // Determine the other user involved in the conversation
-      const otherUserId = String(message.sender_id).toLowerCase() === userIdLower 
+      // Normalize both IDs to lowercase for comparison
+      const messageSenderId = String(message.sender_id).toLowerCase();
+      const messageReceiverId = String(message.receiver_id).toLowerCase();
+      
+      const otherUserId = messageSenderId === userIdLower 
         ? message.receiver_id 
         : message.sender_id;
       
+      // Normalize the otherUserId for use as the key
+      const otherUserIdLower = String(otherUserId).toLowerCase();
+      
       // Create a key for the conversation if it doesn't exist
-      if (!conversationMap[otherUserId]) {
-        conversationMap[otherUserId] = [];
+      if (!conversationMap[otherUserIdLower]) {
+        conversationMap[otherUserIdLower] = [];
       }
       
-      conversationMap[otherUserId].push(message);
+      conversationMap[otherUserIdLower].push(message);
     });
     
     // Create thread summaries from the grouped conversations
@@ -118,11 +128,19 @@ export async function fetchMessageThreads(userId: string): Promise<MessageThread
       // Get the most recent message
       const latestMessage = messages[0];
       
-      // Determine if the other user is the sender or receiver of the latest message
-      const isOtherUserSender = String(latestMessage.sender_id).toLowerCase() !== userIdLower;
+      // Normalize IDs for comparison
+      const latestMessageSenderId = String(latestMessage.sender_id).toLowerCase();
+      
+      // Determine if the other user is the sender of the latest message
+      const isOtherUserSender = latestMessageSenderId !== userIdLower;
       
       // Get profile info from our profiles map
       const otherUserProfile = profilesMap[otherUserId];
+      
+      // Log profile lookup
+      if (!otherUserProfile) {
+        console.warn(`No profile found for other user ID: ${otherUserId}`);
+      }
       
       // Count unread messages from the other user
       const unreadCount = messages.filter(msg => 
