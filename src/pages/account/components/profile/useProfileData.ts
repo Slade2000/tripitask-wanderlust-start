@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 export interface ProfileDataState {
   rating: number;
@@ -20,6 +21,7 @@ export interface ProfileDataState {
 export const useProfileData = () => {
   const { user, profile, refreshProfile } = useAuth();
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   
   // Form state
@@ -68,14 +70,23 @@ export const useProfileData = () => {
     console.log("Current profile data:", profile);
     
     setLoading(true);
+    setError(false);
     
     // Enhanced initial profile fetch
     const fetchInitialProfile = async () => {
-      if (user && !profile) {
-        console.log("No profile data yet, manually refreshing...");
-        await refreshProfile();
+      try {
+        if (user && !profile) {
+          console.log("No profile data yet, manually refreshing...");
+          await refreshProfile();
+        }
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+        setError(true);
+        toast.error("Failed to load profile data");
+      } finally {
+        // Always set loading to false, even if an error occurred
+        setLoading(false);
       }
-      setLoading(false);
     };
     
     fetchInitialProfile();
@@ -103,8 +114,13 @@ export const useProfileData = () => {
       }));
       
       setLoading(false);
+      setError(false);
+    } else if (user) {
+      // If we have a user but no profile, we should still stop loading
+      // This gives us a chance to show a "create profile" UI instead of infinite loading
+      setLoading(false);
     }
-  }, [profile]);
+  }, [profile, user]);
 
   // Get user's name with fallbacks
   const getUserName = () => {
@@ -137,6 +153,7 @@ export const useProfileData = () => {
     user,
     profile,
     loading,
+    error,
     isEditMode,
     formData,
     profileData,

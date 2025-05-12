@@ -1,9 +1,10 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, RefreshCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { toast } from "sonner";
 
 // Import the refactored components
 import ProfileHeader from "./components/profile/ProfileHeader";
@@ -20,6 +21,7 @@ const PersonalInformation = () => {
     user, 
     profile, 
     loading, 
+    error,
     isEditMode, 
     formData, 
     profileData, 
@@ -29,6 +31,21 @@ const PersonalInformation = () => {
     getBusinessName, 
     refreshProfile 
   } = useProfileData();
+  
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  
+  const handleRefresh = async () => {
+    try {
+      setIsRefreshing(true);
+      await refreshProfile();
+      toast.success("Profile data refreshed");
+    } catch (err) {
+      console.error("Failed to refresh profile:", err);
+      toast.error("Failed to refresh profile data");
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   return (
     <div className="bg-cream min-h-screen pb-20">
@@ -43,21 +60,32 @@ const PersonalInformation = () => {
           <ArrowLeft size={22} />
         </Button>
         <h1 className="text-xl font-semibold">Personal Information</h1>
-        {!isEditMode && (
-          <Button 
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsEditMode(true)}
-            className="ml-auto"
-          >
-            Edit
-          </Button>
+        {!isEditMode && !loading && !error && (
+          <div className="ml-auto flex gap-2">
+            <Button 
+              variant="ghost"
+              size="icon"
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+            >
+              <RefreshCcw size={18} className={isRefreshing ? "animate-spin" : ""} />
+            </Button>
+            <Button 
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsEditMode(true)}
+            >
+              Edit
+            </Button>
+          </div>
         )}
       </div>
       
       <div className="px-4 py-6 space-y-6">
         {loading ? (
           <ProfileLoading />
+        ) : error ? (
+          <ProfileLoading error={true} />
         ) : isEditMode ? (
           <ProfileForm 
             user={user}
