@@ -17,6 +17,13 @@ export async function fetchMessageThreads(userId: string): Promise<MessageThread
     // Convert userId to lowercase for consistency
     const userIdLower = String(userId).toLowerCase();
     
+    // Verify we have a valid session before proceeding
+    const session = await supabase.auth.getSession();
+    if (!session.data.session) {
+      console.error("No active session found when fetching message threads");
+      throw new Error("Authentication required");
+    }
+    
     // Use explicit select without relying on foreign key relationships for tasks
     const { data: threadsData, error } = await supabase
       .from('messages')

@@ -14,6 +14,10 @@ const options = {
     storage: localStorage
   },
   global: {
+    headers: {
+      // Ensure API key is always included in requests
+      'apiKey': SUPABASE_PUBLISHABLE_KEY
+    },
     fetch: (url: RequestInfo | URL, options?: RequestInit) => {
       return fetch(url, {
         ...options,
