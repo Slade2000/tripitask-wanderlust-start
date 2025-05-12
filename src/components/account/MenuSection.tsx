@@ -1,12 +1,13 @@
 
 import { ChevronRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export interface MenuItem {
   icon: React.ReactNode;
   title: string;
   description?: string;
   path: string;
-  onClick: () => void;
+  onClick?: () => void;
 }
 
 interface MenuSectionProps {
@@ -15,6 +16,16 @@ interface MenuSectionProps {
 }
 
 const MenuSection = ({ title, items }: MenuSectionProps) => {
+  const navigate = useNavigate();
+
+  const handleItemClick = (item: MenuItem) => {
+    if (item.onClick) {
+      item.onClick();
+    } else {
+      navigate(item.path);
+    }
+  };
+
   return (
     <div className="mt-6 px-4">
       <h2 className="text-sm uppercase text-gray-500 font-medium mb-2">{title}</h2>
@@ -23,7 +34,7 @@ const MenuSection = ({ title, items }: MenuSectionProps) => {
         {items.map((item, index) => (
           <button 
             key={item.title}
-            onClick={item.onClick}
+            onClick={() => handleItemClick(item)}
             className={`flex items-center justify-between w-full px-4 py-4 ${
               index !== items.length - 1 ? 'border-b border-gray-100' : ''
             }`}

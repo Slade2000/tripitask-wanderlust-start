@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import BottomNav from "@/components/BottomNav";
@@ -46,31 +47,25 @@ const Account = () => {
     // Final fallback
     "User";
 
-  // Navigation handlers for each section
-  const handleNavigation = (path: string) => {
-    // This would navigate to specific pages in a real app
-    console.log(`Navigating to: ${path}`);
-  };
-  
   // Account settings section items
   const accountSettingsItems: MenuItem[] = [
     {
       icon: <CreditCard size={22} className="text-gray-500 mr-4" />,
       title: "Payment options",
       path: '/account/payment',
-      onClick: () => handleNavigation('/account/payment')
+      onClick: () => navigate('/account/payment')
     },
     {
       icon: <Bell size={22} className="text-gray-500 mr-4" />,
       title: "Notification preferences",
       path: '/account/notifications',
-      onClick: () => handleNavigation('/account/notifications')
+      onClick: () => navigate('/account/notifications')
     },
     {
       icon: <User size={22} className="text-gray-500 mr-4" />,
       title: "Personal information",
       path: '/account/personal',
-      onClick: () => handleNavigation('/account/personal')
+      onClick: () => navigate('/account/personal')
     }
   ];
 
@@ -79,22 +74,22 @@ const Account = () => {
     {
       icon: <ChartBar size={22} className="text-gray-500 mr-4" />,
       title: "My dashboard",
-      path: '/account/dashboard',
-      onClick: () => handleNavigation('/account/dashboard')
+      path: '/dashboard',
+      onClick: () => navigate('/dashboard')
     },
     {
       icon: <AlarmClock size={22} className="text-gray-500 mr-4" />,
       title: "Set up task alerts",
       description: "Get notified when new tasks match your skills",
       path: '/account/alerts',
-      onClick: () => handleNavigation('/account/alerts')
+      onClick: () => navigate('/account/alerts')
     },
     {
       icon: <List size={22} className="text-gray-500 mr-4" />,
       title: "List my services",
       description: "Create listings for your services so customers come to you",
       path: '/account/services',
-      onClick: () => handleNavigation('/account/services')
+      onClick: () => navigate('/account/services')
     }
   ];
 
@@ -104,19 +99,19 @@ const Account = () => {
       icon: <HelpCircle size={22} className="text-gray-500 mr-4" />,
       title: "Frequently asked questions",
       path: '/account/faq',
-      onClick: () => handleNavigation('/account/faq')
+      onClick: () => navigate('/account/faq')
     },
     {
       icon: <Users size={22} className="text-gray-500 mr-4" />,
       title: "Community guidelines",
       path: '/account/community',
-      onClick: () => handleNavigation('/account/community')
+      onClick: () => navigate('/account/community')
     },
     {
       icon: <ContactIcon size={22} className="text-gray-500 mr-4" />,
       title: "Contact us",
       path: '/account/contact',
-      onClick: () => handleNavigation('/account/contact')
+      onClick: () => navigate('/account/contact')
     }
   ];
 

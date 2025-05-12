@@ -28,6 +28,11 @@ import TaskDetail from "./pages/TaskDetail";
 import SubmitOffer from "./pages/SubmitOffer";
 import SpatialReferenceSystems from "./pages/SpatialReferenceSystems";
 
+// Import account-related pages
+import NotificationPreferences from "./pages/account/NotificationPreferences";
+import PersonalInformation from "./pages/account/PersonalInformation";
+import TaskAlerts from "./pages/account/TaskAlerts";
+
 const App = () => {
   // Create a new QueryClient instance inside the component
   const [queryClient] = useState(() => new QueryClient());
@@ -55,7 +60,13 @@ const App = () => {
                 {/* Support both task-based and user-based message routes */}
                 <Route path="/messages/:taskId" element={<MessageDetail />} />
                 <Route path="/messages/user/:userId" element={<MessageDetail />} />
+                
+                {/* Account section routes */}
                 <Route path="/account" element={<Account />} />
+                <Route path="/account/notifications" element={<NotificationPreferences />} />
+                <Route path="/account/personal" element={<PersonalInformation />} />
+                <Route path="/account/alerts" element={<TaskAlerts />} />
+                
                 <Route path="/spatial-reference-systems" element={<SpatialReferenceSystems />} />
                 <Route path="/terms" element={<Terms />} />
                 <Route path="/privacy" element={<Privacy />} />
