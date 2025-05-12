@@ -2,13 +2,24 @@
 import { supabase } from '../../integrations/supabase/client';
 import { Profile } from './types';
 
-// Fetch user profile
+// Set up a local cache for profile data
+const profileCache: { [userId: string]: { profile: Profile, timestamp: number } } = {};
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
+
+// Fetch user profile with improved caching and error handling
 export const fetchUserProfile = async (userId: string): Promise<Profile | null> => {
   console.log(`Fetching profile for user: ${userId}`);
   
   if (!userId) {
     console.error('Cannot fetch profile: userId is null or undefined');
     return null;
+  }
+  
+  // Check cache first
+  const now = Date.now();
+  if (profileCache[userId] && now - profileCache[userId].timestamp < CACHE_DURATION) {
+    console.log('Returning cached profile for user:', userId);
+    return profileCache[userId].profile;
   }
   
   try {
@@ -44,10 +55,26 @@ export const fetchUserProfile = async (userId: string): Promise<Profile | null> 
         : null
     } as Profile;
     
+    // Update cache
+    profileCache[userId] = {
+      profile: profileData,
+      timestamp: now
+    };
+    
     return profileData;
   } catch (error) {
     console.error('Exception fetching profile:', error);
     return null; // Return null instead of throwing error
+  }
+};
+
+// Clear cache for a specific user or all users
+export const clearProfileCache = (userId?: string): void => {
+  if (userId) {
+    delete profileCache[userId];
+  } else {
+    // Clear all cache
+    Object.keys(profileCache).forEach(key => delete profileCache[key]);
   }
 };
 
@@ -79,6 +106,8 @@ export const createInitialProfile = async (userId: string): Promise<Profile | nu
       about: '',
       location: '',
       business_name: '',
+      rating: 0,
+      jobs_completed: 0
     };
     
     console.log('Attempting to create profile with data:', initialData);
@@ -108,6 +137,12 @@ export const createInitialProfile = async (userId: string): Promise<Profile | nu
         ? data.full_name.split(' ').slice(1).join(' ')
         : null
     } as Profile;
+    
+    // Update cache
+    profileCache[userId] = {
+      profile: profileData,
+      timestamp: Date.now()
+    };
     
     return profileData;
   } catch (error) {

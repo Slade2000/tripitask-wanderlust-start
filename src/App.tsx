@@ -6,6 +6,9 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { ProfileProvider } from "@/contexts/profile/ProfileProvider";
+import { NetworkStatusProvider } from "@/components/NetworkStatusMonitor";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import { useState } from "react";
 
 // Import pages
@@ -34,52 +37,67 @@ import PersonalInformation from "./pages/account/PersonalInformation";
 import TaskAlerts from "./pages/account/TaskAlerts";
 
 const App = () => {
-  // Create a new QueryClient instance inside the component
-  const [queryClient] = useState(() => new QueryClient());
+  // Create a new QueryClient instance inside the component with improved settings
+  const [queryClient] = useState(() => new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: 2,
+        retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
+        staleTime: 5 * 60 * 1000, // 5 minutes
+        refetchOnWindowFocus: false,
+      },
+    },
+  }));
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange>
-        <BrowserRouter>
-          <AuthProvider>
-            <TooltipProvider>
-              <Routes>
-                <Route path="/" element={<WelcomePage />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/signup" element={<Signup />} />
-                <Route path="/home" element={<Home />} />
-                <Route path="/welcome-after-login" element={<Home />} />
-                <Route path="/post-task" element={<PostTask />} />
-                <Route path="/find-work" element={<FindWork />} />
-                <Route path="/my-jobs" element={<MyJobs />} />
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/tasks/:taskId" element={<TaskDetail />} />
-                <Route path="/tasks/:taskId/submit-offer" element={<SubmitOffer />} />
-                <Route path="/tasks/:taskId/offers" element={<TaskOffers />} />
-                <Route path="/messages" element={<Messages />} />
-                {/* Support both task-based and user-based message routes */}
-                <Route path="/messages/:taskId" element={<MessageDetail />} />
-                <Route path="/messages/user/:userId" element={<MessageDetail />} />
-                
-                {/* Account section routes */}
-                <Route path="/account" element={<Account />} />
-                <Route path="/account/notifications" element={<NotificationPreferences />} />
-                <Route path="/account/personal" element={<PersonalInformation />} />
-                <Route path="/account/alerts" element={<TaskAlerts />} />
-                
-                <Route path="/spatial-reference-systems" element={<SpatialReferenceSystems />} />
-                <Route path="/terms" element={<Terms />} />
-                <Route path="/privacy" element={<Privacy />} />
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-              <Toaster />
-              <Sonner />
-            </TooltipProvider>
-          </AuthProvider>
-        </BrowserRouter>
-      </ThemeProvider>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange>
+          <BrowserRouter>
+            <AuthProvider>
+              <ProfileProvider>
+                <NetworkStatusProvider>
+                  <TooltipProvider>
+                    <Routes>
+                      <Route path="/" element={<WelcomePage />} />
+                      <Route path="/login" element={<Login />} />
+                      <Route path="/signup" element={<Signup />} />
+                      <Route path="/home" element={<Home />} />
+                      <Route path="/welcome-after-login" element={<Home />} />
+                      <Route path="/post-task" element={<PostTask />} />
+                      <Route path="/find-work" element={<FindWork />} />
+                      <Route path="/my-jobs" element={<MyJobs />} />
+                      <Route path="/dashboard" element={<Dashboard />} />
+                      <Route path="/tasks/:taskId" element={<TaskDetail />} />
+                      <Route path="/tasks/:taskId/submit-offer" element={<SubmitOffer />} />
+                      <Route path="/tasks/:taskId/offers" element={<TaskOffers />} />
+                      <Route path="/messages" element={<Messages />} />
+                      {/* Support both task-based and user-based message routes */}
+                      <Route path="/messages/:taskId" element={<MessageDetail />} />
+                      <Route path="/messages/user/:userId" element={<MessageDetail />} />
+                      
+                      {/* Account section routes */}
+                      <Route path="/account" element={<Account />} />
+                      <Route path="/account/notifications" element={<NotificationPreferences />} />
+                      <Route path="/account/personal" element={<PersonalInformation />} />
+                      <Route path="/account/alerts" element={<TaskAlerts />} />
+                      
+                      <Route path="/spatial-reference-systems" element={<SpatialReferenceSystems />} />
+                      <Route path="/terms" element={<Terms />} />
+                      <Route path="/privacy" element={<Privacy />} />
+                      {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                    <Toaster />
+                    <Sonner />
+                  </TooltipProvider>
+                </NetworkStatusProvider>
+              </ProfileProvider>
+            </AuthProvider>
+          </BrowserRouter>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 };
 

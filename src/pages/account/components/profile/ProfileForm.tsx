@@ -4,7 +4,6 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -43,7 +42,7 @@ interface ProfileFormProps {
   };
   loading: boolean;
   setFormData: (data: any) => void;
-  refreshProfile: () => Promise<Profile | null>;
+  updateProfile: (profileData: Partial<Profile>) => Promise<Profile | null>;
   setIsEditMode: (isEdit: boolean) => void;
 }
 
@@ -52,7 +51,7 @@ const ProfileForm = ({
   formData,
   loading,
   setFormData,
-  refreshProfile,
+  updateProfile,
   setIsEditMode,
 }: ProfileFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -82,29 +81,17 @@ const ProfileForm = ({
         ? data.services.split(",").map(service => service.trim()).filter(Boolean)
         : [];
         
-      const { error } = await supabase
-        .from("profiles")
-        .update({
-          full_name: data.full_name,
-          business_name: data.business_name,
-          about: data.about,
-          location: data.location,
-          services: servicesArray,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", user.id);
+      const result = await updateProfile({
+        full_name: data.full_name,
+        business_name: data.business_name,
+        about: data.about,
+        location: data.location,
+        services: servicesArray,
+      });
         
-      if (error) {
-        console.error("Error updating profile:", error);
-        toast.error("Failed to update profile");
-        return;
+      if (result) {
+        setIsEditMode(false);
       }
-      
-      // Refresh profile data after update
-      await refreshProfile();
-      
-      toast.success("Profile updated successfully");
-      setIsEditMode(false);
     } catch (error) {
       console.error("Exception updating profile:", error);
       toast.error("An unexpected error occurred");

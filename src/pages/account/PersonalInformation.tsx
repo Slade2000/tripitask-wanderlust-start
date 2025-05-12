@@ -13,8 +13,7 @@ import ServicesTab from "./components/profile/ServicesTab";
 import ReviewsTab from "./components/profile/ReviewsTab";
 import ProfileForm from "./components/profile/ProfileForm";
 import ProfileLoading from "./components/profile/ProfileLoading";
-import { useProfileData } from "./components/profile/useProfileData";
-import { Profile } from "@/contexts/auth/types";
+import { useProfileData } from "@/hooks/useProfileData";
 
 const PersonalInformation = () => {
   const navigate = useNavigate();
@@ -32,6 +31,7 @@ const PersonalInformation = () => {
     getUserName, 
     getBusinessName, 
     refreshProfile,
+    updateProfile,
     handleRetryLoadProfile
   } = useProfileData();
   
@@ -104,7 +104,7 @@ const PersonalInformation = () => {
             formData={formData}
             loading={loading}
             setFormData={setFormData}
-            refreshProfile={refreshProfile}
+            updateProfile={updateProfile}
             setIsEditMode={setIsEditMode}
           />
         ) : (
