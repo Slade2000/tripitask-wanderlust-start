@@ -36,7 +36,7 @@ export async function fetchMessageThreads(userId: string): Promise<MessageThread
         created_at,
         read
       `)
-      .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
+      .or(`sender_id.eq.${userIdLower},receiver_id.eq.${userIdLower}`)
       .order('created_at', { ascending: false });
 
     if (error) {
