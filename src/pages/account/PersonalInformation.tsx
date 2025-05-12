@@ -14,6 +14,7 @@ import ReviewsTab from "./components/profile/ReviewsTab";
 import ProfileForm from "./components/profile/ProfileForm";
 import ProfileLoading from "./components/profile/ProfileLoading";
 import { useProfileData } from "./components/profile/useProfileData";
+import { Profile } from "@/contexts/auth/types";
 
 const PersonalInformation = () => {
   const navigate = useNavigate();

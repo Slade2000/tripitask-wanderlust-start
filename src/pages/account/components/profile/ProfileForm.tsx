@@ -1,18 +1,38 @@
 
 import { useState } from "react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { z } from "zod";
+import { toast } from "sonner";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Upload } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Profile } from "@/contexts/auth/types";
+import { User } from "@/types/user";
+
+// Form validation schema
+const profileSchema = z.object({
+  full_name: z.string().min(1, { message: "Name is required" }),
+  business_name: z.string().optional(),
+  about: z.string().optional(),
+  location: z.string().optional(),
+  services: z.string().optional(),
+});
+
+type ProfileFormData = z.infer<typeof profileSchema>;
 
 interface ProfileFormProps {
-  user: any;
+  user: User | null;
   formData: {
     full_name: string;
     business_name: string;
@@ -23,220 +43,177 @@ interface ProfileFormProps {
   };
   loading: boolean;
   setFormData: (data: any) => void;
-  refreshProfile: () => Promise<void>;
+  refreshProfile: () => Promise<Profile | null>;
   setIsEditMode: (isEdit: boolean) => void;
 }
 
-const ProfileForm = ({ 
-  user, 
-  formData, 
-  loading, 
-  setFormData, 
-  refreshProfile, 
-  setIsEditMode 
+const ProfileForm = ({
+  user,
+  formData,
+  loading,
+  setFormData,
+  refreshProfile,
+  setIsEditMode,
 }: ProfileFormProps) => {
-  const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const form = useForm<ProfileFormData>({
+    resolver: zodResolver(profileSchema),
+    defaultValues: {
+      full_name: formData.full_name || "",
+      business_name: formData.business_name || "",
+      about: formData.about || "",
+      location: formData.location || "",
+      services: formData.services || "",
+    },
+  });
   
-  // Handle form changes
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev: any) => ({ ...prev, [name]: value }));
-  };
-  
-  // Handle file upload
-  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file || !user) return;
-    
-    try {
-      // Create a unique file name
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}-${Date.now()}.${fileExt}`;
-      const filePath = `avatars/${fileName}`;
-      
-      // Upload to Supabase Storage
-      const { error: uploadError, data } = await supabase
-        .storage
-        .from('profiles')
-        .upload(filePath, file);
-      
-      if (uploadError) {
-        throw uploadError;
-      }
-      
-      // Get the public URL
-      const { data: { publicUrl } } = supabase
-        .storage
-        .from('profiles')
-        .getPublicUrl(filePath);
-      
-      // Update form data
-      setFormData((prev: any) => ({ ...prev, avatar_url: publicUrl }));
-      
-      toast({
-        title: "Image uploaded",
-        description: "Your profile picture has been updated."
-      });
-    } catch (error) {
-      console.error('Error uploading image:', error);
-      toast({
-        title: "Upload failed",
-        description: "There was a problem uploading your image. Please try again.",
-        variant: "destructive"
-      });
+  const onSubmit = async (data: ProfileFormData) => {
+    if (!user) {
+      toast.error("You must be logged in to update your profile");
+      return;
     }
-  };
-  
-  // Save profile updates to database
-  const handleSave = async () => {
-    if (!user) return;
+    
+    setIsSubmitting(true);
     
     try {
       // Parse services from comma-separated string to array
-      const servicesArray = formData.services.split(',')
-        .map(service => service.trim())
-        .filter(service => service !== '');
-      
+      const servicesArray = data.services
+        ? data.services.split(",").map(service => service.trim()).filter(Boolean)
+        : [];
+        
       const { error } = await supabase
-        .from('profiles')
+        .from("profiles")
         .update({
-          full_name: formData.full_name,
-          business_name: formData.business_name,
-          about: formData.about,
-          location: formData.location,
+          full_name: data.full_name,
+          business_name: data.business_name,
+          about: data.about,
+          location: data.location,
           services: servicesArray,
-          avatar_url: formData.avatar_url,
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         })
-        .eq('id', user.id);
+        .eq("id", user.id);
+        
+      if (error) {
+        console.error("Error updating profile:", error);
+        toast.error("Failed to update profile");
+        return;
+      }
       
-      if (error) throw error;
-      
+      // Refresh profile data after update
       await refreshProfile();
-      setIsEditMode(false);
       
-      toast({
-        title: "Profile updated",
-        description: "Your profile has been successfully updated."
-      });
+      toast.success("Profile updated successfully");
+      setIsEditMode(false);
     } catch (error) {
-      console.error('Error updating profile:', error);
-      toast({
-        title: "Update failed",
-        description: "There was a problem updating your profile. Please try again.",
-        variant: "destructive"
-      });
+      console.error("Exception updating profile:", error);
+      toast.error("An unexpected error occurred");
+    } finally {
+      setIsSubmitting(false);
     }
   };
-
+  
+  const handleCancel = () => {
+    setIsEditMode(false);
+  };
+  
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Edit Profile</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex flex-col items-center mb-6">
-          <div className="relative mb-4">
-            <Avatar className="h-24 w-24 border-4 border-white shadow">
-              <AvatarImage src={formData.avatar_url} />
-              <AvatarFallback className="text-2xl bg-gray-200">
-                {formData.full_name.charAt(0) || "U"}
-              </AvatarFallback>
-            </Avatar>
-            <label htmlFor="profile-upload" className="absolute bottom-0 right-0 bg-primary text-white p-1 rounded-full cursor-pointer">
-              <Upload size={16} />
-              <input 
-                id="profile-upload" 
-                type="file" 
-                className="hidden" 
-                accept="image/*"
-                onChange={handleImageUpload}
-                disabled={loading}
-              />
-            </label>
-          </div>
-        </div>
-        
-        <div className="space-y-4">
-          <div className="grid gap-4">
-            <div>
-              <Label htmlFor="full_name">Full Name</Label>
-              <Input 
-                id="full_name"
-                name="full_name"
-                value={formData.full_name}
-                onChange={handleInputChange}
-                disabled={loading}
-              />
-            </div>
+      <CardContent className="p-6">
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <FormField
+              control={form.control}
+              name="full_name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Your full name" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             
-            <div>
-              <Label htmlFor="business_name">Business Name</Label>
-              <Input 
-                id="business_name"
-                name="business_name"
-                value={formData.business_name}
-                onChange={handleInputChange}
-                disabled={loading}
-              />
-            </div>
+            <FormField
+              control={form.control}
+              name="business_name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Business Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Your business name (optional)" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             
-            <div>
-              <Label htmlFor="location">Location</Label>
-              <Input 
-                id="location"
-                name="location"
-                value={formData.location}
-                onChange={handleInputChange}
-                placeholder="e.g. Sydney, NSW"
-                disabled={loading}
-              />
-            </div>
+            <FormField
+              control={form.control}
+              name="about"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>About</FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      placeholder="Tell customers about yourself and your business..." 
+                      className="min-h-[120px]" 
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             
-            <div>
-              <Label htmlFor="about">About Me</Label>
-              <Textarea 
-                id="about"
-                name="about"
-                value={formData.about}
-                onChange={handleInputChange}
-                placeholder="Tell clients about your experience and skills"
-                rows={5}
-                disabled={loading}
-              />
-            </div>
+            <FormField
+              control={form.control}
+              name="location"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Location</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Your location" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             
-            <div>
-              <Label htmlFor="services">Services (comma separated)</Label>
-              <Input 
-                id="services"
-                name="services"
-                value={formData.services}
-                onChange={handleInputChange}
-                placeholder="e.g. Electrical, Plumbing, Maintenance"
-                disabled={loading}
-              />
+            <FormField
+              control={form.control}
+              name="services"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Services</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Services (comma separated)" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleCancel}
+                disabled={isSubmitting}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={isSubmitting || loading}
+              >
+                {isSubmitting ? "Saving..." : "Save Changes"}
+              </Button>
             </div>
-          </div>
-        </div>
-        
-        <div className="flex gap-3 pt-4">
-          <Button 
-            variant="outline" 
-            className="flex-1"
-            onClick={() => setIsEditMode(false)}
-            disabled={loading}
-          >
-            Cancel
-          </Button>
-          <Button 
-            className="flex-1"
-            onClick={handleSave}
-            disabled={loading}
-          >
-            {loading ? "Saving..." : "Save Changes"}
-          </Button>
-        </div>
+          </form>
+        </Form>
       </CardContent>
     </Card>
   );

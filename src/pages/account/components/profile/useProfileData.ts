@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { Profile } from "@/contexts/auth/types";
 
 export interface ProfileDataState {
   rating: number;
