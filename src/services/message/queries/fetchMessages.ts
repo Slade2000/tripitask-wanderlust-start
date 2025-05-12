@@ -35,11 +35,17 @@ export async function fetchMessages(userId: string, otherId: string, taskId?: st
       .select(`
         *
       `)
-      // Fix: Properly format the or condition with separate arguments
-      .or(
-        `and(sender_id.eq.${userIdLower},receiver_id.eq.${otherIdLower})`,
-        `and(sender_id.eq.${otherIdLower},receiver_id.eq.${userIdLower})`
-      )
+      // Fix: Use a combination of or() and filter() with object syntax instead of string arguments
+      .or([
+        { 
+          sender_id: userIdLower,
+          receiver_id: otherIdLower
+        },
+        {
+          sender_id: otherIdLower,
+          receiver_id: userIdLower
+        }
+      ])
       .order('created_at', { ascending: true });
     
     // If taskId is provided, filter by task

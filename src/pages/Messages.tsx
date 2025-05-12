@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { getMessageThreads } from "@/services/message";
 import { MessageThreadSummary } from "@/services/message/types";
 import ThreadContent from "@/components/messages/ThreadContent";
+import { supabase } from "@/integrations/supabase/client"; // Add the missing import
 
 const Messages = () => {
   const location = useLocation();
