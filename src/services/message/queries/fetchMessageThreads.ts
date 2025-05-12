@@ -28,6 +28,8 @@ export async function fetchMessageThreads(userId: string): Promise<MessageThread
     
     // Log the query we're about to run for debugging purposes
     console.log(`Building query to fetch messages where sender_id = ${userIdLower} OR receiver_id = ${userIdLower}`);
+    console.log("Using .or() with the correct syntax format:");
+    console.log(`or(sender_id.eq.${userIdLower},receiver_id.eq.${userIdLower})`);
     
     // Use explicit select without relying on foreign key relationships for tasks
     const { data: threadsData, error } = await supabase

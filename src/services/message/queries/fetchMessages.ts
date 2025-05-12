@@ -28,27 +28,20 @@ export async function fetchMessages(userId: string, otherId: string, taskId?: st
     
     console.log("Session verified, user authenticated. Querying with IDs:", 
       { userIdLower, otherIdLower });
-      
-    // Log the SQL filter conditions we're trying to build for debugging
-    console.log("Building query to fetch messages where:");
-    console.log(`1. (sender_id = '${userIdLower}' AND receiver_id = '${otherIdLower}') OR`);
-    console.log(`2. (sender_id = '${otherIdLower}' AND receiver_id = '${userIdLower}')`);
     
-    // Build the query to get messages between the two users
+    // Log the SQL filter conditions we're trying to build for debugging
+    console.log("Building single query for messages with OR condition:");
+    console.log(`(sender_id = '${userIdLower}' AND receiver_id = '${otherIdLower}') OR ` +
+                `(sender_id = '${otherIdLower}' AND receiver_id = '${userIdLower}')`);
+    
+    // Build a single query to get all messages between the two users
     let query = supabase
       .from('messages')
-      .select(`*`)
-      // Properly filter for messages between these two users using a filter() approach
-      .filter('sender_id', 'eq', userIdLower)
-      .filter('receiver_id', 'eq', otherIdLower)
-      .order('created_at', { ascending: true });
-    
-    // Now add the messages going the other direction with a separate query
-    const query2 = supabase
-      .from('messages')
-      .select(`*`)
-      .filter('sender_id', 'eq', otherIdLower)
-      .filter('receiver_id', 'eq', userIdLower)
+      .select('*')
+      .or(
+        `and(sender_id.eq.${userIdLower},receiver_id.eq.${otherIdLower}),` +
+        `and(sender_id.eq.${otherIdLower},receiver_id.eq.${userIdLower})`
+      )
       .order('created_at', { ascending: true });
     
     // If taskId is provided, filter by task
@@ -56,27 +49,13 @@ export async function fetchMessages(userId: string, otherId: string, taskId?: st
       query = query.eq('task_id', taskId);
     }
     
-    // Execute the first query
-    const { data: messagesData1, error: messagesError1 } = await query;
+    // Execute the query
+    const { data: messagesData, error: messagesError } = await query;
     
-    if (messagesError1) {
-      console.error("Error fetching messages (first direction):", messagesError1);
-      throw new Error(`Failed to fetch messages: ${messagesError1.message}`);
+    if (messagesError) {
+      console.error("Error fetching messages:", messagesError);
+      throw new Error(`Failed to fetch messages: ${messagesError.message}`);
     }
-    
-    // Execute the second query
-    const { data: messagesData2, error: messagesError2 } = await query2;
-    
-    if (messagesError2) {
-      console.error("Error fetching messages (second direction):", messagesError2);
-      throw new Error(`Failed to fetch messages: ${messagesError2.message}`);
-    }
-    
-    // Combine the results
-    const messagesData = [...(messagesData1 || []), ...(messagesData2 || [])];
-    
-    // Sort messages by timestamp
-    messagesData.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
 
     console.log(`Found ${messagesData?.length || 0} messages between users ${userId} and ${otherId}`);
 
