@@ -19,13 +19,27 @@ export async function fetchMessages(userId: string, otherId: string, taskId?: st
     const userIdLower = String(userId).toLowerCase();
     const otherIdLower = String(otherId).toLowerCase();
     
+    // Verify we have a valid session before proceeding
+    const session = await supabase.auth.getSession();
+    if (!session.data.session) {
+      console.error("No active session found when fetching messages");
+      throw new Error("Authentication required");
+    }
+    
+    console.log("Session verified, user authenticated. Querying with IDs:", 
+      { userIdLower, otherIdLower });
+    
     // Build the query to get messages between the two users
     let query = supabase
       .from('messages')
       .select(`
         *
       `)
-      .or(`and(sender_id.eq.${userIdLower},receiver_id.eq.${otherIdLower}),and(sender_id.eq.${otherIdLower},receiver_id.eq.${userIdLower})`)
+      // Fix: Properly format the or condition with separate arguments
+      .or(
+        `and(sender_id.eq.${userIdLower},receiver_id.eq.${otherIdLower})`,
+        `and(sender_id.eq.${otherIdLower},receiver_id.eq.${userIdLower})`
+      )
       .order('created_at', { ascending: true });
     
     // If taskId is provided, filter by task

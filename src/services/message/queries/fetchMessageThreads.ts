@@ -24,6 +24,8 @@ export async function fetchMessageThreads(userId: string): Promise<MessageThread
       throw new Error("Authentication required");
     }
     
+    console.log("Session verified, user authenticated. Querying with ID:", userIdLower);
+    
     // Use explicit select without relying on foreign key relationships for tasks
     const { data: threadsData, error } = await supabase
       .from('messages')
@@ -36,7 +38,11 @@ export async function fetchMessageThreads(userId: string): Promise<MessageThread
         created_at,
         read
       `)
-      .or(`sender_id.eq.${userIdLower},receiver_id.eq.${userIdLower}`)
+      // Fix: Properly format the or condition with separate arguments
+      .or(
+        `sender_id.eq.${userIdLower}`,
+        `receiver_id.eq.${userIdLower}`
+      )
       .order('created_at', { ascending: false });
 
     if (error) {

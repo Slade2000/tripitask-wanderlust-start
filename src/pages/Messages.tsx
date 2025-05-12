@@ -43,6 +43,13 @@ const Messages = () => {
     setError(null);
     try {
       console.log("Loading message threads for user:", user.id);
+      console.log("User ID type:", typeof user.id);
+      
+      // Get session status and debug info
+      const { data: sessionData } = await supabase.auth.getSession();
+      console.log("Current session status:", sessionData?.session ? "Active" : "None");
+      console.log("Session user ID:", sessionData?.session?.user?.id);
+      
       const threadData = await getMessageThreads(user.id);
       console.log("Received thread data:", threadData);
       setThreads(threadData);
@@ -96,9 +103,13 @@ const Messages = () => {
           Messages {profile && ` for ${profile.full_name || 'You'}`}
         </h1>
         
-        {isDevMode && error && (
-          <div className="mb-4 p-4 bg-red-100 border border-red-300 rounded text-red-700">
-            <strong>Debug Error:</strong> {error}
+        {isDevMode && (
+          <div className="mb-4 p-4 bg-blue-100 border border-blue-300 rounded">
+            <h3 className="font-bold">Debug Info:</h3>
+            <div>User ID: {user?.id || 'Not logged in'}</div>
+            <div>Auth Status: {user ? 'Logged In' : 'Not logged in'}</div>
+            <div>Network Status: {isOnline ? 'Online' : 'Offline'}</div>
+            {error && <div className="text-red-600">Error: {error}</div>}
           </div>
         )}
         
