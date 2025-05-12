@@ -65,6 +65,9 @@ export async function fetchMessageThreads(userId: string): Promise<MessageThread
       userIds.add(String(message.receiver_id).toLowerCase());
     });
     
+    // Add the console trace right before the profile query
+    console.log('userIds we will query', Array.from(userIds));
+    
     // Fetch user profiles for all users in a single query
     const { data: userProfiles, error: profilesError } = await supabase
       .from('profiles')
