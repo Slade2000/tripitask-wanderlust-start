@@ -10,16 +10,6 @@ export interface Category {
   active: boolean;
 }
 
-// Simple interface for database data avoiding recursive type issues
-interface DatabaseCategory {
-  id: string;
-  name: string;
-  description: string | null;
-  active: boolean;
-  created_at: string;
-  parent_id?: string | null;
-}
-
 export function useCategories() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -30,10 +20,11 @@ export function useCategories() {
       try {
         setIsLoading(true);
         
-        // Use explicit column names to avoid type issues
+        // Only select the columns that actually exist in the table
+        // Note: If description doesn't exist, we'll add it as null in the mapping
         const { data, error } = await supabase
           .from('categories')
-          .select('id, name, description, active, created_at, parent_id');
+          .select('id, name, active, created_at');
           
         if (error) {
           throw error;
@@ -43,11 +34,11 @@ export function useCategories() {
         
         if (Array.isArray(data)) {
           // Map the data to our Category interface
-          data.forEach((item) => {
+          data.forEach((item: any) => {
             typedData.push({
               id: item.id,
               name: item.name,
-              description: item.description,
+              description: null, // Handle the missing description field
               active: item.active !== undefined ? Boolean(item.active) : true
             });
           });

@@ -16,8 +16,10 @@ export interface AdminSettings {
  */
 export async function getAdminSetting(name: string): Promise<string | null> {
   try {
+    // Use any for the type to work around the TypeScript errors
+    // since the admin_settings table isn't part of the generated types
     const { data, error } = await supabase
-      .from('admin_settings')
+      .from('admin_settings' as any)
       .select('value')
       .eq('name', name)
       .single();
@@ -88,7 +90,7 @@ export async function updateAdminSetting(
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const { error } = await supabase
-      .from('admin_settings')
+      .from('admin_settings' as any)
       .update({ 
         value,
         description,

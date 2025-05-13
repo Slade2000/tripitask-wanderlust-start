@@ -97,7 +97,7 @@ const PostTaskStep = ({ onStepBack }: PostTaskStepProps) => {
       return (
         <BasicInfoStep
           onSubmit={handleBasicInfoSubmit}
-          onBack={onStepBack} // Use the passed onStepBack function
+          onBack={onStepBack}
         />
       );
     case "location-date":

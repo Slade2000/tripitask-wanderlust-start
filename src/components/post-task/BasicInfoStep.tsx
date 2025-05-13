@@ -1,4 +1,3 @@
-
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +7,18 @@ import { usePostTask } from "@/contexts/PostTaskContext";
 import { useCategories } from "@/hooks/useCategories";
 import CommissionCalculator from "@/components/commission/CommissionCalculator";
 
-const BasicInfoStep = () => {
+interface BasicInfoStepProps {
+  onSubmit: (data: any) => void;
+  onBack: () => void;
+  initialData?: {
+    title?: string;
+    category_id?: string;
+    budget?: number;
+    photos?: File[];
+  };
+}
+
+const BasicInfoStep = ({ onSubmit, onBack, initialData = {} }: BasicInfoStepProps) => {
   const { taskData, setTaskData, setCurrentStep } = usePostTask();
   const { categories, isLoading } = useCategories();
   const [uploadingPhotos, setUploadingPhotos] = useState(false);

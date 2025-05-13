@@ -190,6 +190,7 @@ const TaskDetail = () => {
           onClose={handleCloseMessageModal}
           taskId={task.id}
           receiverId={task.user_id}
+          taskTitle={task.title}
         />
       )}
     </div>

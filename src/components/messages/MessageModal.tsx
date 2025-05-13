@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import MessageInput from "./MessageInput";
@@ -14,16 +13,16 @@ interface MessageModalProps {
   isOpen: boolean;
   onClose: () => void;
   taskId: string;
-  taskOwnerId: string;
-  taskTitle: string;
+  receiverId: string;
+  taskTitle?: string;
 }
 
 export default function MessageModal({ 
   isOpen, 
   onClose, 
   taskId, 
-  taskOwnerId,
-  taskTitle 
+  receiverId,
+  taskTitle = "this task"
 }: MessageModalProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
@@ -39,7 +38,7 @@ export default function MessageModal({
     if (isOpen && user) {
       loadMessages();
     }
-  }, [isOpen, user, taskId, taskOwnerId]);
+  }, [isOpen, user, taskId, receiverId]);
 
   const loadMessages = async () => {
     if (!user) return;
@@ -47,7 +46,7 @@ export default function MessageModal({
     setLoading(true);
     try {
       // Get all messages between the two users
-      const fetchedMessages = await getMessages(user.id, taskOwnerId);
+      const fetchedMessages = await getMessages(user.id, receiverId);
       setMessages(fetchedMessages);
       
       // Set current task title in the tasksByIds map
@@ -94,7 +93,7 @@ export default function MessageModal({
         {
           task_id: taskId,
           sender_id: user.id,
-          receiver_id: taskOwnerId,
+          receiver_id: receiverId,
           content
         },
         files
