@@ -11,12 +11,12 @@ export interface Category {
 
 // Simple interface for database data avoiding recursive type issues
 interface DatabaseCategory {
-  id: number | string;
+  id: string;
   name: string;
   created_at: string;
-  parent_id?: number | null;
-  description?: string | null;
-  active?: boolean | null;
+  parent_id?: string | null;
+  description: string | null;
+  active: boolean;
 }
 
 export function useCategories() {
@@ -42,12 +42,12 @@ export function useCategories() {
         const typedData: Category[] = [];
         
         if (Array.isArray(data)) {
-          // Avoid complex type assertions by explicitly mapping properties
-          data.forEach(item => {
+          // Explicitly map properties to avoid type recursion issues
+          data.forEach((item: DatabaseCategory) => {
             typedData.push({
               id: String(item.id),
               name: item.name,
-              description: item.description || null,
+              description: item.description,
               active: item.active !== undefined ? Boolean(item.active) : true
             });
           });

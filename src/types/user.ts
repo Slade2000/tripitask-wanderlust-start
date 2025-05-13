@@ -2,7 +2,7 @@
 export interface User {
   id: string;
   email?: string;
-  user_metadata?: {
+  user_metadata: {
     name?: string;
     avatar_url?: string;
     [key: string]: any;
