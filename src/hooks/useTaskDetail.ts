@@ -1,0 +1,122 @@
+
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { getTaskById } from "@/services/task/queries/getTaskById";
+import { getTaskOffers } from "@/services/task/offers/queries/getTaskOffers";
+import { User } from "@/types/user";
+import { Offer } from "@/types/offer";
+
+export function useTaskDetail(taskId: string | undefined, user: User | null) {
+  const navigate = useNavigate();
+  
+  const [task, setTask] = useState<any>(null);
+  const [offers, setOffers] = useState<Offer[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [offersLoading, setOffersLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
+  const [isTaskPoster, setIsTaskPoster] = useState(false);
+  const [hasAcceptedOffer, setHasAcceptedOffer] = useState(false);
+
+  useEffect(() => {
+    const fetchTask = async () => {
+      if (!taskId) return;
+      
+      setLoading(true);
+      try {
+        const taskData = await getTaskById(taskId);
+        
+        if (taskData) {
+          setTask(taskData);
+          // Check if the current user is the task poster
+          setIsTaskPoster(user?.id === taskData.user_id);
+          
+          // Check if the task status indicates an accepted offer ("assigned" status)
+          setHasAcceptedOffer(taskData.status === 'assigned' || taskData.status === 'in_progress');
+        } else {
+          setError("Task not found");
+        }
+      } catch (err) {
+        console.error("Error fetching task:", err);
+        setError("Error loading task. Please try again later.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTask();
+  }, [taskId, user?.id]);
+
+  useEffect(() => {
+    const fetchOffers = async () => {
+      if (!taskId || !isTaskPoster) return;
+      
+      setOffersLoading(true);
+      try {
+        const offersData = await getTaskOffers(taskId);
+        setOffers(offersData || []);
+        
+        // Check if there's any accepted offer
+        const acceptedOffer = offersData?.find((offer: any) => offer.status === 'accepted');
+        setHasAcceptedOffer(!!acceptedOffer || (task?.status === 'assigned' || task?.status === 'in_progress'));
+      } catch (err) {
+        console.error("Error fetching offers:", err);
+      } finally {
+        setOffersLoading(false);
+      }
+    };
+
+    if (isTaskPoster) {
+      fetchOffers();
+    }
+  }, [taskId, isTaskPoster, task?.status]);
+
+  const handleOpenMessageModal = () => {
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+    
+    setIsMessageModalOpen(true);
+  };
+
+  const handleCloseMessageModal = () => {
+    setIsMessageModalOpen(false);
+  };
+
+  const refreshOffers = async () => {
+    if (!taskId) return;
+    
+    try {
+      const offersData = await getTaskOffers(taskId);
+      setOffers(offersData || []);
+      
+      // Update the hasAcceptedOffer state
+      const acceptedOffer = offersData?.find((offer: any) => offer.status === 'accepted');
+      setHasAcceptedOffer(!!acceptedOffer || (task?.status === 'assigned' || task?.status === 'in_progress'));
+    } catch (err) {
+      console.error("Error refreshing offers:", err);
+    }
+  };
+
+  const handleTaskUpdated = (updatedTask: any) => {
+    setTask(updatedTask);
+    // Update accepted offer state based on task status
+    setHasAcceptedOffer(updatedTask.status === 'assigned' || updatedTask.status === 'in_progress');
+  };
+
+  return {
+    task,
+    offers,
+    loading,
+    offersLoading,
+    error,
+    isTaskPoster,
+    hasAcceptedOffer,
+    isMessageModalOpen,
+    handleOpenMessageModal,
+    handleCloseMessageModal,
+    handleTaskUpdated,
+    refreshOffers
+  };
+}
