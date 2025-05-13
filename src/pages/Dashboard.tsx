@@ -126,7 +126,7 @@ const Dashboard = () => {
         </div>
         
         {/* Posted Tasks Section with Tabs */}
-        <h2 className="text-xl font-semibold text-teal-dark mb-3">Posted Tasks</h2>
+        <h2 className="text-xl font-semibold text-teal-dark mb-3">My Posted Tasks</h2>
         <Tabs defaultValue="all" className="mb-6">
           <TabsList className="bg-white mb-4">
             <TabsTrigger value="all">All</TabsTrigger>
