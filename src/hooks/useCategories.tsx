@@ -40,8 +40,12 @@ export function useCategories() {
 
         // Transform the database result to match our Category interface
         const typedData: Category[] = [];
+        
         if (Array.isArray(data)) {
-          for (const item of data as DatabaseCategory[]) {
+          // Use a more explicit type assertion to avoid the excessive depth issue
+          const categoryData = data as unknown as DatabaseCategory[];
+          
+          for (const item of categoryData) {
             typedData.push({
               id: String(item.id),
               name: item.name,
