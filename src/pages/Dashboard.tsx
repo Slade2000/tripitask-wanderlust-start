@@ -1,4 +1,3 @@
-
 import { useLocation, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -7,9 +6,7 @@ import {
   Clock,
   DollarSign,
   Briefcase,
-  CreditCard,
   Star,
-  User,
   ArrowRight,
 } from "lucide-react";
 import { format } from "date-fns";
@@ -332,25 +329,6 @@ const Dashboard = () => {
             </CardContent>
           </Card>
         )}
-        
-        {/* Quick Access Buttons */}
-        <div className="grid grid-cols-2 gap-3">
-          <Button 
-            variant="outline" 
-            className="flex flex-col items-center justify-center h-auto py-4"
-            onClick={() => navigate('/withdraw')}>
-            <CreditCard className="h-5 w-5 mb-1" />
-            <span className="text-xs">Withdraw Earnings</span>
-          </Button>
-          
-          <Button 
-            variant="outline"
-            className="flex flex-col items-center justify-center h-auto py-4"
-            onClick={() => navigate('/account')}>
-            <User className="h-5 w-5 mb-1" />
-            <span className="text-xs">My Profile</span>
-          </Button>
-        </div>
       </div>
       
       <BottomNav currentPath={location.pathname} />

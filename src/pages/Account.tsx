@@ -7,7 +7,6 @@ import {
   CreditCard,
   Bell,
   User,
-  ChartBar,
   AlarmClock,
   List,
   Users,
@@ -72,24 +71,11 @@ const Account = () => {
   // Earning money section items
   const earningMoneyItems: MenuItem[] = [
     {
-      icon: <ChartBar size={22} className="text-gray-500 mr-4" />,
-      title: "My dashboard",
-      path: '/dashboard',
-      onClick: () => navigate('/dashboard')
-    },
-    {
       icon: <AlarmClock size={22} className="text-gray-500 mr-4" />,
       title: "Set up task alerts",
       description: "Get notified when new tasks match your skills",
       path: '/account/alerts',
       onClick: () => navigate('/account/alerts')
-    },
-    {
-      icon: <List size={22} className="text-gray-500 mr-4" />,
-      title: "List my services",
-      description: "Create listings for your services so customers come to you",
-      path: '/account/services',
-      onClick: () => navigate('/account/services')
     }
   ];
 

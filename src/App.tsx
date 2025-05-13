@@ -35,6 +35,7 @@ import SpatialReferenceSystems from "./pages/SpatialReferenceSystems";
 import NotificationPreferences from "./pages/account/NotificationPreferences";
 import PersonalInformation from "./pages/account/PersonalInformation";
 import TaskAlerts from "./pages/account/TaskAlerts";
+import ContactUs from "./pages/account/ContactUs";
 
 const App = () => {
   // Create a new QueryClient instance inside the component with improved settings
@@ -81,6 +82,7 @@ const App = () => {
                       <Route path="/account/notifications" element={<NotificationPreferences />} />
                       <Route path="/account/personal" element={<PersonalInformation />} />
                       <Route path="/account/alerts" element={<TaskAlerts />} />
+                      <Route path="/account/contact" element={<ContactUs />} />
                       
                       <Route path="/spatial-reference-systems" element={<SpatialReferenceSystems />} />
                       <Route path="/terms" element={<Terms />} />
