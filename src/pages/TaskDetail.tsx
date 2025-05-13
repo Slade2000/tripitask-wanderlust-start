@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { getTaskById } from "@/services/task/queries/getTaskById";
+import { getTaskOffers } from "@/services/task/offers/queries/getTaskOffers"; 
 import TaskBasicInfo from "@/components/task-detail/TaskBasicInfo";
 import TaskDescription from "@/components/task-detail/TaskDescription";
 import TaskImageGallery from "@/components/task-detail/TaskImageGallery";
@@ -10,6 +11,7 @@ import TaskPosterInfo from "@/components/task-detail/TaskPosterInfo";
 import TaskActionButtons from "@/components/task-detail/TaskActionButtons";
 import TaskDetailLoading from "@/components/task-detail/TaskDetailLoading";
 import TaskDetailError from "@/components/task-detail/TaskDetailError";
+import TaskOffersList from "@/components/task-detail/TaskOffersList";
 import { Button } from "@/components/ui/button";
 import MessageModal from "@/components/messages/MessageModal";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,7 +23,9 @@ const TaskDetail = () => {
   const { user } = useAuth();
   
   const [task, setTask] = useState<any>(null);
+  const [offers, setOffers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [offersLoading, setOffersLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
   const [isTaskPoster, setIsTaskPoster] = useState(false);
@@ -52,6 +56,26 @@ const TaskDetail = () => {
 
     fetchTask();
   }, [taskId, user?.id]);
+
+  useEffect(() => {
+    const fetchOffers = async () => {
+      if (!taskId || !isTaskPoster) return;
+      
+      setOffersLoading(true);
+      try {
+        const offersData = await getTaskOffers(taskId);
+        setOffers(offersData || []);
+      } catch (err) {
+        console.error("Error fetching offers:", err);
+      } finally {
+        setOffersLoading(false);
+      }
+    };
+
+    if (isTaskPoster) {
+      fetchOffers();
+    }
+  }, [taskId, isTaskPoster]);
 
   const handleOpenMessageModal = () => {
     if (!user) {
@@ -95,6 +119,17 @@ const TaskDetail = () => {
       toast.error("Error marking task as completed");
     } finally {
       setIsSubmittingCompletion(false);
+    }
+  };
+
+  const refreshOffers = async () => {
+    if (!taskId) return;
+    
+    try {
+      const offersData = await getTaskOffers(taskId);
+      setOffers(offersData || []);
+    } catch (err) {
+      console.error("Error refreshing offers:", err);
     }
   };
 
@@ -160,6 +195,19 @@ const TaskDetail = () => {
                     Ask a Question
                   </Button>
                 </div>
+              </div>
+            )}
+            
+            {/* Show offers section only to task poster */}
+            {isTaskPoster && (
+              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+                <h2 className="text-xl font-semibold mb-4">Offers</h2>
+                <TaskOffersList 
+                  taskId={taskId || ''} 
+                  offers={offers}
+                  loading={offersLoading}
+                  onRefresh={refreshOffers}
+                />
               </div>
             )}
           </div>
