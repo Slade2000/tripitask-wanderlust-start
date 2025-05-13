@@ -1,4 +1,3 @@
-
 import { supabase } from '../../integrations/supabase/client';
 import { Profile } from './types';
 import { fetchUserProfile } from './profileUtils';
@@ -67,17 +66,9 @@ export const signUpWithEmail = async (
 
     if (data.user) {
       setUser(data.user);
-      // Create a profile in the profiles table
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert([{ id: data.user.id, full_name: metadata?.full_name as string }]);
-
-      if (profileError) {
-        console.error('Error creating profile:', profileError);
-        setAuthError(profileError);
-        return { success: false, error: profileError };
-      }
       
+      // Removed the manual profile creation code since the database trigger handles it
+      // Just fetch the profile that was created by the trigger
       const userProfile = await fetchUserProfile(data.user.id);
       setProfile(userProfile);
       navigate('/welcome-after-login');

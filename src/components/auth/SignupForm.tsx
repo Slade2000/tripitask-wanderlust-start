@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/use-toast";
 
 const SignupForm = () => {
   const [email, setEmail] = useState("");
@@ -27,13 +27,27 @@ const SignupForm = () => {
       const result = await signUp(email, password, { full_name: fullName });
       if (result.error) {
         setError(result.error.message);
+        toast({
+          title: "Signup failed",
+          description: result.error.message,
+          variant: "destructive"
+        });
       } else {
-        toast.success("Account created successfully! Please log in.");
+        toast({
+          title: "Account created",
+          description: "Account created successfully! Please log in."
+        });
         navigate("/login");
       }
     } catch (err) {
       console.error("Error during signup:", err);
-      setError("An error occurred during signup. Please try again.");
+      const errorMessage = "An error occurred during signup. Please try again.";
+      setError(errorMessage);
+      toast({
+        title: "Signup error",
+        description: errorMessage,
+        variant: "destructive"
+      });
     } finally {
       setLoading(false);
     }
