@@ -9,7 +9,7 @@ export interface Category {
   active: boolean;
 }
 
-// Define the actual shape of data coming from the database
+// Define a simpler interface for database data to avoid recursive type issues
 interface DatabaseCategory {
   id: number | string;
   name: string;
@@ -42,8 +42,8 @@ export function useCategories() {
         const typedData: Category[] = [];
         
         if (Array.isArray(data)) {
-          // Use a more explicit type assertion to avoid the excessive depth issue
-          const categoryData = data as unknown as DatabaseCategory[];
+          // Use a simple type assertion without complex nesting
+          const categoryData = data as any[];
           
           for (const item of categoryData) {
             typedData.push({

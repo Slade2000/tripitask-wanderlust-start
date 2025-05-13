@@ -7,5 +7,8 @@ export interface User {
     avatar_url?: string;
     [key: string]: any;
   };
+  app_metadata?: Record<string, any>;
+  aud?: string;
+  created_at?: string;
   [key: string]: any;
 }
