@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft, RefreshCcw } from "lucide-react";
@@ -6,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import BottomNav from "@/components/BottomNav";
+import { Profile } from "@/contexts/auth/types";
 
 // Import the refactored components
 import ProfileHeader from "./components/profile/ProfileHeader";

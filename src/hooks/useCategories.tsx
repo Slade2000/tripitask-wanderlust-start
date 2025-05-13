@@ -39,12 +39,17 @@ export function useCategories() {
         }
 
         // Transform the database result to match our Category interface
-        const typedData: Category[] = Array.isArray(data) ? data.map((item: DatabaseCategory) => ({
-          id: String(item.id),
-          name: item.name,
-          description: item.description || null,
-          active: item.active !== undefined ? Boolean(item.active) : true
-        })) : [];
+        const typedData: Category[] = [];
+        if (Array.isArray(data)) {
+          for (const item of data) {
+            typedData.push({
+              id: String(item.id),
+              name: item.name,
+              description: item.description || null,
+              active: item.active !== undefined ? Boolean(item.active) : true
+            });
+          }
+        }
 
         setCategories(typedData);
       } catch (err) {
