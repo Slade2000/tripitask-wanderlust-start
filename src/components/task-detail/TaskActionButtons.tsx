@@ -9,6 +9,7 @@ interface TaskActionButtonsProps {
   isTaskPoster: boolean;
   onMessageClick: () => void;
   onCompleteTask?: () => void;
+  isSubmittingCompletion?: boolean;
   hasAcceptedOffer?: boolean;
 }
 
@@ -19,6 +20,7 @@ export default function TaskActionButtons({
   isTaskPoster,
   onMessageClick,
   onCompleteTask,
+  isSubmittingCompletion = false,
   hasAcceptedOffer = false
 }: TaskActionButtonsProps) {
   const navigate = useNavigate();
@@ -30,8 +32,9 @@ export default function TaskActionButtons({
         <Button
           onClick={onCompleteTask}
           className="w-full bg-green-600 hover:bg-green-700 text-white"
+          disabled={isSubmittingCompletion}
         >
-          Complete Task
+          {isSubmittingCompletion ? "Processing..." : "Complete Task"}
         </Button>
         <Button
           onClick={onMessageClick}

@@ -1,11 +1,6 @@
 
-import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
 import TaskActionButtons from "./TaskActionButtons";
-import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-import { getTaskById } from "@/services/task/queries/getTaskById";
+import { useTaskCompletion } from "@/hooks/useTaskCompletion";
 
 interface TaskActionSectionProps {
   task: any;
@@ -22,41 +17,12 @@ export default function TaskActionSection({
   onTaskUpdated,
   hasAcceptedOffer = false
 }: TaskActionSectionProps) {
-  const navigate = useNavigate();
-  const [isSubmittingCompletion, setIsSubmittingCompletion] = useState(false);
+  const { isSubmittingCompletion, handleCompleteTask } = useTaskCompletion(
+    task.id,
+    task.user_id,
+    onTaskUpdated
+  );
 
-  const handleCompleteTask = async () => {
-    if (!task.id || !isTaskPoster) return;
-    
-    setIsSubmittingCompletion(true);
-    try {
-      // Update task status to completed
-      const { error } = await supabase
-        .from('tasks')
-        .update({ status: 'completed' })
-        .eq('id', task.id)
-        .eq('user_id', task.user_id); // Ensure the user is the task poster
-        
-      if (error) {
-        throw error;
-      }
-      
-      toast.success("Task marked as completed!");
-      
-      // Refresh task data
-      const updatedTask = await getTaskById(task.id);
-      if (updatedTask) {
-        onTaskUpdated(updatedTask);
-      }
-    } catch (err) {
-      console.error("Error completing task:", err);
-      toast.error("Error marking task as completed");
-    } finally {
-      setIsSubmittingCompletion(false);
-    }
-  };
-
-  // For simplicity and to avoid duplication, use the TaskActionButtons component
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
       <TaskActionButtons
@@ -66,6 +32,7 @@ export default function TaskActionSection({
         isTaskPoster={isTaskPoster}
         onMessageClick={onOpenMessageModal}
         onCompleteTask={handleCompleteTask}
+        isSubmittingCompletion={isSubmittingCompletion}
         hasAcceptedOffer={hasAcceptedOffer}
       />
     </div>
