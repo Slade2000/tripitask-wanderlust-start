@@ -1,14 +1,6 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import {
-  Activity,
-  Award,
-  Clock,
-  DollarSign,
-  Briefcase,
-  Star,
-  ArrowRight,
-} from "lucide-react";
+import { Activity, Award, Clock, DollarSign, Briefcase, Star, ArrowRight } from "lucide-react";
 import { format } from "date-fns";
 import { useAuth } from "@/contexts/AuthContext";
 import { getUserTasks } from "@/services/taskService";
@@ -19,98 +11,84 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { getProviderOffers } from "@/services/task/offers/queries/getProviderOffers";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
 const Dashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useAuth();
-  
+  const {
+    user
+  } = useAuth();
+
   // Fetch user's tasks
   const {
     data: tasks,
-    isLoading: tasksLoading,
+    isLoading: tasksLoading
   } = useQuery({
     queryKey: ['userTasks', user?.id],
     queryFn: () => getUserTasks(user?.id || ''),
-    enabled: !!user?.id,
+    enabled: !!user?.id
   });
-  
+
   // Fetch user's offers
   const {
     data: offers,
-    isLoading: offersLoading,
+    isLoading: offersLoading
   } = useQuery({
     queryKey: ['providerOffers', user?.id],
     queryFn: () => getProviderOffers(user?.id || ''),
-    enabled: !!user?.id,
+    enabled: !!user?.id
   });
-  
+
   // Calculate statistics
   const activeTasks = tasks?.filter(task => task.status === 'open' || task.status === 'assigned') || [];
   const completedTasks = tasks?.filter(task => task.status === 'completed') || [];
   const pendingOffers = offers?.filter(offer => offer.status === 'pending') || [];
-  
+
   // Get tasks by status for the Posted Tasks section
   const openTasks = tasks?.filter(task => task.status === 'open') || [];
   const inProgressTasks = tasks?.filter(task => task.status === 'assigned') || [];
-  
+
   // Mock data for earnings (replace with real data once available)
   const totalEarnings = 3250;
-  
+
   // Mock data for reviews (replace with real data once available)
-  const recentReviews = [
-    {
-      id: '1',
-      customerName: 'John Smith',
-      taskTitle: 'Moving Furniture',
-      rating: 5,
-      comment: 'Great work! Very professional and on time.'
-    },
-    {
-      id: '2',
-      customerName: 'Sarah Johnson',
-      taskTitle: 'House Cleaning',
-      rating: 4,
-      comment: 'Did a thorough job, would hire again for sure.'
-    }
-  ];
-  
+  const recentReviews = [{
+    id: '1',
+    customerName: 'John Smith',
+    taskTitle: 'Moving Furniture',
+    rating: 5,
+    comment: 'Great work! Very professional and on time.'
+  }, {
+    id: '2',
+    customerName: 'Sarah Johnson',
+    taskTitle: 'House Cleaning',
+    rating: 4,
+    comment: 'Did a thorough job, would hire again for sure.'
+  }];
+
   // Loading state
   if (tasksLoading || offersLoading) {
-    return (
-      <div className="min-h-screen bg-cream p-4 pb-20">
+    return <div className="min-h-screen bg-cream p-4 pb-20">
         <div className="max-w-4xl mx-auto">
           <h1 className="text-3xl font-bold text-teal mb-6 text-center">Dashboard</h1>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-            {[1, 2, 3, 4].map((i) => (
-              <Skeleton key={i} className="h-28 rounded-lg" />
-            ))}
+            {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-28 rounded-lg" />)}
           </div>
           <Skeleton className="h-10 w-40 mb-4" />
           <Skeleton className="h-40 rounded-lg mb-6" />
           <Skeleton className="h-10 w-40 mb-4" />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
-            {[1, 2].map((i) => (
-              <Skeleton key={i} className="h-28 rounded-lg" />
-            ))}
+            {[1, 2].map(i => <Skeleton key={i} className="h-28 rounded-lg" />)}
           </div>
           <div className="grid grid-cols-2 gap-3">
-            {[1, 2].map((i) => (
-              <Skeleton key={i} className="h-14 rounded-lg" />
-            ))}
+            {[1, 2].map(i => <Skeleton key={i} className="h-14 rounded-lg" />)}
           </div>
         </div>
         <BottomNav currentPath={location.pathname} />
-      </div>
-    );
+      </div>;
   }
-  
-  return (
-    <div className="min-h-screen bg-cream p-4 pb-20">
+  return <div className="min-h-screen bg-cream p-4 pb-20">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold text-teal mb-6 text-center">
-          Dashboard
-        </h1>
+        <h1 className="text-3xl font-bold text-teal mb-6 text-center">My Dashboard</h1>
         
         {/* Key Stats Section */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
@@ -158,188 +136,118 @@ const Dashboard = () => {
           </TabsList>
           
           <TabsContent value="all" className="mt-0">
-            {tasks && tasks.length > 0 ? (
-              <div className="space-y-3">
-                {tasks.slice(0, 3).map((task) => (
-                  <TaskCard key={task.id} task={task} navigate={navigate} />
-                ))}
-                {tasks.length > 3 && (
-                  <div className="text-center">
-                    <Button 
-                      variant="ghost"
-                      className="text-teal"
-                      onClick={() => navigate('/my-jobs')}>
+            {tasks && tasks.length > 0 ? <div className="space-y-3">
+                {tasks.slice(0, 3).map(task => <TaskCard key={task.id} task={task} navigate={navigate} />)}
+                {tasks.length > 3 && <div className="text-center">
+                    <Button variant="ghost" className="text-teal" onClick={() => navigate('/my-jobs')}>
                       View All ({tasks.length}) Tasks
                     </Button>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <EmptyTasksCard navigate={navigate} />
-            )}
+                  </div>}
+              </div> : <EmptyTasksCard navigate={navigate} />}
           </TabsContent>
           
           <TabsContent value="open" className="mt-0">
-            {openTasks.length > 0 ? (
-              <div className="space-y-3">
-                {openTasks.slice(0, 3).map((task) => (
-                  <TaskCard key={task.id} task={task} navigate={navigate} />
-                ))}
-                {openTasks.length > 3 && (
-                  <div className="text-center">
-                    <Button 
-                      variant="ghost"
-                      className="text-teal"
-                      onClick={() => navigate('/my-jobs')}>
+            {openTasks.length > 0 ? <div className="space-y-3">
+                {openTasks.slice(0, 3).map(task => <TaskCard key={task.id} task={task} navigate={navigate} />)}
+                {openTasks.length > 3 && <div className="text-center">
+                    <Button variant="ghost" className="text-teal" onClick={() => navigate('/my-jobs')}>
                       View All ({openTasks.length}) Open Tasks
                     </Button>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <EmptyStateCard message="No open tasks yet." />
-            )}
+                  </div>}
+              </div> : <EmptyStateCard message="No open tasks yet." />}
           </TabsContent>
           
           <TabsContent value="in-progress" className="mt-0">
-            {inProgressTasks.length > 0 ? (
-              <div className="space-y-3">
-                {inProgressTasks.slice(0, 3).map((task) => (
-                  <TaskCard key={task.id} task={task} navigate={navigate} />
-                ))}
-                {inProgressTasks.length > 3 && (
-                  <div className="text-center">
-                    <Button 
-                      variant="ghost"
-                      className="text-teal"
-                      onClick={() => navigate('/my-jobs')}>
+            {inProgressTasks.length > 0 ? <div className="space-y-3">
+                {inProgressTasks.slice(0, 3).map(task => <TaskCard key={task.id} task={task} navigate={navigate} />)}
+                {inProgressTasks.length > 3 && <div className="text-center">
+                    <Button variant="ghost" className="text-teal" onClick={() => navigate('/my-jobs')}>
                       View All ({inProgressTasks.length}) In Progress Tasks
                     </Button>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <EmptyStateCard message="No tasks in progress." />
-            )}
+                  </div>}
+              </div> : <EmptyStateCard message="No tasks in progress." />}
           </TabsContent>
           
           <TabsContent value="completed" className="mt-0">
-            {completedTasks.length > 0 ? (
-              <div className="space-y-3">
-                {completedTasks.slice(0, 3).map((task) => (
-                  <TaskCard key={task.id} task={task} navigate={navigate} />
-                ))}
-                {completedTasks.length > 3 && (
-                  <div className="text-center">
-                    <Button 
-                      variant="ghost"
-                      className="text-teal"
-                      onClick={() => navigate('/my-jobs')}>
+            {completedTasks.length > 0 ? <div className="space-y-3">
+                {completedTasks.slice(0, 3).map(task => <TaskCard key={task.id} task={task} navigate={navigate} />)}
+                {completedTasks.length > 3 && <div className="text-center">
+                    <Button variant="ghost" className="text-teal" onClick={() => navigate('/my-jobs')}>
                       View All ({completedTasks.length}) Completed Tasks
                     </Button>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <EmptyStateCard message="No completed tasks yet." />
-            )}
+                  </div>}
+              </div> : <EmptyStateCard message="No completed tasks yet." />}
           </TabsContent>
         </Tabs>
         
         {/* Active Jobs Section */}
         <h2 className="text-xl font-semibold text-teal-dark mb-3">Active Jobs</h2>
-        {activeTasks.length > 0 ? (
-          <div className="mb-6 space-y-3">
-            {activeTasks.slice(0, 3).map((task) => (
-              <Card key={task.id} className="overflow-hidden">
+        {activeTasks.length > 0 ? <div className="mb-6 space-y-3">
+            {activeTasks.slice(0, 3).map(task => <Card key={task.id} className="overflow-hidden">
                 <CardContent className="p-4">
                   <div className="flex justify-between items-start mb-2">
                     <div>
                       <h3 className="font-medium text-teal-dark">{task.title}</h3>
                       <p className="text-sm text-gray-600">Customer: John Doe</p> {/* Replace with actual customer name */}
                     </div>
-                    <Badge className={task.status === 'open' 
-                      ? 'bg-green-100 text-green-800 hover:bg-green-100' 
-                      : 'bg-blue-100 text-blue-800 hover:bg-blue-100'}>
+                    <Badge className={task.status === 'open' ? 'bg-green-100 text-green-800 hover:bg-green-100' : 'bg-blue-100 text-blue-800 hover:bg-blue-100'}>
                       {task.status === 'open' ? 'Open' : 'In Progress'}
                     </Badge>
                   </div>
                   <div className="text-sm text-gray-600 mb-3">
                     Due: {format(new Date(task.due_date), 'dd MMM yyyy')}
                   </div>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => navigate(`/tasks/${task.id}`)}
-                    className="w-full sm:w-auto mt-2">
+                  <Button variant="outline" size="sm" onClick={() => navigate(`/tasks/${task.id}`)} className="w-full sm:w-auto mt-2">
                     View Job <ArrowRight className="ml-1" size={16} />
                   </Button>
                 </CardContent>
-              </Card>
-            ))}
-            {activeTasks.length > 3 && (
-              <div className="text-center">
-                <Button 
-                  variant="ghost"
-                  className="text-teal"
-                  onClick={() => navigate('/my-jobs')}>
+              </Card>)}
+            {activeTasks.length > 3 && <div className="text-center">
+                <Button variant="ghost" className="text-teal" onClick={() => navigate('/my-jobs')}>
                   View All ({activeTasks.length}) Jobs
                 </Button>
-              </div>
-            )}
-          </div>
-        ) : (
-          <Card className="mb-6 bg-white p-6 text-center">
+              </div>}
+          </div> : <Card className="mb-6 bg-white p-6 text-center">
             <CardContent className="p-0">
               <p className="text-gray-600 mb-4">No active jobs right now. Head to Find Work to get started!</p>
-              <Button 
-                onClick={() => navigate("/find-work")}
-                className="bg-teal hover:bg-teal-dark text-white">
+              <Button onClick={() => navigate("/find-work")} className="bg-teal hover:bg-teal-dark text-white">
                 Find New Tasks
               </Button>
             </CardContent>
-          </Card>
-        )}
+          </Card>}
         
         {/* Recent Reviews Section */}
         <h2 className="text-xl font-semibold text-teal-dark mb-3">Recent Reviews</h2>
-        {recentReviews.length > 0 ? (
-          <div className="mb-6 grid gap-3 grid-cols-1 md:grid-cols-2">
-            {recentReviews.map((review) => (
-              <Card key={review.id} className="bg-white">
+        {recentReviews.length > 0 ? <div className="mb-6 grid gap-3 grid-cols-1 md:grid-cols-2">
+            {recentReviews.map(review => <Card key={review.id} className="bg-white">
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between mb-1">
                     <p className="font-medium">{review.customerName}</p>
                     <div className="flex">
-                      {[...Array(5)].map((_, i) => (
-                        <Star key={i} size={16} className={i < review.rating ? "text-yellow-400 fill-yellow-400" : "text-gray-300"} />
-                      ))}
+                      {[...Array(5)].map((_, i) => <Star key={i} size={16} className={i < review.rating ? "text-yellow-400 fill-yellow-400" : "text-gray-300"} />)}
                     </div>
                   </div>
                   <p className="text-sm text-gray-500 mb-2">{review.taskTitle}</p>
                   <p className="text-sm">{review.comment}</p>
                 </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : (
-          <Card className="mb-6">
+              </Card>)}
+          </div> : <Card className="mb-6">
             <CardContent className="p-4 text-center">
               <p className="text-gray-600">No reviews yet. Complete jobs to get reviews!</p>
             </CardContent>
-          </Card>
-        )}
+          </Card>}
       </div>
       
       <BottomNav currentPath={location.pathname} />
-    </div>
-  );
+    </div>;
 };
 
 // Component to display task card
-const TaskCard = ({ task, navigate }) => {
-  return (
-    <Card key={task.id} className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow">
+const TaskCard = ({
+  task,
+  navigate
+}) => {
+  return <Card key={task.id} className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow">
       <CardContent className="p-4">
         <div className="flex justify-between items-start mb-2">
           <div>
@@ -348,13 +256,7 @@ const TaskCard = ({ task, navigate }) => {
               Due: {format(new Date(task.due_date), 'dd MMM yyyy')}
             </p>
           </div>
-          <Badge className={
-            task.status === 'open' 
-              ? 'bg-green-100 text-green-800 hover:bg-green-100' 
-              : task.status === 'assigned' 
-              ? 'bg-blue-100 text-blue-800 hover:bg-blue-100'
-              : 'bg-gray-100 text-gray-800 hover:bg-gray-100'
-          }>
+          <Badge className={task.status === 'open' ? 'bg-green-100 text-green-800 hover:bg-green-100' : task.status === 'assigned' ? 'bg-blue-100 text-blue-800 hover:bg-blue-100' : 'bg-gray-100 text-gray-800 hover:bg-gray-100'}>
             {task.status === 'open' ? 'Open' : task.status === 'assigned' ? 'In Progress' : 'Completed'}
           </Badge>
         </div>
@@ -365,44 +267,36 @@ const TaskCard = ({ task, navigate }) => {
             <span>{task.offer_count || 0} offers</span>
           </div>
           
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => navigate(`/tasks/${task.id}/offers`)}
-            className="text-xs">
+          <Button variant="outline" size="sm" onClick={() => navigate(`/tasks/${task.id}/offers`)} className="text-xs">
             View Offers
           </Button>
         </div>
       </CardContent>
-    </Card>
-  );
+    </Card>;
 };
 
 // Component for empty tasks state
-const EmptyTasksCard = ({ navigate }) => {
-  return (
-    <Card className="bg-white p-6 text-center">
+const EmptyTasksCard = ({
+  navigate
+}) => {
+  return <Card className="bg-white p-6 text-center">
       <CardContent className="p-0">
         <p className="text-gray-600 mb-4">You haven't posted any tasks yet. Create one to get started!</p>
-        <Button 
-          onClick={() => navigate("/post-task")}
-          className="bg-teal hover:bg-teal-dark text-white">
+        <Button onClick={() => navigate("/post-task")} className="bg-teal hover:bg-teal-dark text-white">
           Post a New Task
         </Button>
       </CardContent>
-    </Card>
-  );
+    </Card>;
 };
 
 // Component for empty state messages in tabs
-const EmptyStateCard = ({ message }) => {
-  return (
-    <Card className="bg-white p-6 text-center">
+const EmptyStateCard = ({
+  message
+}) => {
+  return <Card className="bg-white p-6 text-center">
       <CardContent className="p-0">
         <p className="text-gray-600">{message}</p>
       </CardContent>
-    </Card>
-  );
+    </Card>;
 };
-
 export default Dashboard;
