@@ -1,10 +1,11 @@
 
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft, RefreshCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
+import BottomNav from "@/components/BottomNav";
 
 // Import the refactored components
 import ProfileHeader from "./components/profile/ProfileHeader";
@@ -17,6 +18,7 @@ import { useProfileData } from "@/hooks/useProfileData";
 
 const PersonalInformation = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { 
     user, 
     profile, 
@@ -141,6 +143,8 @@ const PersonalInformation = () => {
           </>
         )}
       </div>
+      
+      <BottomNav currentPath={location.pathname} />
     </div>
   );
 };

@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import BottomNav from "@/components/BottomNav";
 
 const ContactUs = () => {
   const navigate = useNavigate();
@@ -40,9 +41,9 @@ const ContactUs = () => {
     setIsSubmitting(true);
     
     try {
-      // Store the contact message in the database
+      // Store the contact message in the database - with updated type cast
       const { error } = await supabase
-        .from('contact_messages')
+        .from('contact_messages' as any)
         .insert([
           {
             name: formData.name,
@@ -52,10 +53,13 @@ const ContactUs = () => {
           }
         ]);
         
-      if (error) throw error;
+      if (error) {
+        console.error("Database error:", error);
+        throw error;
+      }
       
-      // Call an edge function to send the email (you'll need to create this)
-      const { error: emailError } = await supabase.functions.invoke('contact-form', {
+      // Call an edge function to send the email
+      const { data, error: emailError } = await supabase.functions.invoke('contact-form', {
         body: {
           name: formData.name,
           email: formData.email,
@@ -64,8 +68,12 @@ const ContactUs = () => {
         }
       });
       
-      if (emailError) throw emailError;
+      if (emailError) {
+        console.error("Email sending error:", emailError);
+        throw emailError;
+      }
       
+      console.log("Contact form response:", data);
       toast.success("Your message has been sent! We'll get back to you soon.");
       setFormData({...formData, message: ""});
     } catch (error) {
@@ -162,6 +170,8 @@ const ContactUs = () => {
           </CardContent>
         </Card>
       </div>
+      
+      <BottomNav currentPath={location.pathname} />
     </div>
   );
 };

@@ -1,4 +1,3 @@
-
 export type Json =
   | string
   | number
@@ -62,27 +61,32 @@ export interface Database {
       }
       categories: {
         Row: {
-          id: string
-          name: string
-          description: string | null
-          active: boolean
           created_at: string
+          id: number
+          name: string
+          parent_id: number | null
         }
         Insert: {
-          id?: string
-          name: string
-          description?: string | null
-          active?: boolean
           created_at?: string
+          id?: number
+          name: string
+          parent_id?: number | null
         }
         Update: {
-          id?: string
-          name?: string
-          description?: string | null
-          active?: boolean
           created_at?: string
+          id?: number
+          name?: string
+          parent_id?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "categories_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       tasks: {
         Row: {
@@ -300,6 +304,41 @@ export interface Database {
           created_at?: string
         }
         Relationships: []
+      }
+      contact_messages: {
+        Row: {
+          id: string
+          name: string
+          email: string
+          message: string
+          user_id: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          email: string
+          message: string
+          user_id?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          email?: string
+          message?: string
+          user_id?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contact_messages_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       spatial_ref_sys: {
         Row: {

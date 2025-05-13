@@ -1,60 +1,59 @@
 
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { ArrowLeft, BellRing, Mail, MessageSquare, Bell } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Switch } from "@/components/ui/switch";
-import { Separator } from "@/components/ui/separator";
-import { useToast } from "@/hooks/use-toast";
+import { useNavigate, useLocation } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { toast } from "sonner";
+import BottomNav from "@/components/BottomNav";
 
 const NotificationPreferences = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const location = useLocation();
+  const [isLoading, setIsLoading] = useState(false);
   
-  // State for different notification types
-  const [preferences, setPreferences] = useState({
-    // App notifications
-    newMessages: true,
-    taskUpdates: true,
-    offerUpdates: true,
-    paymentUpdates: true,
-    taskReminders: true,
-    
-    // Email notifications
-    emailNewMessages: false,
-    emailTaskUpdates: true,
-    emailOfferUpdates: true,
-    emailPaymentUpdates: true,
-    emailTaskReminders: false,
-    
-    // Marketing notifications
-    marketingApp: false,
-    marketingEmail: false,
+  // State for notification toggles
+  const [notifications, setNotifications] = useState({
+    email: {
+      newMessages: true,
+      taskUpdates: true,
+      offerUpdates: true,
+      paymentUpdates: true,
+      marketing: false
+    },
+    push: {
+      newMessages: true,
+      taskUpdates: true,
+      offerUpdates: true,
+      paymentUpdates: true
+    }
   });
-
-  const handleToggle = (key: keyof typeof preferences) => {
-    setPreferences(prev => ({
+  
+  const handleToggle = (type: 'email' | 'push', field: string) => {
+    setNotifications(prev => ({
       ...prev,
-      [key]: !prev[key]
+      [type]: {
+        ...prev[type],
+        [field]: !prev[type][field as keyof typeof prev[type]]
+      }
     }));
   };
-
-  const handleSave = () => {
-    // In a real app, this would save to database
-    console.log("Saving notification preferences:", preferences);
+  
+  const handleSave = async () => {
+    setIsLoading(true);
     
-    toast({
-      title: "Preferences saved",
-      description: "Your notification preferences have been updated.",
-    });
-    
-    // Navigate back to account page
-    navigate("/account");
+    // Simulate API call
+    setTimeout(() => {
+      toast.success("Notification preferences saved successfully");
+      setIsLoading(false);
+    }, 1000);
   };
 
   return (
-    <div className="bg-cream min-h-screen pb-8">
+    <div className="bg-cream min-h-screen pb-20">
       {/* Header */}
       <div className="bg-white px-4 py-4 flex items-center">
         <Button 
@@ -70,187 +69,108 @@ const NotificationPreferences = () => {
       
       <div className="px-4 py-6 space-y-6">
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Bell size={18} className="mr-2 text-gray-600" />
-              App Notifications
-            </CardTitle>
-            <CardDescription>
-              Control which notifications appear in your app
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium text-gray-800">New messages</p>
-                <p className="text-sm text-gray-500">Get notified when you receive a new message</p>
+          <CardContent className="p-6">
+            <h2 className="text-lg font-medium mb-4">Email Notifications</h2>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="email-messages" className="flex-1">New messages</Label>
+                <Switch 
+                  id="email-messages"
+                  checked={notifications.email.newMessages}
+                  onCheckedChange={() => handleToggle('email', 'newMessages')}
+                />
               </div>
-              <Switch 
-                checked={preferences.newMessages} 
-                onCheckedChange={() => handleToggle('newMessages')}
-              />
+              
+              <div className="flex items-center justify-between">
+                <Label htmlFor="email-task-updates" className="flex-1">Task updates</Label>
+                <Switch 
+                  id="email-task-updates"
+                  checked={notifications.email.taskUpdates}
+                  onCheckedChange={() => handleToggle('email', 'taskUpdates')}
+                />
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <Label htmlFor="email-offer-updates" className="flex-1">Offer updates</Label>
+                <Switch 
+                  id="email-offer-updates"
+                  checked={notifications.email.offerUpdates}
+                  onCheckedChange={() => handleToggle('email', 'offerUpdates')}
+                />
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <Label htmlFor="email-payment-updates" className="flex-1">Payment updates</Label>
+                <Switch 
+                  id="email-payment-updates"
+                  checked={notifications.email.paymentUpdates}
+                  onCheckedChange={() => handleToggle('email', 'paymentUpdates')}
+                />
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <Label htmlFor="email-marketing" className="flex-1">Marketing emails</Label>
+                <Switch 
+                  id="email-marketing"
+                  checked={notifications.email.marketing}
+                  onCheckedChange={() => handleToggle('email', 'marketing')}
+                />
+              </div>
             </div>
-            <Separator />
             
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium text-gray-800">Task updates</p>
-                <p className="text-sm text-gray-500">Updates on tasks you've created or applied to</p>
-              </div>
-              <Switch 
-                checked={preferences.taskUpdates} 
-                onCheckedChange={() => handleToggle('taskUpdates')}
-              />
-            </div>
-            <Separator />
+            <Separator className="my-6" />
             
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium text-gray-800">Offer updates</p>
-                <p className="text-sm text-gray-500">When your offers are accepted or rejected</p>
+            <h2 className="text-lg font-medium mb-4">Push Notifications</h2>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="push-messages" className="flex-1">New messages</Label>
+                <Switch 
+                  id="push-messages"
+                  checked={notifications.push.newMessages}
+                  onCheckedChange={() => handleToggle('push', 'newMessages')}
+                />
               </div>
-              <Switch 
-                checked={preferences.offerUpdates} 
-                onCheckedChange={() => handleToggle('offerUpdates')}
-              />
+              
+              <div className="flex items-center justify-between">
+                <Label htmlFor="push-task-updates" className="flex-1">Task updates</Label>
+                <Switch 
+                  id="push-task-updates"
+                  checked={notifications.push.taskUpdates}
+                  onCheckedChange={() => handleToggle('push', 'taskUpdates')}
+                />
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <Label htmlFor="push-offer-updates" className="flex-1">Offer updates</Label>
+                <Switch 
+                  id="push-offer-updates"
+                  checked={notifications.push.offerUpdates}
+                  onCheckedChange={() => handleToggle('push', 'offerUpdates')}
+                />
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <Label htmlFor="push-payment-updates" className="flex-1">Payment updates</Label>
+                <Switch 
+                  id="push-payment-updates"
+                  checked={notifications.push.paymentUpdates}
+                  onCheckedChange={() => handleToggle('push', 'paymentUpdates')}
+                />
+              </div>
             </div>
-            <Separator />
             
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium text-gray-800">Payment updates</p>
-                <p className="text-sm text-gray-500">Notifications about payments and invoices</p>
-              </div>
-              <Switch 
-                checked={preferences.paymentUpdates} 
-                onCheckedChange={() => handleToggle('paymentUpdates')}
-              />
-            </div>
-            <Separator />
-            
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium text-gray-800">Task reminders</p>
-                <p className="text-sm text-gray-500">Reminders about upcoming tasks</p>
-              </div>
-              <Switch 
-                checked={preferences.taskReminders} 
-                onCheckedChange={() => handleToggle('taskReminders')}
-              />
-            </div>
+            <Button 
+              className="w-full mt-6" 
+              onClick={handleSave}
+              disabled={isLoading}
+            >
+              {isLoading ? "Saving..." : "Save Preferences"}
+            </Button>
           </CardContent>
         </Card>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Mail size={18} className="mr-2 text-gray-600" />
-              Email Notifications
-            </CardTitle>
-            <CardDescription>
-              Choose which emails you'd like to receive
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium text-gray-800">New messages</p>
-              </div>
-              <Switch 
-                checked={preferences.emailNewMessages} 
-                onCheckedChange={() => handleToggle('emailNewMessages')}
-              />
-            </div>
-            <Separator />
-            
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium text-gray-800">Task updates</p>
-              </div>
-              <Switch 
-                checked={preferences.emailTaskUpdates} 
-                onCheckedChange={() => handleToggle('emailTaskUpdates')}
-              />
-            </div>
-            <Separator />
-            
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium text-gray-800">Offer updates</p>
-              </div>
-              <Switch 
-                checked={preferences.emailOfferUpdates} 
-                onCheckedChange={() => handleToggle('emailOfferUpdates')}
-              />
-            </div>
-            <Separator />
-            
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium text-gray-800">Payment updates</p>
-              </div>
-              <Switch 
-                checked={preferences.emailPaymentUpdates} 
-                onCheckedChange={() => handleToggle('emailPaymentUpdates')}
-              />
-            </div>
-            <Separator />
-            
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium text-gray-800">Task reminders</p>
-              </div>
-              <Switch 
-                checked={preferences.emailTaskReminders} 
-                onCheckedChange={() => handleToggle('emailTaskReminders')}
-              />
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <MessageSquare size={18} className="mr-2 text-gray-600" />
-              Marketing Communications
-            </CardTitle>
-            <CardDescription>
-              Updates about new features and special offers
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium text-gray-800">In-app marketing</p>
-                <p className="text-sm text-gray-500">Promotions and special offers in the app</p>
-              </div>
-              <Switch 
-                checked={preferences.marketingApp} 
-                onCheckedChange={() => handleToggle('marketingApp')}
-              />
-            </div>
-            <Separator />
-            
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium text-gray-800">Marketing emails</p>
-                <p className="text-sm text-gray-500">Newsletter and promotional emails</p>
-              </div>
-              <Switch 
-                checked={preferences.marketingEmail} 
-                onCheckedChange={() => handleToggle('marketingEmail')}
-              />
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Button 
-          className="w-full" 
-          onClick={handleSave}
-        >
-          Save Preferences
-        </Button>
       </div>
+      
+      <BottomNav currentPath={location.pathname} />
     </div>
   );
 };

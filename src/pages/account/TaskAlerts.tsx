@@ -1,114 +1,139 @@
 
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Card } from "@/components/ui/card";
+import { useNavigate, useLocation } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
-// Import refactored components
+// Import the alert components
 import HeaderSection from "./components/task-alerts/HeaderSection";
+import CategorySection from "./components/task-alerts/CategorySection";
+import LocationSection from "./components/task-alerts/LocationSection";
+import BudgetSection from "./components/task-alerts/BudgetSection";
 import AlertFrequencySection from "./components/task-alerts/AlertFrequencySection";
 import FiltersCard from "./components/task-alerts/FiltersCard";
+import BottomNav from "@/components/BottomNav";
 
-interface Category {
-  id: string;
-  name: string;
-}
+// Alert frequency options
+const frequencyOptions = [
+  { value: "realtime", label: "Real-time" },
+  { value: "daily", label: "Daily summary" },
+  { value: "weekly", label: "Weekly summary" },
+];
 
 const TaskAlerts = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const location = useLocation();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
-  // Mock categories
-  const categories: Category[] = [
-    { id: "1", name: "Electrical" },
-    { id: "2", name: "Plumbing" },
-    { id: "3", name: "Carpentry" },
-    { id: "4", name: "Cleaning" },
-    { id: "5", name: "Gardening" },
-    { id: "6", name: "Moving" },
-    { id: "7", name: "Painting" },
-    { id: "8", name: "General Maintenance" },
-  ];
+  // State for alert preferences
+  const [alertPreferences, setAlertPreferences] = useState({
+    isEnabled: true,
+    categories: [],
+    location: {
+      useCurrentLocation: true,
+      radius: 30, // kilometers
+      customLocation: ""
+    },
+    budget: {
+      min: 10,
+      max: 5000
+    },
+    frequency: "daily"
+  });
   
-  // State for alert configurations
-  const [alertsEnabled, setAlertsEnabled] = useState(true);
-  const [notificationMethod, setNotificationMethod] = useState("app");
-  
-  // Filter states
-  const [selectedCategories, setSelectedCategories] = useState<string[]>(["1", "3"]);
-  const [locations, setLocations] = useState<string[]>(["Sydney CBD", "Parramatta"]);
-  const [budgetRange, setBudgetRange] = useState([50, 500]); // Minimum and maximum budget
-  const [distanceRadius, setDistanceRadius] = useState([25]);
-  
-  // Frequency settings
-  const [frequency, setFrequency] = useState("immediate");
-  
-  const handleAddLocation = (location: string) => {
-    setLocations([...locations, location]);
-  };
-  
-  const handleRemoveLocation = (location: string) => {
-    setLocations(locations.filter(loc => loc !== location));
-  };
-  
-  const handleCategoryToggle = (categoryId: string) => {
-    if (selectedCategories.includes(categoryId)) {
-      setSelectedCategories(selectedCategories.filter(id => id !== categoryId));
-    } else {
-      setSelectedCategories([...selectedCategories, categoryId]);
+  const handleSavePreferences = async () => {
+    setIsSubmitting(true);
+    
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1200));
+      toast.success("Task alert preferences saved successfully");
+    } catch (error) {
+      toast.error("Failed to save alert preferences");
+    } finally {
+      setIsSubmitting(false);
     }
   };
   
-  const handleSave = () => {
-    // Would save to database in a real app
-    toast({
-      title: "Task alerts updated",
-      description: "Your task alert preferences have been saved."
-    });
-    navigate("/account");
+  // Update handlers for each section
+  const updateCategories = (categories: string[]) => {
+    setAlertPreferences(prev => ({...prev, categories}));
+  };
+  
+  const updateLocation = (locationData: any) => {
+    setAlertPreferences(prev => ({
+      ...prev, 
+      location: {...prev.location, ...locationData}
+    }));
+  };
+  
+  const updateBudget = (budgetData: {min: number, max: number}) => {
+    setAlertPreferences(prev => ({...prev, budget: budgetData}));
+  };
+  
+  const updateFrequency = (frequency: string) => {
+    setAlertPreferences(prev => ({...prev, frequency}));
+  };
+  
+  const toggleAlerts = (enabled: boolean) => {
+    setAlertPreferences(prev => ({...prev, isEnabled: enabled}));
   };
 
   return (
     <div className="bg-cream min-h-screen pb-20">
-      <HeaderSection />
+      {/* Header */}
+      <div className="bg-white px-4 py-4 flex items-center">
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          onClick={() => navigate("/account")}
+          className="mr-2"
+        >
+          <ArrowLeft size={22} />
+        </Button>
+        <h1 className="text-xl font-semibold">Task Alerts</h1>
+      </div>
       
       <div className="px-4 py-6 space-y-6">
-        <Card>
-          <AlertFrequencySection 
-            alertsEnabled={alertsEnabled}
-            setAlertsEnabled={setAlertsEnabled}
-            notificationMethod={notificationMethod}
-            setNotificationMethod={setNotificationMethod}
-            frequency={frequency}
-            setFrequency={setFrequency}
-          />
-        </Card>
+        <HeaderSection 
+          isEnabled={alertPreferences.isEnabled}
+          onToggle={toggleAlerts}
+        />
         
-        {alertsEnabled && (
-          <>
-            <FiltersCard 
-              categories={categories}
-              selectedCategories={selectedCategories}
-              handleCategoryToggle={handleCategoryToggle}
-              locations={locations}
-              addLocation={handleAddLocation}
-              removeLocation={handleRemoveLocation}
-              distanceRadius={distanceRadius}
-              setDistanceRadius={setDistanceRadius}
-              budgetRange={budgetRange}
-              setBudgetRange={setBudgetRange}
-            />
-            
-            <Button 
-              className="w-full" 
-              onClick={handleSave}
-            >
-              Save Alert Settings
-            </Button>
-          </>
-        )}
+        <FiltersCard title="Alert Preferences">
+          <CategorySection 
+            selectedCategories={alertPreferences.categories}
+            onCategoriesChange={updateCategories}
+          />
+          
+          <LocationSection 
+            locationData={alertPreferences.location}
+            onLocationChange={updateLocation}
+          />
+          
+          <BudgetSection 
+            budgetRange={alertPreferences.budget}
+            onBudgetChange={updateBudget}
+          />
+        </FiltersCard>
+        
+        <AlertFrequencySection 
+          selectedFrequency={alertPreferences.frequency}
+          options={frequencyOptions}
+          onFrequencyChange={updateFrequency}
+        />
+        
+        <Button 
+          className="w-full" 
+          onClick={handleSavePreferences}
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? "Saving..." : "Save Alert Preferences"}
+        </Button>
       </div>
+      
+      <BottomNav currentPath={location.pathname} />
     </div>
   );
 };

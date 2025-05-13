@@ -19,13 +19,16 @@ interface ContactFormRequest {
 const handler = async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { headers: corsHeaders, status: 204 });
   }
 
   try {
+    // Parse the request body
     const { name, email, message, recipient }: ContactFormRequest = await req.json();
 
+    // Validate required fields
     if (!name || !email || !message || !recipient) {
+      console.error("Missing required fields:", { name, email, message, recipient });
       return new Response(
         JSON.stringify({ error: "Missing required fields" }),
         {
@@ -35,6 +38,8 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
+    console.log("Sending contact form email to admin:", recipient);
+    
     // Send email to the recipient (website admin)
     const emailToAdmin = await resend.emails.send({
       from: "TripiTask Contact <onboarding@resend.dev>",
@@ -48,6 +53,8 @@ const handler = async (req: Request): Promise<Response> => {
         <p>${message.replace(/\n/g, "<br>")}</p>
       `,
     });
+
+    console.log("Admin email sent:", emailToAdmin);
 
     // Send confirmation email to the user
     const emailToUser = await resend.emails.send({
@@ -64,6 +71,8 @@ const handler = async (req: Request): Promise<Response> => {
       `,
     });
 
+    console.log("User confirmation email sent:", emailToUser);
+
     return new Response(
       JSON.stringify({
         success: true,
@@ -79,7 +88,7 @@ const handler = async (req: Request): Promise<Response> => {
   } catch (error: any) {
     console.error("Error in contact-form function:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: error.message || "An unknown error occurred" }),
       {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },

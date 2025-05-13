@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { X, Plus } from "lucide-react";
 import {
   Form,
   FormControl,
@@ -25,7 +27,6 @@ const profileSchema = z.object({
   business_name: z.string().optional(),
   about: z.string().optional(),
   location: z.string().optional(),
-  services: z.string().optional(),
 });
 
 type ProfileFormData = z.infer<typeof profileSchema>;
@@ -55,6 +56,10 @@ const ProfileForm = ({
   setIsEditMode,
 }: ProfileFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [services, setServices] = useState<string[]>(
+    formData.services ? formData.services.split(",").map(s => s.trim()).filter(Boolean) : []
+  );
+  const [newService, setNewService] = useState("");
 
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
@@ -63,9 +68,26 @@ const ProfileForm = ({
       business_name: formData.business_name || "",
       about: formData.about || "",
       location: formData.location || "",
-      services: formData.services || "",
     },
   });
+  
+  const addService = () => {
+    if (newService.trim()) {
+      setServices([...services, newService.trim()]);
+      setNewService("");
+    }
+  };
+  
+  const removeService = (index: number) => {
+    setServices(services.filter((_, i) => i !== index));
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addService();
+    }
+  };
   
   const onSubmit = async (data: ProfileFormData) => {
     if (!user) {
@@ -76,17 +98,12 @@ const ProfileForm = ({
     setIsSubmitting(true);
     
     try {
-      // Parse services from comma-separated string to array
-      const servicesArray = data.services
-        ? data.services.split(",").map(service => service.trim()).filter(Boolean)
-        : [];
-        
       const result = await updateProfile({
         full_name: data.full_name,
         business_name: data.business_name,
         about: data.about,
         location: data.location,
-        services: servicesArray,
+        services: services,
       });
         
       if (result) {
@@ -169,19 +186,40 @@ const ProfileForm = ({
               )}
             />
             
-            <FormField
-              control={form.control}
-              name="services"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Services</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Services (comma separated)" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div>
+              <FormLabel>Services</FormLabel>
+              <div className="flex flex-wrap gap-2 mb-2">
+                {services.map((service, index) => (
+                  <Badge key={index} variant="secondary" className="p-2">
+                    {service}
+                    <button 
+                      type="button" 
+                      className="ml-2"
+                      onClick={() => removeService(index)}
+                    >
+                      <X size={14} />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+              <div className="flex items-center">
+                <Input
+                  value={newService}
+                  onChange={(e) => setNewService(e.target.value)}
+                  placeholder="Add a service"
+                  className="flex-1"
+                  onKeyPress={handleKeyPress}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={addService}
+                  className="ml-2"
+                >
+                  <Plus size={16} />
+                </Button>
+              </div>
+            </div>
             
             <div className="flex justify-end space-x-2 pt-4">
               <Button
