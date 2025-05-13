@@ -5,6 +5,7 @@ import EmptyOffers from "@/components/offers/EmptyOffers";
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { updateOfferStatus } from "@/services/task/offers/queries/updateOfferStatus";
+import { getTaskById } from "@/services/task/queries/getTaskById";
 
 interface TaskOffersListProps {
   taskId: string;
@@ -57,6 +58,10 @@ export default function TaskOffersList({
           title: "Success",
           description: "Offer accepted successfully",
         });
+        
+        // Get the latest task data to ensure we have the updated status
+        const updatedTask = await getTaskById(taskId);
+        console.log("Task status after accepting offer:", updatedTask?.status);
         
         // Refresh offers list
         await onRefresh();
@@ -147,6 +152,28 @@ export default function TaskOffersList({
           disableActions={hasAcceptedOffer || offer.status !== 'pending'}
         />
       ))}
+
+      {showDebugInfo && (
+        <div className="mt-4 p-4 bg-gray-100 rounded text-left text-xs overflow-auto max-h-60">
+          <h4 className="font-semibold mb-2">Debug Information</h4>
+          <p><strong>Task ID:</strong> {taskId}</p>
+          <p><strong>Offers count:</strong> {offers.length}</p>
+          <p><strong>Has accepted offer:</strong> {hasAcceptedOffer ? 'Yes' : 'No'}</p>
+          <div>
+            <p><strong>Offers:</strong></p>
+            <pre>{JSON.stringify(offers, null, 2)}</pre>
+          </div>
+        </div>
+      )}
+      
+      <div className="mt-4 text-center">
+        <button 
+          onClick={toggleDebugInfo} 
+          className="text-sm text-gray-500 hover:text-teal"
+        >
+          {showDebugInfo ? "Hide Debug Info" : "Show Debug Info"}
+        </button>
+      </div>
     </div>
   );
 }

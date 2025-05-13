@@ -3,8 +3,10 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { getTaskById } from "@/services/task/queries/getTaskById";
 import { getTaskOffers } from "@/services/task/offers/queries/getTaskOffers";
+import { syncTaskStatusWithOffers } from "@/services/task/offers/queries/updateOfferStatus";
 import { User } from "@/types/user";
 import { Offer } from "@/types/offer";
+import { toast } from "@/hooks/use-toast";
 
 export function useTaskDetail(taskId: string | undefined, user: User | null) {
   const navigate = useNavigate();
@@ -33,6 +35,22 @@ export function useTaskDetail(taskId: string | undefined, user: User | null) {
           
           // Check if the task status indicates an accepted offer ("assigned" status)
           setHasAcceptedOffer(taskData.status === 'assigned' || taskData.status === 'in_progress');
+
+          // Check for data consistency between task status and offers
+          const checkResult = await syncTaskStatusWithOffers(taskId);
+          if (checkResult.updated) {
+            // If the task status was fixed, refresh the task data
+            console.log("Task status was inconsistent with offers and has been fixed");
+            toast({
+              title: "Task status corrected",
+              description: "The task status has been updated to match its accepted offer",
+            });
+            const refreshedTask = await getTaskById(taskId);
+            if (refreshedTask) {
+              setTask(refreshedTask);
+              setHasAcceptedOffer(refreshedTask.status === 'assigned' || refreshedTask.status === 'in_progress');
+            }
+          }
         } else {
           setError("Task not found");
         }
@@ -94,6 +112,12 @@ export function useTaskDetail(taskId: string | undefined, user: User | null) {
       // Update the hasAcceptedOffer state
       const acceptedOffer = offersData?.find((offer: any) => offer.status === 'accepted');
       setHasAcceptedOffer(!!acceptedOffer || (task?.status === 'assigned' || task?.status === 'in_progress'));
+      
+      // Also refresh the task to get the latest status
+      const refreshedTask = await getTaskById(taskId);
+      if (refreshedTask) {
+        setTask(refreshedTask);
+      }
     } catch (err) {
       console.error("Error refreshing offers:", err);
     }

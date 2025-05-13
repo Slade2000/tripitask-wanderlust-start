@@ -1,6 +1,7 @@
 
 import { useToast } from "@/hooks/use-toast";
 import { updateOfferStatus } from "@/services/task/offers/queries/updateOfferStatus";
+import { getTaskById } from "@/services/task/queries/getTaskById";
 
 interface OfferActionsProps {
   taskId: string;
@@ -31,7 +32,11 @@ export default function OfferActions({
           description: "Offer accepted successfully",
         });
         
-        // Refresh offers list
+        // Get the latest task data to ensure we have the updated status
+        const updatedTask = await getTaskById(taskId);
+        console.log("Task status after accepting offer:", updatedTask?.status);
+        
+        // Refresh offers list and parent components
         await onUpdate();
       } else {
         toast({
