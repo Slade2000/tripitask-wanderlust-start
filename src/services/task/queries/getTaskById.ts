@@ -17,6 +17,9 @@ export async function getTaskById(taskId: string) {
       throw error;
     }
 
+    // Log the task status to debug
+    console.log("Task status from database:", data?.status);
+    
     return data;
   } catch (error) {
     console.error("Error fetching task details:", error);

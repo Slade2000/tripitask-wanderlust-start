@@ -31,6 +31,13 @@ const TaskDetail = () => {
     window.scrollTo(0, 0);
   }, []);
 
+  useEffect(() => {
+    // Debug logging for task status
+    if (task) {
+      console.log("TaskDetail received task with status:", task.status);
+    }
+  }, [task]);
+
   if (loading) {
     return <TaskDetailLoading onBack={() => navigate(-1)} />;
   }

@@ -4,6 +4,9 @@ interface TaskStatusBadgeProps {
 }
 
 export default function TaskStatusBadge({ status }: TaskStatusBadgeProps) {
+  // Log the incoming status for debugging
+  console.log("TaskStatusBadge received status:", status);
+
   // Normalize the status for display
   const getDisplayStatus = (rawStatus: string): string => {
     const statusMap: Record<string, string> = {
