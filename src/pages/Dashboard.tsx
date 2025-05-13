@@ -181,7 +181,7 @@ const Dashboard = () => {
         </Tabs>
         
         {/* Active Jobs Section */}
-        <h2 className="text-xl font-semibold text-teal-dark mb-3">Active Jobs</h2>
+        <h2 className="text-xl font-semibold text-teal-dark mb-3">I Am Working On</h2>
         {activeTasks.length > 0 ? <div className="mb-6 space-y-3">
             {activeTasks.slice(0, 3).map(task => <Card key={task.id} className="overflow-hidden">
                 <CardContent className="p-4">
