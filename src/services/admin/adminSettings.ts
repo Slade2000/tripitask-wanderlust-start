@@ -16,7 +16,7 @@ export interface AdminSettings {
  */
 export async function getAdminSetting(name: string): Promise<string | null> {
   try {
-    // Use any for the type to work around the TypeScript errors
+    // Use type assertion to work around TypeScript errors
     // since the admin_settings table isn't part of the generated types
     const { data, error } = await supabase
       .from('admin_settings' as any)
