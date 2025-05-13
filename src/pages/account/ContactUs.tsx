@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Send } from "lucide-react";
+import { ArrowLeft, Send, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,12 +10,14 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import BottomNav from "@/components/BottomNav";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const ContactUs = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [serverError, setServerError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: user?.user_metadata?.full_name || "",
     email: user?.email || "",
@@ -28,6 +30,8 @@ const ContactUs = () => {
       ...prev,
       [name]: value
     }));
+    // Clear error when user starts typing again
+    if (serverError) setServerError(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -39,6 +43,7 @@ const ContactUs = () => {
     }
     
     setIsSubmitting(true);
+    setServerError(null);
     
     try {
       // Store the contact message in the database - with updated type cast
@@ -55,7 +60,7 @@ const ContactUs = () => {
         
       if (error) {
         console.error("Database error:", error);
-        throw error;
+        throw new Error("Failed to save your message to our database");
       }
       
       // Call an edge function to send the email
@@ -70,7 +75,11 @@ const ContactUs = () => {
       
       if (emailError) {
         console.error("Email sending error:", emailError);
-        throw emailError;
+        throw new Error(emailError.message || "Failed to send your message via email");
+      }
+      
+      if (data?.error) {
+        throw new Error(data.error);
       }
       
       console.log("Contact form response:", data);
@@ -78,7 +87,12 @@ const ContactUs = () => {
       setFormData({...formData, message: ""});
     } catch (error) {
       console.error("Error sending contact form:", error);
-      toast.error("Failed to send your message. Please try again later.");
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : "Failed to send your message. Please try again later.";
+      
+      setServerError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -100,6 +114,14 @@ const ContactUs = () => {
       </div>
       
       <div className="px-4 py-6">
+        {serverError && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{serverError}</AlertDescription>
+          </Alert>
+        )}
+        
         <Card>
           <CardContent className="p-6">
             <p className="text-gray-600 mb-6">

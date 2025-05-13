@@ -2,7 +2,19 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@2.0.0";
 
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+// Initialize Resend with proper error handling
+const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+let resend: Resend | null = null;
+
+try {
+  if (!RESEND_API_KEY) {
+    console.error("RESEND_API_KEY environment variable is not set");
+  } else {
+    resend = new Resend(RESEND_API_KEY);
+  }
+} catch (error) {
+  console.error("Failed to initialize Resend client:", error);
+}
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -33,6 +45,20 @@ const handler = async (req: Request): Promise<Response> => {
         JSON.stringify({ error: "Missing required fields" }),
         {
           status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
+    // Check if Resend is properly initialized
+    if (!resend) {
+      console.error("Resend client is not initialized. Check if RESEND_API_KEY is set.");
+      return new Response(
+        JSON.stringify({ 
+          error: "Email service is not configured properly. Please contact support."
+        }),
+        {
+          status: 500,
           headers: { "Content-Type": "application/json", ...corsHeaders },
         }
       );

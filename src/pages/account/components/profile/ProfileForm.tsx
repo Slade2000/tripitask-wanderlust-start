@@ -1,35 +1,14 @@
 
 import { useState } from "react";
-import { z } from "zod";
-import { toast } from "sonner";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { X, Plus } from "lucide-react";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 import { Profile } from "@/contexts/auth/types";
-import { User } from "@/types/user";
-
-// Form validation schema
-const profileSchema = z.object({
-  full_name: z.string().min(1, { message: "Name is required" }),
-  business_name: z.string().optional(),
-  about: z.string().optional(),
-  location: z.string().optional(),
-});
-
-type ProfileFormData = z.infer<typeof profileSchema>;
+import { Card, CardContent } from "@/components/ui/card";
+import { toast } from "sonner";
+import LocationSearchInput from "@/components/location/LocationSearchInput";
+import { useLocationSearch } from "@/hooks/useLocationSearch";
 
 interface ProfileFormProps {
   user: User | null;
@@ -43,202 +22,176 @@ interface ProfileFormProps {
   };
   loading: boolean;
   setFormData: (data: any) => void;
-  updateProfile: (profileData: Partial<Profile>) => Promise<Profile | null>;
-  setIsEditMode: (isEdit: boolean) => void;
+  updateProfile: (data: Partial<Profile>) => Promise<void>;
+  setIsEditMode: (edit: boolean) => void;
 }
 
-const ProfileForm = ({
-  user,
-  formData,
-  loading,
-  setFormData,
-  updateProfile,
-  setIsEditMode,
+const ProfileForm = ({ 
+  user, 
+  formData, 
+  loading, 
+  setFormData, 
+  updateProfile, 
+  setIsEditMode 
 }: ProfileFormProps) => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [services, setServices] = useState<string[]>(
-    formData.services ? formData.services.split(",").map(s => s.trim()).filter(Boolean) : []
-  );
-  const [newService, setNewService] = useState("");
-
-  const form = useForm<ProfileFormData>({
-    resolver: zodResolver(profileSchema),
-    defaultValues: {
-      full_name: formData.full_name || "",
-      business_name: formData.business_name || "",
-      about: formData.about || "",
-      location: formData.location || "",
-    },
+  const [isSaving, setIsSaving] = useState(false);
+  
+  // Use the location search hook for Google Places integration
+  const { 
+    searchTerm, 
+    setSearchTerm, 
+    suggestions, 
+    isLoading: locationLoading,
+    resetSearch
+  } = useLocationSearch({
+    initialTerm: formData.location,
+    debounceTime: 300
   });
   
-  const addService = () => {
-    if (newService.trim()) {
-      setServices([...services, newService.trim()]);
-      setNewService("");
-    }
+  const [showLocationSuggestions, setShowLocationSuggestions] = useState(false);
+  
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
   };
   
-  const removeService = (index: number) => {
-    setServices(services.filter((_, i) => i !== index));
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      addService();
-    }
+  const handleLocationSelect = (location: string) => {
+    setFormData({ ...formData, location });
+    resetSearch();
   };
   
-  const onSubmit = async (data: ProfileFormData) => {
-    if (!user) {
-      toast.error("You must be logged in to update your profile");
-      return;
-    }
-    
-    setIsSubmitting(true);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     
     try {
-      const result = await updateProfile({
-        full_name: data.full_name,
-        business_name: data.business_name,
-        about: data.about,
-        location: data.location,
-        services: services,
+      setIsSaving(true);
+      
+      // Parse services from comma-separated string to array
+      const servicesArray = formData.services
+        .split(',')
+        .map(service => service.trim())
+        .filter(service => service.length > 0);
+      
+      await updateProfile({
+        full_name: formData.full_name,
+        business_name: formData.business_name,
+        about: formData.about,
+        location: formData.location,
+        services: servicesArray,
+        avatar_url: formData.avatar_url
       });
-        
-      if (result) {
-        setIsEditMode(false);
-      }
+      
+      toast.success("Profile updated successfully");
+      setIsEditMode(false);
     } catch (error) {
-      console.error("Exception updating profile:", error);
-      toast.error("An unexpected error occurred");
+      console.error("Failed to update profile:", error);
+      toast.error("Failed to update profile");
     } finally {
-      setIsSubmitting(false);
+      setIsSaving(false);
     }
-  };
-  
-  const handleCancel = () => {
-    setIsEditMode(false);
   };
   
   return (
     <Card>
       <CardContent className="p-6">
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <FormField
-              control={form.control}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label htmlFor="full_name" className="block text-sm font-medium text-gray-700 mb-1">
+              Full Name
+            </label>
+            <Input
+              id="full_name"
               name="full_name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Your full name" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              value={formData.full_name}
+              onChange={handleChange}
+              disabled={isSaving}
+              placeholder="Your full name"
             />
-            
-            <FormField
-              control={form.control}
+          </div>
+          
+          <div>
+            <label htmlFor="business_name" className="block text-sm font-medium text-gray-700 mb-1">
+              Business Name
+            </label>
+            <Input
+              id="business_name"
               name="business_name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Business Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Your business name (optional)" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              value={formData.business_name}
+              onChange={handleChange}
+              disabled={isSaving}
+              placeholder="Your business name"
             />
-            
-            <FormField
-              control={form.control}
+          </div>
+          
+          <div>
+            <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">
+              Location
+            </label>
+            <LocationSearchInput
+              searchTerm={searchTerm || formData.location}
+              setSearchTerm={(term) => {
+                setSearchTerm(term);
+                setFormData({ ...formData, location: term });
+              }}
+              suggestions={suggestions}
+              isLoading={locationLoading}
+              showSuggestions={showLocationSuggestions}
+              setShowSuggestions={setShowLocationSuggestions}
+              onLocationSelect={handleLocationSelect}
+              label=""
+              placeholder="Enter your location"
+              disabled={isSaving}
+            />
+          </div>
+          
+          <div>
+            <label htmlFor="about" className="block text-sm font-medium text-gray-700 mb-1">
+              About Me
+            </label>
+            <Textarea
+              id="about"
               name="about"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>About</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="Tell customers about yourself and your business..." 
-                      className="min-h-[120px]" 
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              value={formData.about}
+              onChange={handleChange}
+              disabled={isSaving}
+              placeholder="Tell clients about yourself and your services"
+              rows={4}
             />
-            
-            <FormField
-              control={form.control}
-              name="location"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Location</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Your location" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+          </div>
+          
+          <div>
+            <label htmlFor="services" className="block text-sm font-medium text-gray-700 mb-1">
+              Services (comma separated)
+            </label>
+            <Input
+              id="services"
+              name="services"
+              value={formData.services}
+              onChange={handleChange}
+              disabled={isSaving}
+              placeholder="e.g. Plumbing, Electrical, Carpentry"
             />
-            
-            <div>
-              <FormLabel>Services</FormLabel>
-              <div className="flex flex-wrap gap-2 mb-2">
-                {services.map((service, index) => (
-                  <Badge key={index} variant="secondary" className="p-2">
-                    {service}
-                    <button 
-                      type="button" 
-                      className="ml-2"
-                      onClick={() => removeService(index)}
-                    >
-                      <X size={14} />
-                    </button>
-                  </Badge>
-                ))}
-              </div>
-              <div className="flex items-center">
-                <Input
-                  value={newService}
-                  onChange={(e) => setNewService(e.target.value)}
-                  placeholder="Add a service"
-                  className="flex-1"
-                  onKeyPress={handleKeyPress}
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={addService}
-                  className="ml-2"
-                >
-                  <Plus size={16} />
-                </Button>
-              </div>
-            </div>
-            
-            <div className="flex justify-end space-x-2 pt-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleCancel}
-                disabled={isSubmitting}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                disabled={isSubmitting || loading}
-              >
-                {isSubmitting ? "Saving..." : "Save Changes"}
-              </Button>
-            </div>
-          </form>
-        </Form>
+          </div>
+          
+          <div className="flex space-x-3 pt-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsEditMode(false)}
+              disabled={isSaving}
+              className="flex-1"
+            >
+              Cancel
+            </Button>
+            <Button 
+              type="submit" 
+              disabled={isSaving}
+              className="flex-1"
+            >
+              {isSaving ? "Saving..." : "Save Changes"}
+            </Button>
+          </div>
+        </form>
       </CardContent>
     </Card>
   );

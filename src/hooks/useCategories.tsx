@@ -39,9 +39,8 @@ export function useCategories() {
         }
 
         // Transform the database result to match our Category interface
-        // Use type assertion to unknown first to avoid excessive type instantiation
-        const rawData = data || [];
-        const typedData: Category[] = rawData.map((item: any) => ({
+        const rawData = data as DatabaseCategory[] || [];
+        const typedData: Category[] = rawData.map((item) => ({
           id: String(item.id),
           name: item.name,
           description: item.description || null,
