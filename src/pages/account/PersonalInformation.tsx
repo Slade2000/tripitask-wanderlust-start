@@ -33,11 +33,16 @@ const PersonalInformation = () => {
     getUserName, 
     getBusinessName, 
     refreshProfile,
-    updateProfile,
+    updateProfile: originalUpdateProfile,
     handleRetryLoadProfile
   } = useProfileData();
   
   const [isRefreshing, setIsRefreshing] = useState(false);
+  
+  // Create a wrapper function for updateProfile that conforms to the expected type
+  const updateProfile = async (data: Partial<Profile>) => {
+    await originalUpdateProfile(data);
+  };
   
   const handleRefresh = async () => {
     try {

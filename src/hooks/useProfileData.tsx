@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/contexts/profile/ProfileProvider";
@@ -83,6 +82,32 @@ export const useProfileData = () => {
       setErrorMessage("");
     }
   }, [error]);
+
+  const fetchInitialProfile = async () => {
+    if (profile) {
+      console.log("Loading profile data into form:", profile);
+      
+      setFormData({
+        full_name: profile.full_name || "",
+        business_name: profile.business_name || "",
+        about: profile.about || "",
+        location: profile.location || "",
+        services: profile.services?.join(", ") || "",
+        avatar_url: profile.avatar_url || ""
+      });
+      
+      // Update mock data with real data where available
+      setProfileData(prev => ({
+        ...prev,
+        rating: profile.rating !== null ? profile.rating : prev.rating,
+        jobsCompleted: profile.jobs_completed !== null ? profile.jobs_completed : prev.jobsCompleted
+      }));
+    }
+  };
+
+  useEffect(() => {
+    fetchInitialProfile();
+  }, [user, refreshProfile]);
 
   useEffect(() => {
     // Load the most recent profile data whenever the component mounts or profile changes

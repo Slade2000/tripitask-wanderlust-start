@@ -14,9 +14,9 @@ interface DatabaseCategory {
   id: number | string;
   name: string;
   created_at: string;
-  parent_id?: number;
+  parent_id?: number | null;
   description?: string | null;
-  active?: boolean;
+  active?: boolean | null;
 }
 
 export function useCategories() {
@@ -39,13 +39,12 @@ export function useCategories() {
         }
 
         // Transform the database result to match our Category interface
-        const rawData = data as DatabaseCategory[] || [];
-        const typedData: Category[] = rawData.map((item) => ({
+        const typedData: Category[] = Array.isArray(data) ? data.map((item: DatabaseCategory) => ({
           id: String(item.id),
           name: item.name,
           description: item.description || null,
           active: item.active !== undefined ? Boolean(item.active) : true
-        }));
+        })) : [];
 
         setCategories(typedData);
       } catch (err) {
