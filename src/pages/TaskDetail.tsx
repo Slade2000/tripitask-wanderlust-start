@@ -166,7 +166,6 @@ const TaskDetail = () => {
           
           <div className="space-y-6">
             <TaskPosterInfo
-              userId={task.user_id}
               taskerId={task.user_id}
               taskId={task.id}
             />

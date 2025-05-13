@@ -9,6 +9,33 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      admin_settings: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+          updated_at: string | null
+          value: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string | null
+          value: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string | null
+          value?: string
+        }
+        Relationships: []
+      }
       categories: {
         Row: {
           active: boolean
@@ -193,6 +220,7 @@ export type Database = {
           expected_delivery_date: string
           id: string
           message: string | null
+          net_amount: number | null
           provider_id: string
           status: string
           task_id: string
@@ -203,6 +231,7 @@ export type Database = {
           expected_delivery_date: string
           id?: string
           message?: string | null
+          net_amount?: number | null
           provider_id: string
           status?: string
           task_id: string
@@ -213,6 +242,7 @@ export type Database = {
           expected_delivery_date?: string
           id?: string
           message?: string | null
+          net_amount?: number | null
           provider_id?: string
           status?: string
           task_id?: string

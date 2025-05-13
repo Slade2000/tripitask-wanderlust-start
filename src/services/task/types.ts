@@ -1,4 +1,3 @@
-
 export interface TaskData {
   id?: string;
   title: string;
@@ -27,4 +26,16 @@ export interface TaskFilterParams {
   latitude?: number;
   longitude?: number;
   userId?: string;  // Added userId to filter out current user's tasks
+}
+
+export interface Offer {
+  id: string;
+  task_id: string;
+  provider_id: string;
+  amount: number;
+  net_amount?: number;
+  expected_delivery_date: string;
+  message?: string;
+  status: 'pending' | 'accepted' | 'rejected';
+  created_at: string;
 }

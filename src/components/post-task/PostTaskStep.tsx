@@ -4,7 +4,6 @@ import BasicInfoStep from "./BasicInfoStep";
 import LocationDateStep from "./LocationDateStep";
 import ReviewSubmitStep from "./ReviewSubmitStep";
 import TaskConfirmation from "./TaskConfirmation";
-import { BasicInfoFormData } from "./BasicInfoStep";
 import { LocationDateFormData } from "./LocationDateStep";
 import { createTask } from "@/services/taskService";
 import { toast } from "sonner";
@@ -27,7 +26,7 @@ const PostTaskStep = ({ onStepBack }: PostTaskStepProps) => {
   } = usePostTask();
   const navigate = useNavigate();
 
-  const handleBasicInfoSubmit = (data: BasicInfoFormData) => {
+  const handleBasicInfoSubmit = (data: any) => {
     setTaskData({
       ...taskData,
       title: data.title,
@@ -97,12 +96,6 @@ const PostTaskStep = ({ onStepBack }: PostTaskStepProps) => {
     case "basic-info":
       return (
         <BasicInfoStep
-          initialData={{
-            title: taskData.title,
-            category_id: taskData.category_id,
-            photos: Array.isArray(taskData.photos) ? taskData.photos.filter(p => p instanceof File) as File[] : [], // Ensure we only pass File objects
-            budget: taskData.budget,
-          }}
           onSubmit={handleBasicInfoSubmit}
           onBack={onStepBack} // Use the passed onStepBack function
         />

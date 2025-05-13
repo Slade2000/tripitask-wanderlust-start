@@ -6,7 +6,9 @@ import { supabase } from "@/integrations/supabase/client";
  */
 export async function submitOffer(offer: {
   task_id: string;
+  provider_id?: string;
   amount: number; 
+  net_amount?: number;
   expected_delivery_date: string;
   message?: string;
 }): Promise<{ success: boolean; error?: string }> {
@@ -20,8 +22,9 @@ export async function submitOffer(offer: {
       .from('offers')
       .insert({
         task_id: offer.task_id,
-        provider_id: userData.user.id,
+        provider_id: offer.provider_id || userData.user.id,
         amount: offer.amount,
+        net_amount: offer.net_amount,
         expected_delivery_date: offer.expected_delivery_date,
         message: offer.message || null,
         status: 'pending'
