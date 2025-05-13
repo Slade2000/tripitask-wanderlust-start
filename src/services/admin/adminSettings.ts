@@ -30,7 +30,7 @@ export async function getAdminSetting(name: string): Promise<string | null> {
     }
     
     // Add type assertion here to tell TypeScript that data has a value property
-    return (data as { value: string } | null)?.value || null;
+    return (data as unknown as { value: string } | null)?.value || null;
   } catch (error) {
     console.error(`Error fetching admin setting ${name}:`, error);
     return null;
