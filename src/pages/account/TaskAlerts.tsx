@@ -1,9 +1,10 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { useCategories } from "@/hooks/useCategories";
 
 // Import the alert components
 import HeaderSection from "./components/task-alerts/HeaderSection";
@@ -25,11 +26,12 @@ const TaskAlerts = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { categories, loading } = useCategories();
   
   // State for alert preferences
   const [alertPreferences, setAlertPreferences] = useState({
     isEnabled: true,
-    categories: [],
+    categories: [] as string[],
     location: {
       useCurrentLocation: true,
       radius: 30, // kilometers

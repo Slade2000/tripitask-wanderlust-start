@@ -18,7 +18,6 @@ export function useCategories() {
     async function fetchCategories() {
       try {
         setLoading(true);
-        // Using a more generic approach to avoid TypeScript errors with Supabase tables
         const { data, error } = await supabase
           .from('categories')
           .select('*')
@@ -29,8 +28,15 @@ export function useCategories() {
           throw error;
         }
 
-        // Type assertion to handle the data coming from Supabase
-        setCategories((data || []) as Category[]);
+        // Type assertion with proper transformation to ensure it matches Category interface
+        const typedData = (data || []).map(item => ({
+          id: String(item.id),
+          name: item.name,
+          description: item.description,
+          active: item.active !== undefined ? item.active : true
+        })) as Category[];
+
+        setCategories(typedData);
       } catch (err) {
         console.error('Error fetching categories:', err);
         setError(err instanceof Error ? err.message : 'Unknown error occurred');

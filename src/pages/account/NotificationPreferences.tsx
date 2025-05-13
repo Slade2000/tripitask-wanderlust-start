@@ -10,13 +10,29 @@ import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import BottomNav from "@/components/BottomNav";
 
+interface NotificationState {
+  email: {
+    newMessages: boolean;
+    taskUpdates: boolean;
+    offerUpdates: boolean;
+    paymentUpdates: boolean;
+    marketing: boolean;
+  };
+  push: {
+    newMessages: boolean;
+    taskUpdates: boolean;
+    offerUpdates: boolean;
+    paymentUpdates: boolean;
+  };
+}
+
 const NotificationPreferences = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isLoading, setIsLoading] = useState(false);
   
   // State for notification toggles
-  const [notifications, setNotifications] = useState({
+  const [notifications, setNotifications] = useState<NotificationState>({
     email: {
       newMessages: true,
       taskUpdates: true,
@@ -32,12 +48,12 @@ const NotificationPreferences = () => {
     }
   });
   
-  const handleToggle = (type: 'email' | 'push', field: string) => {
+  const handleToggle = (channelType: 'email' | 'push', field: string) => {
     setNotifications(prev => ({
       ...prev,
-      [type]: {
-        ...prev[type],
-        [field]: !prev[type][field as keyof typeof prev[type]]
+      [channelType]: {
+        ...prev[channelType],
+        [field]: !prev[channelType][field as keyof typeof prev[channelType]]
       }
     }));
   };

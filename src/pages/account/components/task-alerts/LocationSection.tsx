@@ -6,22 +6,58 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { useState } from "react";
 
-interface LocationSectionProps {
-  locations: string[];
-  addLocation: (location: string) => void;
-  removeLocation: (location: string) => void;
-  distanceRadius: number[];
-  setDistanceRadius: (radius: number[]) => void;
+interface LocationData {
+  useCurrentLocation: boolean;
+  radius: number;
+  customLocation: string;
 }
 
-const LocationSection = ({
-  locations,
-  addLocation,
-  removeLocation,
-  distanceRadius,
-  setDistanceRadius
-}: LocationSectionProps) => {
+interface LocationSectionProps {
+  locationData?: LocationData;
+  onLocationChange?: (locationData: any) => void;
+}
+
+const LocationSection = ({ locationData, onLocationChange }: LocationSectionProps) => {
+  const [locations, setLocations] = useState<string[]>([]);
   const [newLocation, setNewLocation] = useState("");
+  const [distanceRadius, setDistanceRadius] = useState([30]); // km
+  
+  const addLocation = (location: string) => {
+    if (location && !locations.includes(location)) {
+      const updatedLocations = [...locations, location];
+      setLocations(updatedLocations);
+      
+      if (onLocationChange && locationData) {
+        onLocationChange({
+          ...locationData,
+          customLocation: updatedLocations.join(',')
+        });
+      }
+    }
+  };
+  
+  const removeLocation = (location: string) => {
+    const updatedLocations = locations.filter(loc => loc !== location);
+    setLocations(updatedLocations);
+    
+    if (onLocationChange && locationData) {
+      onLocationChange({
+        ...locationData,
+        customLocation: updatedLocations.join(',')
+      });
+    }
+  };
+  
+  const handleRadiusChange = (values: number[]) => {
+    setDistanceRadius(values);
+    
+    if (onLocationChange && locationData) {
+      onLocationChange({
+        ...locationData,
+        radius: values[0]
+      });
+    }
+  };
 
   const handleAddLocation = () => {
     if (newLocation && !locations.includes(newLocation)) {
@@ -74,7 +110,8 @@ const LocationSection = ({
           defaultValue={distanceRadius}
           max={100}
           step={5}
-          onValueChange={setDistanceRadius}
+          value={distanceRadius}
+          onValueChange={handleRadiusChange}
         />
       </div>
     </div>

@@ -2,51 +2,78 @@
 import { Bell } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { FormLabel } from "@/components/ui/form";
-import { CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 
 interface AlertFrequencySectionProps {
-  alertsEnabled: boolean;
-  setAlertsEnabled: (enabled: boolean) => void;
-  notificationMethod: string;
-  setNotificationMethod: (method: string) => void;
-  frequency: string;
-  setFrequency: (frequency: string) => void;
+  alertsEnabled?: boolean;
+  setAlertsEnabled?: (enabled: boolean) => void;
+  notificationMethod?: string;
+  setNotificationMethod?: (method: string) => void;
+  frequency?: string;
+  setFrequency?: (frequency: string) => void;
+  
+  // For backward compatibility
+  selectedFrequency?: string;
+  options?: { value: string; label: string }[];
+  onFrequencyChange?: (frequency: string) => void;
 }
 
 const AlertFrequencySection = ({
-  alertsEnabled,
+  alertsEnabled = true,
   setAlertsEnabled,
-  notificationMethod,
+  notificationMethod = "both",
   setNotificationMethod,
-  frequency,
-  setFrequency
+  frequency = "daily",
+  setFrequency,
+  selectedFrequency,
+  options,
+  onFrequencyChange
 }: AlertFrequencySectionProps) => {
+  
+  // Use the appropriate state or prop
+  const currentFrequency = selectedFrequency || frequency;
+  
+  // Handle frequency change with proper fallback
+  const handleFrequencyChange = (value: string) => {
+    if (onFrequencyChange) {
+      onFrequencyChange(value);
+    } else if (setFrequency) {
+      setFrequency(value);
+    }
+  };
+  
+  const frequencyOptions = options || [
+    { value: "immediate", label: "Immediate alerts" },
+    { value: "daily", label: "Daily digest" },
+    { value: "weekly", label: "Weekly summary" }
+  ];
+
   return (
-    <>
+    <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center">
             <Bell size={18} className="mr-2" />
-            Task Alerts
+            Alert Frequency
           </CardTitle>
           <Switch 
             checked={alertsEnabled} 
-            onCheckedChange={setAlertsEnabled}
+            onCheckedChange={setAlertsEnabled || (() => {})}
           />
         </div>
         <CardDescription>
-          Get notified when new tasks match your criteria
+          Choose how often you want to receive task alerts
         </CardDescription>
       </CardHeader>
       <CardContent>
         {alertsEnabled && (
-          <div className="space-y-4">
-            <div>
+          <>
+            <div className="mb-4">
               <h3 className="text-sm font-medium mb-2">Notification Method</h3>
               <RadioGroup 
                 value={notificationMethod} 
-                onValueChange={setNotificationMethod}
+                onValueChange={setNotificationMethod || (() => {})}
                 className="flex space-x-4"
               >
                 <div className="flex items-center space-x-2">
@@ -67,28 +94,22 @@ const AlertFrequencySection = ({
             <div>
               <h3 className="text-sm font-medium mb-2">Alert Frequency</h3>
               <RadioGroup 
-                value={frequency} 
-                onValueChange={setFrequency}
+                value={currentFrequency} 
+                onValueChange={handleFrequencyChange}
                 className="flex flex-col space-y-2"
               >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="immediate" id="immediate" />
-                  <FormLabel htmlFor="immediate">Immediate alerts</FormLabel>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="daily" id="daily" />
-                  <FormLabel htmlFor="daily">Daily digest</FormLabel>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="weekly" id="weekly" />
-                  <FormLabel htmlFor="weekly">Weekly summary</FormLabel>
-                </div>
+                {frequencyOptions.map(option => (
+                  <div key={option.value} className="flex items-center space-x-2">
+                    <RadioGroupItem value={option.value} id={option.value} />
+                    <FormLabel htmlFor={option.value}>{option.label}</FormLabel>
+                  </div>
+                ))}
               </RadioGroup>
             </div>
-          </div>
+          </>
         )}
       </CardContent>
-    </>
+    </Card>
   );
 };
 
