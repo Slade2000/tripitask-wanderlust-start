@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 /**
  * Updates the status of an offer (accept or reject)
- * When an offer is accepted, also updates the task status to 'in_progress'
+ * When an offer is accepted, also updates the task status to 'assigned'
  */
 export async function updateOfferStatus(
   offerId: string, 
@@ -35,11 +35,11 @@ export async function updateOfferStatus(
       return { success: false, error: updateOfferError.message };
     }
 
-    // If the offer is accepted, update the task status to 'in_progress'
+    // If the offer is accepted, update the task status to 'assigned'
     if (status === 'accepted') {
       const { error: updateTaskError } = await supabase
         .from('tasks')
-        .update({ status: 'in_progress' })
+        .update({ status: 'assigned' })
         .eq('id', taskId);
 
       if (updateTaskError) {
