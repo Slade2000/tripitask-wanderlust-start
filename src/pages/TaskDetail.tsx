@@ -4,6 +4,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { getTaskById } from "@/services/task/queries/getTaskById";
 import { getTaskOffers } from "@/services/task/offers/queries/getTaskOffers"; 
+import { Button } from "@/components/ui/button";
 import TaskBasicInfo from "@/components/task-detail/TaskBasicInfo";
 import TaskDescription from "@/components/task-detail/TaskDescription";
 import TaskImageGallery from "@/components/task-detail/TaskImageGallery";
