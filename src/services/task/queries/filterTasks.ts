@@ -1,7 +1,6 @@
 
 // Update filter tasks to exclude in_progress and completed tasks
 import { supabase } from "@/integrations/supabase/client";
-import { Task } from "../types";
 
 export interface TaskFilters {
   search?: string;
@@ -18,7 +17,7 @@ export interface TaskFilters {
   offset?: number;
 }
 
-export async function filterTasks(filters: TaskFilters): Promise<Task[]> {
+export async function filterTasks(filters: TaskFilters) {
   try {
     let query = supabase
       .from('tasks')
@@ -79,7 +78,7 @@ export async function filterTasks(filters: TaskFilters): Promise<Task[]> {
       return [];
     }
 
-    return data as unknown as Task[];
+    return data;
   } catch (error) {
     console.error("Error in filterTasks:", error);
     return [];

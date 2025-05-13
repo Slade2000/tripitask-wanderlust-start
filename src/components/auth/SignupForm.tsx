@@ -24,7 +24,7 @@ const SignupForm = () => {
     setLoading(true);
     
     try {
-      const result = await signUp(email, password, fullName);
+      const result = await signUp(email, password, { full_name: fullName });
       if (result.error) {
         setError(result.error.message);
       } else {

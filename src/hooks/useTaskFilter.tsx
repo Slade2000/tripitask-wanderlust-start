@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { getAllAvailableTasks } from "@/services/taskService";
+import { getAllAvailableTasks } from "@/services/task/queries/getAllAvailableTasks";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 

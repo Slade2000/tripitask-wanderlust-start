@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
@@ -26,7 +25,7 @@ const TaskAlerts = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { categories, loading } = useCategories();
+  const { categories, isLoading, error } = useCategories();
   
   // State for alert preferences
   const [alertPreferences, setAlertPreferences] = useState({

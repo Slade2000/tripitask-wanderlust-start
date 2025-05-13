@@ -11,7 +11,7 @@ import TaskActionButtons from "@/components/task-detail/TaskActionButtons";
 import TaskDetailLoading from "@/components/task-detail/TaskDetailLoading";
 import TaskDetailError from "@/components/task-detail/TaskDetailError";
 import { Button } from "@/components/ui/button";
-import { MessageModal } from "@/components/messages/MessageModal";
+import MessageModal from "@/components/messages/MessageModal";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -99,11 +99,11 @@ const TaskDetail = () => {
   };
 
   if (loading) {
-    return <TaskDetailLoading />;
+    return <TaskDetailLoading onBack={() => navigate(-1)} />;
   }
 
   if (error || !task) {
-    return <TaskDetailError error={error || "Task not found"} />;
+    return <TaskDetailError error={error || "Task not found"} onBack={() => navigate(-1)} />;
   }
 
   return (
@@ -137,7 +137,7 @@ const TaskDetail = () => {
               budget={task.budget}
               location={task.location}
               dueDate={task.due_date}
-              category={task.categories?.name}
+              categoryName={task.categories?.name}
             />
             
             <TaskDescription description={task.description} />
@@ -166,7 +166,7 @@ const TaskDetail = () => {
           
           <div className="space-y-6">
             <TaskPosterInfo
-              taskerId={task.user_id}
+              userId={task.user_id}
               taskId={task.id}
             />
             

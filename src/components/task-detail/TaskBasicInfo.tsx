@@ -1,14 +1,19 @@
-
-import { MapPin, Calendar, Tag } from "lucide-react";
+import { MapPin, Calendar, Tag, DollarSign } from "lucide-react";
 import { format } from "date-fns";
 
 interface TaskBasicInfoProps {
+  budget: string;
   location: string;
   dueDate: string;
-  budget: string;
+  categoryName?: string;
 }
 
-export default function TaskBasicInfo({ location, dueDate, budget }: TaskBasicInfoProps) {
+export default function TaskBasicInfo({ 
+  budget, 
+  location, 
+  dueDate,
+  categoryName
+}: TaskBasicInfoProps) {
   const formatDate = (dateString: string) => {
     try {
       return format(new Date(dateString), "PPP");
@@ -19,18 +24,48 @@ export default function TaskBasicInfo({ location, dueDate, budget }: TaskBasicIn
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-      <div className="flex items-center text-gray-600">
-        <MapPin className="h-5 w-5 mr-2" />
-        <span>{location}</span>
-      </div>
-      <div className="flex items-center text-gray-600">
-        <Calendar className="h-5 w-5 mr-2" />
-        <span>Due Date: {formatDate(dueDate)}</span>
-      </div>
-      <div className="flex items-center text-gray-600">
-        <Tag className="h-5 w-5 mr-2" />
-        <span>Budget: ${budget}</span>
+    <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+      <h2 className="text-xl font-semibold mb-4">Task Details</h2>
+      <div className="space-y-3">
+        <div className="flex items-start">
+          <DollarSign className="h-5 w-5 text-teal mr-2 mt-0.5" />
+          <div>
+            <p className="font-medium">Budget</p>
+            <p className="text-gray-700">${budget}</p>
+          </div>
+        </div>
+        
+        <div className="flex items-start">
+          <MapPin className="h-5 w-5 text-teal mr-2 mt-0.5" />
+          <div>
+            <p className="font-medium">Location</p>
+            <p className="text-gray-700">{location}</p>
+          </div>
+        </div>
+        
+        <div className="flex items-start">
+          <Calendar className="h-5 w-5 text-teal mr-2 mt-0.5" />
+          <div>
+            <p className="font-medium">Due Date</p>
+            <p className="text-gray-700">
+              {new Date(dueDate).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+              })}
+            </p>
+          </div>
+        </div>
+        
+        {categoryName && (
+          <div className="flex items-start">
+            <Tag className="h-5 w-5 text-teal mr-2 mt-0.5" />
+            <div>
+              <p className="font-medium">Category</p>
+              <p className="text-gray-700">{categoryName}</p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
