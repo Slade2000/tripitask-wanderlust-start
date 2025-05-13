@@ -41,7 +41,7 @@ export function useCategories() {
         // Transform the database result to match our Category interface
         const typedData: Category[] = [];
         if (Array.isArray(data)) {
-          for (const item of data) {
+          for (const item of data as DatabaseCategory[]) {
             typedData.push({
               id: String(item.id),
               name: item.name,
