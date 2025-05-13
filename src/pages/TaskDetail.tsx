@@ -8,14 +8,12 @@ import TaskBasicInfo from "@/components/task-detail/TaskBasicInfo";
 import TaskDescription from "@/components/task-detail/TaskDescription";
 import TaskImageGallery from "@/components/task-detail/TaskImageGallery";
 import TaskPosterInfo from "@/components/task-detail/TaskPosterInfo";
-import TaskActionButtons from "@/components/task-detail/TaskActionButtons";
 import TaskDetailLoading from "@/components/task-detail/TaskDetailLoading";
 import TaskDetailError from "@/components/task-detail/TaskDetailError";
-import TaskOffersList from "@/components/task-detail/TaskOffersList";
-import { Button } from "@/components/ui/button";
 import MessageModal from "@/components/messages/MessageModal";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import TaskDetailHeader from "@/components/task-detail/TaskDetailHeader";
+import TaskActionSection from "@/components/task-detail/TaskActionSection";
+import TaskOffersSection from "@/components/task-detail/TaskOffersSection";
 
 const TaskDetail = () => {
   const { taskId } = useParams<{ taskId: string }>();
@@ -29,7 +27,6 @@ const TaskDetail = () => {
   const [error, setError] = useState<string | null>(null);
   const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
   const [isTaskPoster, setIsTaskPoster] = useState(false);
-  const [isSubmittingCompletion, setIsSubmittingCompletion] = useState(false);
 
   useEffect(() => {
     const fetchTask = async () => {
@@ -79,7 +76,6 @@ const TaskDetail = () => {
 
   const handleOpenMessageModal = () => {
     if (!user) {
-      toast.error("Please sign in to send messages");
       navigate("/login");
       return;
     }
@@ -89,37 +85,6 @@ const TaskDetail = () => {
 
   const handleCloseMessageModal = () => {
     setIsMessageModalOpen(false);
-  };
-  
-  const handleCompleteTask = async () => {
-    if (!taskId || !user || !isTaskPoster) return;
-    
-    setIsSubmittingCompletion(true);
-    try {
-      // Update task status to completed
-      const { error } = await supabase
-        .from('tasks')
-        .update({ status: 'completed' })
-        .eq('id', taskId)
-        .eq('user_id', user.id); // Ensure the user is the task poster
-        
-      if (error) {
-        throw error;
-      }
-      
-      toast.success("Task marked as completed!");
-      
-      // Refresh task data
-      const updatedTask = await getTaskById(taskId);
-      if (updatedTask) {
-        setTask(updatedTask);
-      }
-    } catch (err) {
-      console.error("Error completing task:", err);
-      toast.error("Error marking task as completed");
-    } finally {
-      setIsSubmittingCompletion(false);
-    }
   };
 
   const refreshOffers = async () => {
@@ -133,6 +98,10 @@ const TaskDetail = () => {
     }
   };
 
+  const handleTaskUpdated = (updatedTask: any) => {
+    setTask(updatedTask);
+  };
+
   if (loading) {
     return <TaskDetailLoading onBack={() => navigate(-1)} />;
   }
@@ -144,23 +113,7 @@ const TaskDetail = () => {
   return (
     <div className="min-h-screen bg-cream p-4">
       <div className="max-w-4xl mx-auto">
-        <div className="mb-6">
-          <button
-            onClick={() => navigate(-1)}
-            className="text-teal hover:text-teal-dark mb-4"
-          >
-            &larr; Back
-          </button>
-          <div className="flex justify-between items-center">
-            <h1 className="text-3xl font-bold text-teal">{task.title}</h1>
-            <div className="px-3 py-1 rounded-full text-sm font-medium bg-teal-100 text-teal-800">
-              {task.status === 'open' && 'Open'}
-              {task.status === 'in_progress' && 'In Progress'}
-              {task.status === 'completed' && 'Completed'}
-              {task.status === 'cancelled' && 'Cancelled'}
-            </div>
-          </div>
-        </div>
+        <TaskDetailHeader title={task.title} status={task.status} />
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="md:col-span-2 space-y-6">
@@ -198,18 +151,13 @@ const TaskDetail = () => {
               </div>
             )}
             
-            {/* Show offers section only to task poster */}
-            {isTaskPoster && (
-              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-                <h2 className="text-xl font-semibold mb-4">Offers</h2>
-                <TaskOffersList 
-                  taskId={taskId || ''} 
-                  offers={offers}
-                  loading={offersLoading}
-                  onRefresh={refreshOffers}
-                />
-              </div>
-            )}
+            <TaskOffersSection 
+              taskId={taskId || ''}
+              isTaskPoster={isTaskPoster}
+              offers={offers}
+              offersLoading={offersLoading}
+              onRefreshOffers={refreshOffers}
+            />
           </div>
           
           <div className="space-y-6">
@@ -218,16 +166,12 @@ const TaskDetail = () => {
               taskId={task.id}
             />
             
-            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-              <TaskActionButtons
-                taskId={task.id}
-                isProviderPage={!isTaskPoster}
-                taskStatus={task.status}
-                isTaskPoster={isTaskPoster}
-                onMessageClick={handleOpenMessageModal}
-                onCompleteTask={handleCompleteTask}
-              />
-            </div>
+            <TaskActionSection 
+              task={task}
+              isTaskPoster={isTaskPoster} 
+              onOpenMessageModal={handleOpenMessageModal}
+              onTaskUpdated={handleTaskUpdated}
+            />
           </div>
         </div>
       </div>
