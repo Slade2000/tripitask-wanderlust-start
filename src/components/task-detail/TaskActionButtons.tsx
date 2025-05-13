@@ -9,6 +9,7 @@ interface TaskActionButtonsProps {
   isTaskPoster: boolean;
   onMessageClick: () => void;
   onCompleteTask?: () => void;
+  hasAcceptedOffer?: boolean;
 }
 
 export default function TaskActionButtons({ 
@@ -17,7 +18,8 @@ export default function TaskActionButtons({
   taskStatus, 
   isTaskPoster,
   onMessageClick,
-  onCompleteTask
+  onCompleteTask,
+  hasAcceptedOffer = false
 }: TaskActionButtonsProps) {
   const navigate = useNavigate();
 
@@ -43,7 +45,7 @@ export default function TaskActionButtons({
   }
 
   // If provider view and task is open, show submit offer button
-  if (isProviderPage && taskStatus === "open") {
+  if (isProviderPage && taskStatus === "open" && !hasAcceptedOffer) {
     return (
       <div className="flex space-x-2">
         <Button

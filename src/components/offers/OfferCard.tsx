@@ -11,6 +11,7 @@ interface OfferCardProps {
   onReject: () => void;
   onViewDetails: () => void;
   isUpdating: boolean | string | null;
+  disableActions?: boolean;
 }
 
 export default function OfferCard({ 
@@ -18,7 +19,8 @@ export default function OfferCard({
   onAccept, 
   onReject, 
   onViewDetails, 
-  isUpdating 
+  isUpdating,
+  disableActions = false
 }: OfferCardProps) {
   // Use the provider data that's already included in the offer object
   const provider = offer.provider || {
@@ -94,7 +96,7 @@ export default function OfferCard({
       )}
       
       <div className="mt-4 flex justify-end gap-2">
-        {offer.status === 'pending' && (
+        {offer.status === 'pending' && !disableActions && (
           <>
             <Button 
               onClick={onReject}

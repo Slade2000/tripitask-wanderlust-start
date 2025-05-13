@@ -2,7 +2,7 @@
 import { Offer } from "@/types/offer";
 import OfferCard from "@/components/offers/OfferCard";
 import EmptyOffers from "@/components/offers/EmptyOffers";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { updateOfferStatus } from "@/services/task/offers/queries/updateOfferStatus";
 
@@ -22,8 +22,17 @@ export default function TaskOffersList({
   const { toast } = useToast();
   const [updatingOfferId, setUpdatingOfferId] = useState<string | null>(null);
   const [showDebugInfo, setShowDebugInfo] = useState<boolean>(false);
+  const [hasAcceptedOffer, setHasAcceptedOffer] = useState<boolean>(false);
   
   console.log("TaskOffersList received offers:", offers);
+
+  // Check if any offer has been accepted
+  useEffect(() => {
+    if (offers && Array.isArray(offers)) {
+      const acceptedOffer = offers.find(offer => offer.status === 'accepted');
+      setHasAcceptedOffer(!!acceptedOffer);
+    }
+  }, [offers]);
   
   const handleViewOfferDetails = (offerId: string) => {
     console.log("View details for offer:", offerId);
@@ -36,7 +45,7 @@ export default function TaskOffersList({
   };
 
   const handleAcceptOffer = async (offerId: string) => {
-    if (!taskId) return;
+    if (!taskId || hasAcceptedOffer) return;
     
     console.log("Accepting offer:", offerId);
     setUpdatingOfferId(offerId);
@@ -71,7 +80,7 @@ export default function TaskOffersList({
   };
 
   const handleRejectOffer = async (offerId: string) => {
-    if (!taskId) return;
+    if (!taskId || hasAcceptedOffer) return;
     
     console.log("Rejecting offer:", offerId);
     setUpdatingOfferId(offerId);
@@ -121,6 +130,12 @@ export default function TaskOffersList({
   
   return (
     <div className="space-y-4">
+      {hasAcceptedOffer && (
+        <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded mb-4">
+          An offer has been accepted for this task. No further actions can be taken.
+        </div>
+      )}
+
       {offers.map((offer) => (
         <OfferCard
           key={offer.id}
@@ -129,6 +144,7 @@ export default function TaskOffersList({
           onReject={() => handleRejectOffer(offer.id)}
           onViewDetails={() => handleViewOfferDetails(offer.id)}
           isUpdating={updatingOfferId === offer.id}
+          disableActions={hasAcceptedOffer || offer.status !== 'pending'}
         />
       ))}
     </div>

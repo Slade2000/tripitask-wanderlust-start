@@ -12,13 +12,15 @@ interface TaskActionSectionProps {
   isTaskPoster: boolean;
   onOpenMessageModal: () => void;
   onTaskUpdated: (updatedTask: any) => void;
+  hasAcceptedOffer?: boolean;
 }
 
 export default function TaskActionSection({ 
   task, 
   isTaskPoster, 
   onOpenMessageModal, 
-  onTaskUpdated 
+  onTaskUpdated,
+  hasAcceptedOffer = false
 }: TaskActionSectionProps) {
   const navigate = useNavigate();
   const [isSubmittingCompletion, setIsSubmittingCompletion] = useState(false);
@@ -79,7 +81,7 @@ export default function TaskActionSection({
   }
 
   // If provider view and task is open, show submit offer button
-  if (!isTaskPoster && task.status === "open") {
+  if (!isTaskPoster && task.status === "open" && !hasAcceptedOffer) {
     return (
       <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
         <div className="flex flex-col sm:flex-row gap-4">
@@ -111,6 +113,7 @@ export default function TaskActionSection({
         isTaskPoster={isTaskPoster}
         onMessageClick={onOpenMessageModal}
         onCompleteTask={handleCompleteTask}
+        hasAcceptedOffer={hasAcceptedOffer}
       />
     </div>
   );
