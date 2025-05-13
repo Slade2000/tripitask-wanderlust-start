@@ -1,5 +1,7 @@
+
 import TaskActionButtons from "./TaskActionButtons";
 import { useTaskCompletion } from "@/hooks/useTaskCompletion";
+
 interface TaskActionSectionProps {
   task: any;
   isTaskPoster: boolean;
@@ -7,6 +9,7 @@ interface TaskActionSectionProps {
   onTaskUpdated: (updatedTask: any) => void;
   hasAcceptedOffer?: boolean;
 }
+
 export default function TaskActionSection({
   task,
   isTaskPoster,
@@ -18,5 +21,20 @@ export default function TaskActionSection({
     isSubmittingCompletion,
     handleCompleteTask
   } = useTaskCompletion(task.id, task.user_id, onTaskUpdated);
-  return;
+  
+  return (
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+      <h3 className="text-lg font-medium mb-3">Task Actions</h3>
+      <TaskActionButtons
+        taskId={task.id}
+        isProviderPage={!isTaskPoster}
+        taskStatus={task.status}
+        isTaskPoster={isTaskPoster}
+        onMessageClick={onOpenMessageModal}
+        onCompleteTask={handleCompleteTask}
+        isSubmittingCompletion={isSubmittingCompletion}
+        hasAcceptedOffer={hasAcceptedOffer}
+      />
+    </div>
+  );
 }
