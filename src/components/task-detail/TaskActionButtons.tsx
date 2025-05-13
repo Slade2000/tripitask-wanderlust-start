@@ -24,7 +24,7 @@ export default function TaskActionButtons({
   const navigate = useNavigate();
 
   // If user is task poster and task is in progress, show complete button
-  if (isTaskPoster && taskStatus === "in_progress" && onCompleteTask) {
+  if (isTaskPoster && taskStatus === "in_progress" || isTaskPoster && taskStatus === "assigned") {
     return (
       <div className="flex space-x-2">
         <Button
@@ -60,6 +60,21 @@ export default function TaskActionButtons({
           className="border-teal text-teal hover:bg-teal/10"
         >
           Ask Questions
+        </Button>
+      </div>
+    );
+  }
+
+  // If provider view and task is in progress, show only message button
+  if (isProviderPage && (taskStatus === "in_progress" || taskStatus === "assigned")) {
+    return (
+      <div className="flex space-x-2">
+        <Button
+          onClick={onMessageClick}
+          className="w-full border-teal text-teal hover:bg-teal/10"
+          variant="outline"
+        >
+          Messages
         </Button>
       </div>
     );

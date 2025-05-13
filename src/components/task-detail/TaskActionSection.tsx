@@ -56,54 +56,7 @@ export default function TaskActionSection({
     }
   };
 
-  // If user is task poster and task is in progress, show complete button
-  if (isTaskPoster && task.status === "in_progress") {
-    return (
-      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-        <div className="flex space-x-2">
-          <Button
-            onClick={handleCompleteTask}
-            className="w-full bg-green-600 hover:bg-green-700 text-white"
-            disabled={isSubmittingCompletion}
-          >
-            {isSubmittingCompletion ? "Processing..." : "Complete Task"}
-          </Button>
-          <Button
-            onClick={onOpenMessageModal}
-            variant="outline"
-            className="border-teal text-teal hover:bg-teal/10"
-          >
-            Messages
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  // If provider view and task is open, show submit offer button
-  if (!isTaskPoster && task.status === "open" && !hasAcceptedOffer) {
-    return (
-      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <Button
-            onClick={() => navigate(`/tasks/${task.id}/submit-offer`)}
-            className="bg-teal hover:bg-teal-dark"
-          >
-            Submit an Offer
-          </Button>
-          <Button
-            onClick={onOpenMessageModal}
-            variant="outline"
-            className="border-teal text-teal hover:bg-teal/10"
-          >
-            Ask a Question
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  // For closed tasks or any other scenarios
+  // For simplicity and to avoid duplication, use the TaskActionButtons component
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
       <TaskActionButtons

@@ -43,8 +43,8 @@ const TaskDetail = () => {
           // Check if the current user is the task poster
           setIsTaskPoster(user?.id === taskData.user_id);
           
-          // Check if the task status indicates an accepted offer
-          setHasAcceptedOffer(taskData.status === 'assigned');
+          // Check if the task status indicates an accepted offer ("assigned" status)
+          setHasAcceptedOffer(taskData.status === 'assigned' || taskData.status === 'in_progress');
         } else {
           setError("Task not found");
         }
@@ -70,7 +70,7 @@ const TaskDetail = () => {
         
         // Check if there's any accepted offer
         const acceptedOffer = offersData?.find((offer: any) => offer.status === 'accepted');
-        setHasAcceptedOffer(!!acceptedOffer);
+        setHasAcceptedOffer(!!acceptedOffer || (task?.status === 'assigned' || task?.status === 'in_progress'));
       } catch (err) {
         console.error("Error fetching offers:", err);
       } finally {
@@ -81,7 +81,7 @@ const TaskDetail = () => {
     if (isTaskPoster) {
       fetchOffers();
     }
-  }, [taskId, isTaskPoster]);
+  }, [taskId, isTaskPoster, task?.status]);
 
   const handleOpenMessageModal = () => {
     if (!user) {
@@ -105,7 +105,7 @@ const TaskDetail = () => {
       
       // Update the hasAcceptedOffer state
       const acceptedOffer = offersData?.find((offer: any) => offer.status === 'accepted');
-      setHasAcceptedOffer(!!acceptedOffer);
+      setHasAcceptedOffer(!!acceptedOffer || (task?.status === 'assigned' || task?.status === 'in_progress'));
     } catch (err) {
       console.error("Error refreshing offers:", err);
     }
@@ -114,7 +114,7 @@ const TaskDetail = () => {
   const handleTaskUpdated = (updatedTask: any) => {
     setTask(updatedTask);
     // Update accepted offer state based on task status
-    setHasAcceptedOffer(updatedTask.status === 'assigned');
+    setHasAcceptedOffer(updatedTask.status === 'assigned' || updatedTask.status === 'in_progress');
   };
 
   if (loading) {
@@ -145,7 +145,7 @@ const TaskDetail = () => {
             
             <TaskDescription description={task.description} />
             
-            {task.status === 'open' && user?.id !== task.user_id && !hasAcceptedOffer && (
+            {task.status === 'open' && !isTaskPoster && !hasAcceptedOffer && (
               <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
                 <h2 className="text-xl font-semibold mb-4">Interested in this task?</h2>
                 <div className="flex flex-col sm:flex-row gap-4">
@@ -166,7 +166,7 @@ const TaskDetail = () => {
               </div>
             )}
             
-            {hasAcceptedOffer && !isTaskPoster && task.status !== 'completed' && (
+            {hasAcceptedOffer && !isTaskPoster && (
               <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded">
                 <h3 className="font-semibold mb-1">This task has been assigned</h3>
                 <p>An offer has been accepted for this task. No new offers can be submitted.</p>
