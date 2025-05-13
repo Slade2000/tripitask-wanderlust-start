@@ -53,14 +53,23 @@ const NotificationPreferences = () => {
   });
   
   const handleToggle = (channelType: 'email' | 'push', field: string) => {
-    setNotifications(prev => ({
-      ...prev,
-      [channelType]: {
-        ...prev[channelType],
-        // Fixed the type error by using an indexed access type with keyof
-        [field]: !prev[channelType][field as keyof typeof prev[channelType]]
-      }
-    }));
+    setNotifications(prev => {
+      // Create a type-safe copy of the specific channel's settings
+      const channelSettings = channelType === 'email' 
+        ? { ...prev.email }
+        : { ...prev.push };
+      
+      // Update the specific field in the copied settings
+      // Using a type assertion to tell TypeScript this is a valid key
+      const keyField = field as keyof typeof channelSettings;
+      channelSettings[keyField] = !channelSettings[keyField];
+      
+      // Return the updated state
+      return {
+        ...prev,
+        [channelType]: channelSettings
+      };
+    });
   };
   
   const handleSave = async () => {
