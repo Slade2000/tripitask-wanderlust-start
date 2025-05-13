@@ -9,6 +9,16 @@ export interface Category {
   active: boolean;
 }
 
+// Define the actual shape of data coming from the database
+interface DatabaseCategory {
+  id: number | string;
+  name: string;
+  created_at: string;
+  parent_id?: number;
+  description?: string | null;
+  active?: boolean;
+}
+
 export function useCategories() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -28,12 +38,12 @@ export function useCategories() {
           throw error;
         }
 
-        // Type assertion with proper transformation to ensure it matches Category interface
-        const typedData = (data || []).map(item => ({
+        // Transform the database result to match our Category interface
+        const typedData = (data || []).map((item: DatabaseCategory) => ({
           id: String(item.id),
           name: item.name,
-          description: item.description,
-          active: item.active !== undefined ? item.active : true
+          description: item.description || null,
+          active: item.active !== undefined ? Boolean(item.active) : true
         })) as Category[];
 
         setCategories(typedData);

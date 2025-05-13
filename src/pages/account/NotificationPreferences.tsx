@@ -10,20 +10,24 @@ import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import BottomNav from "@/components/BottomNav";
 
+interface EmailNotifications {
+  newMessages: boolean;
+  taskUpdates: boolean;
+  offerUpdates: boolean;
+  paymentUpdates: boolean;
+  marketing: boolean;
+}
+
+interface PushNotifications {
+  newMessages: boolean;
+  taskUpdates: boolean;
+  offerUpdates: boolean;
+  paymentUpdates: boolean;
+}
+
 interface NotificationState {
-  email: {
-    newMessages: boolean;
-    taskUpdates: boolean;
-    offerUpdates: boolean;
-    paymentUpdates: boolean;
-    marketing: boolean;
-  };
-  push: {
-    newMessages: boolean;
-    taskUpdates: boolean;
-    offerUpdates: boolean;
-    paymentUpdates: boolean;
-  };
+  email: EmailNotifications;
+  push: PushNotifications;
 }
 
 const NotificationPreferences = () => {
@@ -53,6 +57,7 @@ const NotificationPreferences = () => {
       ...prev,
       [channelType]: {
         ...prev[channelType],
+        // Fixed the type error by using an indexed access type with keyof
         [field]: !prev[channelType][field as keyof typeof prev[channelType]]
       }
     }));
