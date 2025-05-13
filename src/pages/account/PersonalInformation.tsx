@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft, RefreshCcw } from "lucide-react";
@@ -7,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import BottomNav from "@/components/BottomNav";
 import { Profile } from "@/contexts/auth/types";
+import { User } from "@/types/user";
 
 // Import the refactored components
 import ProfileHeader from "./components/profile/ProfileHeader";
@@ -108,7 +108,7 @@ const PersonalInformation = () => {
           </div>
         ) : isEditMode ? (
           <ProfileForm 
-            user={user}
+            user={user as User}
             formData={formData}
             loading={loading}
             setFormData={setFormData}

@@ -7,8 +7,8 @@ export interface User {
     avatar_url?: string;
     [key: string]: any;
   };
-  app_metadata?: Record<string, any>;
-  aud?: string;
-  created_at?: string;
+  app_metadata: Record<string, any>; // Changed from optional to required
+  aud: string; // Changed from optional to required
+  created_at: string; // Changed from optional to required
   [key: string]: any;
 }

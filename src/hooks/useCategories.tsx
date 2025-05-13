@@ -9,7 +9,7 @@ export interface Category {
   active: boolean;
 }
 
-// Define a simpler interface for database data to avoid recursive type issues
+// Simple interface for database data avoiding recursive type issues
 interface DatabaseCategory {
   id: number | string;
   name: string;
@@ -42,17 +42,15 @@ export function useCategories() {
         const typedData: Category[] = [];
         
         if (Array.isArray(data)) {
-          // Use a simple type assertion without complex nesting
-          const categoryData = data as any[];
-          
-          for (const item of categoryData) {
+          // Avoid complex type assertions by explicitly mapping properties
+          data.forEach(item => {
             typedData.push({
               id: String(item.id),
               name: item.name,
               description: item.description || null,
               active: item.active !== undefined ? Boolean(item.active) : true
             });
-          }
+          });
         }
 
         setCategories(typedData);
