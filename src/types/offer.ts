@@ -4,6 +4,7 @@ export interface Offer {
   task_id: string;
   provider_id: string;
   amount: number;
+  net_amount?: number; // Amount after commission
   expected_delivery_date: string;
   message?: string;
   status: 'pending' | 'accepted' | 'rejected';

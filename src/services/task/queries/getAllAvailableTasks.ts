@@ -15,11 +15,13 @@ export async function getAllAvailableTasks(filters: TaskFilterParams = {}) {
         categories(name, description)
       `);
     
-    // Only filter by status if we're not in development mode
-    // For testing, we'll show all tasks regardless of status
-    // Remove this condition in production
+    // Only show tasks with status 'open' to prevent completed or in progress tasks from showing
+    // Remove this condition in development mode
     if (import.meta.env.PROD) {
       query = query.eq('status', 'open');
+    } else {
+      // Even in development, don't show tasks that aren't available anymore
+      query = query.not('status', 'eq', 'completed');
     }
     
     // Filter out current user's tasks if userId is provided

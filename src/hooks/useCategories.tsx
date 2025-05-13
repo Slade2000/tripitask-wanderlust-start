@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
+// Define the Category interface for the frontend
 export interface Category {
   id: string;
   name: string;
@@ -13,57 +14,56 @@ export interface Category {
 interface DatabaseCategory {
   id: string;
   name: string;
-  created_at: string;
-  parent_id?: string | null;
   description: string | null;
   active: boolean;
+  created_at: string;
+  parent_id?: string | null;
 }
 
 export function useCategories() {
   const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    async function fetchCategories() {
+    const fetchCategories = async () => {
       try {
-        setLoading(true);
+        setIsLoading(true);
+        
+        // Use explicit column names to avoid type issues
         const { data, error } = await supabase
           .from('categories')
-          .select('*')
-          .eq('active', true)
-          .order('name');
-
+          .select('id, name, description, active, created_at, parent_id');
+          
         if (error) {
           throw error;
         }
-
-        // Transform the database result to match our Category interface
+        
         const typedData: Category[] = [];
         
         if (Array.isArray(data)) {
-          // Explicitly map properties to avoid type recursion issues
-          data.forEach((item: DatabaseCategory) => {
+          // Map the data to our Category interface
+          data.forEach((item) => {
             typedData.push({
-              id: String(item.id),
+              id: item.id,
               name: item.name,
               description: item.description,
               active: item.active !== undefined ? Boolean(item.active) : true
             });
           });
         }
-
+        
         setCategories(typedData);
       } catch (err) {
-        console.error('Error fetching categories:', err);
-        setError(err instanceof Error ? err.message : 'Unknown error occurred');
+        console.error("Error fetching categories:", err);
+        setError(err instanceof Error ? err : new Error(String(err)));
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
-    }
+    };
 
     fetchCategories();
   }, []);
 
-  return { categories, loading, error };
+  return { categories, isLoading, error };
 }

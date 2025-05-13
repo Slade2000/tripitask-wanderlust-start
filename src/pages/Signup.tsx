@@ -1,10 +1,12 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { UserPlus, Facebook, Mail } from "lucide-react";
+import { UserPlus, Facebook, Mail, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -14,7 +16,21 @@ const Signup = () => {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [signupSuccess, setSignupSuccess] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { signUp, isLoading, signInWithProvider } = useAuth();
+
+  useEffect(() => {
+    if (signupSuccess) {
+      // Redirect to login page after 3 seconds
+      const timer = setTimeout(() => {
+        navigate('/login');
+      }, 3000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [signupSuccess, navigate]);
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,10 +41,17 @@ const Signup = () => {
       return;
     }
     
-    await signUp(email, password, { 
+    const result = await signUp(email, password, { 
       first_name: firstName, 
       last_name: lastName 
     });
+
+    if (result.success) {
+      setSignupSuccess(true);
+      toast.success("Account created successfully! Redirecting to login...");
+    } else if (result.error) {
+      toast.error(result.error.message || "Failed to create account");
+    }
   };
 
   const handleGoogleLogin = async () => {
@@ -37,6 +60,14 @@ const Signup = () => {
 
   const handleFacebookLogin = async () => {
     await signInWithProvider("facebook");
+  };
+
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
+
+  const toggleConfirmPasswordVisibility = () => {
+    setShowConfirmPassword(!showConfirmPassword);
   };
 
   return (
@@ -60,7 +91,7 @@ const Signup = () => {
                   placeholder="John"
                   required
                   className="bg-cream/50"
-                  disabled={isLoading}
+                  disabled={isLoading || signupSuccess}
                 />
               </div>
               
@@ -74,7 +105,7 @@ const Signup = () => {
                   placeholder="Doe"
                   required
                   className="bg-cream/50"
-                  disabled={isLoading}
+                  disabled={isLoading || signupSuccess}
                 />
               </div>
             </div>
@@ -89,43 +120,61 @@ const Signup = () => {
                 placeholder="hello@example.com"
                 required
                 className="bg-cream/50"
-                disabled={isLoading}
+                disabled={isLoading || signupSuccess}
               />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                required
-                className="bg-cream/50"
-                disabled={isLoading}
-              />
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  required
+                  className="bg-cream/50"
+                  disabled={isLoading || signupSuccess}
+                />
+                <button 
+                  type="button"
+                  className="absolute right-2 top-2 text-gray-500 hover:text-gray-700"
+                  onClick={togglePasswordVisibility}
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="confirmPassword">Confirm Password</Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="••••••••"
-                required
-                className="bg-cream/50"
-                disabled={isLoading}
-              />
+              <div className="relative">
+                <Input
+                  id="confirmPassword"
+                  type={showConfirmPassword ? "text" : "password"}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="••••••••"
+                  required
+                  className="bg-cream/50"
+                  disabled={isLoading || signupSuccess}
+                />
+                <button 
+                  type="button"
+                  className="absolute right-2 top-2 text-gray-500 hover:text-gray-700"
+                  onClick={toggleConfirmPasswordVisibility}
+                >
+                  {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
               {error && <p className="text-red-500 text-sm">{error}</p>}
             </div>
 
             <Button 
               type="submit" 
               className="w-full bg-gold hover:bg-orange text-teal-dark"
-              disabled={isLoading}
+              disabled={isLoading || signupSuccess}
             >
               <UserPlus className="mr-2" /> {isLoading ? 'Creating account...' : 'Sign Up with Email'}
             </Button>
@@ -146,7 +195,7 @@ const Signup = () => {
               type="button"
               onClick={handleGoogleLogin}
               className="w-full bg-white text-gray-700 border border-gray-300 hover:bg-gray-100"
-              disabled={isLoading}
+              disabled={isLoading || signupSuccess}
             >
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="24px" height="24px" className="mr-2">
                 <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z" />
@@ -161,7 +210,7 @@ const Signup = () => {
               type="button"
               onClick={handleFacebookLogin}
               className="w-full bg-[#1877F2] hover:bg-[#166FE5] text-white"
-              disabled={isLoading}
+              disabled={isLoading || signupSuccess}
             >
               <Facebook className="mr-2" />
               Sign up with Facebook

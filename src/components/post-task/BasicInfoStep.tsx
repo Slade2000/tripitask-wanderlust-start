@@ -1,184 +1,195 @@
 
-import { useState, useRef } from "react";
+import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Camera, Image, Upload, Plus } from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { useCategories, Category } from "@/hooks/useCategories";
+import { Textarea } from "@/components/ui/textarea";
+import { usePostTask } from "@/contexts/PostTaskContext";
+import { useCategories } from "@/hooks/useCategories";
+import CommissionCalculator from "@/components/commission/CommissionCalculator";
 
-export interface BasicInfoFormData {
-  title: string;
-  category_id: string;
-  photos: File[];
-  budget: string;
-}
-
-export interface BasicInfoProps {
-  initialData: {
-    title: string;
-    category_id?: string;
-    photos: File[];
-    budget: string;
-  };
-  onSubmit: (data: BasicInfoFormData) => void;
-  onBack?: () => void; // Added optional back handler
-}
-
-const BasicInfoStep = ({
-  onSubmit,
-  initialData,
-  onBack
-}: BasicInfoProps) => {
-  const [title, setTitle] = useState(initialData.title);
-  const [categoryId, setCategoryId] = useState(initialData.category_id || "");
-  const [photos, setPhotos] = useState<File[]>(initialData.photos);
-  const [budget, setBudget] = useState(initialData.budget);
-  const [titleError, setTitleError] = useState("");
-  const [categoryError, setCategoryError] = useState("");
+const BasicInfoStep = () => {
+  const { taskData, setTaskData, setCurrentStep } = usePostTask();
+  const { categories, isLoading } = useCategories();
+  const [uploadingPhotos, setUploadingPhotos] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const cameraInputRef = useRef<HTMLInputElement>(null);
-  const { categories, loading: categoriesLoading } = useCategories();
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const fileArray = Array.from(e.target.files);
-      // Limit to 5 photos max
-      const newPhotos = [...photos, ...fileArray].slice(0, 5);
-      setPhotos(newPhotos);
-    }
+  
+  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setTaskData({ ...taskData, title: e.target.value });
   };
-
-  const removePhoto = (index: number) => {
-    setPhotos(photos.filter((_, i) => i !== index));
+  
+  const handleDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setTaskData({ ...taskData, description: e.target.value });
   };
-
-  const handleSubmit = () => {
-    let hasError = false;
-    
-    if (!title.trim()) {
-      setTitleError("Please enter a task title");
-      hasError = true;
-    }
-    
-    if (!categoryId) {
-      setCategoryError("Please select a category");
-      hasError = true;
+  
+  const handleBudgetChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const budgetValue = e.target.value.replace(/[^0-9.]/g, '');
+    setTaskData({ ...taskData, budget: budgetValue });
+  };
+  
+  const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setTaskData({ ...taskData, category_id: e.target.value });
+  };
+  
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) {
+      return;
     }
     
-    if (hasError) return;
-
-    onSubmit({
-      title,
-      category_id: categoryId,
-      photos,
-      budget
-    });
+    const newFiles = Array.from(e.target.files);
+    
+    // Limit to 5 photos total
+    const updatedPhotos = [...taskData.photos || [], ...newFiles].slice(0, 5);
+    setTaskData({ ...taskData, photos: updatedPhotos });
   };
-
-  const handleUploadClick = () => {
-    fileInputRef.current?.click();
+  
+  const handleRemovePhoto = (index: number) => {
+    const updatedPhotos = [...taskData.photos || []];
+    updatedPhotos.splice(index, 1);
+    setTaskData({ ...taskData, photos: updatedPhotos });
   };
-
-  const handleCameraClick = () => {
-    cameraInputRef.current?.click();
+  
+  const handleNextStep = () => {
+    setCurrentStep("location-date");
   };
-
-  return <div className="space-y-6">
-      <div className="space-y-2">
-        <h2 className="text-xl font-semibold text-teal-dark">
-          What do you need help with?
-        </h2>
-        <div>
-          <Input placeholder="Give your task a title" 
-            value={title} 
-            onChange={e => {
-              setTitle(e.target.value);
-              setTitleError("");
-            }} 
-            className={`text-base bg-white ${titleError ? "border-red" : ""}`} 
+  
+  return (
+    <div className="mt-8">
+      <div className="space-y-6">
+        <div className="space-y-2">
+          <Label htmlFor="title">Task Title</Label>
+          <Input
+            id="title"
+            value={taskData.title}
+            onChange={handleTitleChange}
+            placeholder="e.g., Help moving furniture"
+            className="bg-white"
+            required
           />
-          {titleError && <p className="text-sm text-red-500 mt-1">{titleError}</p>}
         </div>
-      </div>
-
-      {/* Category selection */}
-      <div className="space-y-2">
-        <Label htmlFor="category" className="text-teal-dark">Category</Label>
-        <Select 
-          value={categoryId}
-          onValueChange={(value) => {
-            setCategoryId(value);
-            setCategoryError("");
-          }}
-        >
-          <SelectTrigger className={`bg-white ${categoryError ? "border-red-500" : ""}`}>
-            <SelectValue placeholder="Select a category" />
-          </SelectTrigger>
-          <SelectContent>
-            {categoriesLoading ? (
-              <SelectItem value="loading" disabled>Loading categories...</SelectItem>
-            ) : (
-              categories.map((category: Category) => (
-                <SelectItem key={category.id} value={category.id}>
-                  {category.name}
-                </SelectItem>
-              ))
+        
+        <div className="space-y-2">
+          <Label htmlFor="description">Task Description</Label>
+          <Textarea
+            id="description"
+            value={taskData.description}
+            onChange={handleDescriptionChange}
+            placeholder="Describe what you need help with. Be specific about requirements and expectations."
+            className="min-h-[120px] bg-white"
+            required
+          />
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <Label htmlFor="budget">Budget ($)</Label>
+            <div className="flex items-center">
+              <span className="mr-2">$</span>
+              <Input
+                id="budget"
+                type="text"
+                value={taskData.budget}
+                onChange={handleBudgetChange}
+                placeholder="Enter amount"
+                className="bg-white"
+                required
+              />
+            </div>
+            {taskData.budget && parseFloat(taskData.budget) > 0 && (
+              <CommissionCalculator amount={parseFloat(taskData.budget)} />
             )}
-          </SelectContent>
-        </Select>
-        {categoryError && <p className="text-sm text-red-500">{categoryError}</p>}
-      </div>
-
-      <div className="space-y-3">
-        <Label className="text-teal-dark">Upload Photos (Optional)</Label>
-        <div className="flex flex-wrap gap-2 justify-center">
-          {/* Display photo previews */}
-          {photos.map((photo, index) => <div key={index} className="relative w-20 h-20 border rounded-md overflow-hidden">
-              <img src={URL.createObjectURL(photo)} alt={`uploaded preview ${index + 1}`} className="w-full h-full object-cover" />
-              <button onClick={() => removePhoto(index)} className="absolute top-0.5 right-0.5 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center">
-                ×
-              </button>
-            </div>)}
+          </div>
           
-          {/* Add photo buttons directly in the UI instead of in a dialog */}
-          {photos.length < 5 && <div className="flex gap-2">
-              <Button onClick={handleCameraClick} variant="outline" className="h-20 w-20 flex flex-col items-center justify-center">
-                <Camera className="h-5 w-5 mb-1" />
-                <span className="text-xs">Take Photo</span>
-              </Button>
-              <Button onClick={handleUploadClick} variant="outline" className="h-20 w-20 flex flex-col items-center justify-center">
-                <Image className="h-5 w-5 mb-1" />
-                <span className="text-xs">Add Photo</span>
-              </Button>
-            </div>}
+          <div className="space-y-2">
+            <Label htmlFor="category">Category</Label>
+            <select
+              id="category"
+              value={taskData.category_id}
+              onChange={handleCategoryChange}
+              className="w-full h-10 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal bg-white"
+              required
+            >
+              <option value="">Select a category</option>
+              {isLoading ? (
+                <option value="" disabled>Loading categories...</option>
+              ) : (
+                categories.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))
+              )}
+            </select>
+          </div>
         </div>
-        <p className="text-xs text-teal-dark/70">
-          You can upload up to 5 photos
-        </p>
-        <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" multiple />
-        <input ref={cameraInputRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" capture="environment" />
-      </div>
-
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <Label htmlFor="budget" className="text-teal-dark">
-            Set your Budget (AUD)
-          </Label>
-          <Input id="budget" type="number" placeholder="Enter amount" value={budget} onChange={e => setBudget(e.target.value)} className="text-base bg-white max-w-40" />
+        
+        <div className="space-y-2">
+          <Label htmlFor="photos">Task Photos (Optional)</Label>
+          <p className="text-sm text-gray-500">
+            Upload up to 5 photos that help explain your task
+          </p>
+          
+          <div className="mt-2 flex flex-wrap gap-4">
+            {taskData.photos && taskData.photos.map((photo, index) => (
+              <div key={index} className="relative">
+                <div className="h-24 w-24 border rounded-lg overflow-hidden bg-white">
+                  <img
+                    src={photo instanceof File ? URL.createObjectURL(photo) : photo}
+                    alt={`Task photo ${index + 1}`}
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleRemovePhoto(index)}
+                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center"
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+            
+            {(!taskData.photos || taskData.photos.length < 5) && (
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="h-24 w-24 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 hover:border-gray-400 transition-colors"
+                disabled={uploadingPhotos}
+              >
+                {uploadingPhotos ? (
+                  <div className="animate-spin h-5 w-5 border-2 border-teal border-t-transparent rounded-full"></div>
+                ) : (
+                  <span className="text-2xl">+</span>
+                )}
+              </button>
+            )}
+            
+            <input
+              ref={fileInputRef}
+              type="file"
+              id="photos"
+              multiple
+              accept="image/*"
+              className="hidden"
+              onChange={handlePhotoUpload}
+              disabled={uploadingPhotos}
+            />
+          </div>
+        </div>
+        
+        <div className="pt-4">
+          <Button
+            type="button"
+            onClick={handleNextStep}
+            className="w-full bg-teal hover:bg-teal-dark"
+            disabled={!taskData.title || !taskData.description || !taskData.budget || !taskData.category_id}
+          >
+            Next Step
+          </Button>
         </div>
       </div>
-
-      <div className="pt-6">
-        <Button onClick={handleSubmit} className="w-full bg-gold hover:bg-orange text-teal-dark py-6 text-lg">Next</Button>
-      </div>
-    </div>;
+    </div>
+  );
 };
 
 export default BasicInfoStep;
