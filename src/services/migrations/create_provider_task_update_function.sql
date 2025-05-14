@@ -14,7 +14,7 @@ AS $$
 DECLARE
   is_accepted BOOLEAN;
   task_exists BOOLEAN;
-  result BOOLEAN;
+  result INTEGER; -- Changed from BOOLEAN to INTEGER
 BEGIN
   -- Check if the provider is an accepted provider for this task
   SELECT EXISTS(
@@ -43,7 +43,7 @@ BEGIN
   -- Check if the update was successful
   GET DIAGNOSTICS result = ROW_COUNT;
   
-  RETURN result > 0;
+  RETURN result > 0; -- Now comparing INTEGER > INTEGER
 END;
 $$;
 
