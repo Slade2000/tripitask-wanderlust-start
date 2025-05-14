@@ -66,6 +66,14 @@ export const ProfileProvider: React.FC<ProfileProviderProps> = ({ children }) =>
       
       if (updatedProfile) {
         console.log("Profile loaded successfully", updatedProfile);
+        
+        // Add the updateProfile method to the profile object
+        if (updatedProfile) {
+          updatedProfile.updateProfile = async (profileData) => {
+            return await updateProfile(profileData);
+          };
+        }
+        
         setProfile(updatedProfile);
         setLastLoadTime(Date.now());
         return updatedProfile;
@@ -120,6 +128,11 @@ export const ProfileProvider: React.FC<ProfileProviderProps> = ({ children }) =>
           ? data.full_name.split(' ').slice(1).join(' ')
           : null
       } as Profile;
+      
+      // Add the updateProfile method to the profile object
+      updatedProfile.updateProfile = async (newProfileData) => {
+        return await updateProfile(newProfileData);
+      };
       
       setProfile(updatedProfile);
       setLastLoadTime(Date.now());

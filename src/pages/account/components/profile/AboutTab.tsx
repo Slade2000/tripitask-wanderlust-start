@@ -10,6 +10,9 @@ interface AboutTabProps {
 }
 
 const AboutTab = ({ profile, profileData }: AboutTabProps) => {
+  // Combine certifications from profile and profileData, preferring profile if available
+  const certifications = profile?.certifications || profileData.certifications || [];
+  
   return (
     <div className="space-y-6">
       {profile?.about && (
@@ -57,12 +60,12 @@ const AboutTab = ({ profile, profileData }: AboutTabProps) => {
         </Card>
       )}
       
-      {(profile?.certifications?.length || profileData.certifications.length) > 0 && (
+      {certifications.length > 0 && (
         <Card>
           <CardContent className="p-5">
             <h3 className="font-semibold text-lg mb-2">Certifications & Qualifications</h3>
             <div className="space-y-2">
-              {(profile?.certifications || profileData.certifications).map((cert, index) => (
+              {certifications.map((cert, index) => (
                 <div 
                   key={index} 
                   className="flex items-center justify-between p-2 bg-gray-50 rounded"

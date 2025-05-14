@@ -27,6 +27,8 @@ export interface Profile {
   // Computed properties
   first_name: string | null;
   last_name: string | null;
+  // Add the updateProfile method to the interface
+  updateProfile?: (profileData: Partial<Profile>) => Promise<Profile | null>;
 }
 
 // Auth context interface

@@ -2,12 +2,13 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/contexts/profile/ProfileProvider";
-import { Profile } from "@/contexts/auth/types";
+import { Profile, Certificate } from "@/contexts/auth/types";
 import { toast } from "@/components/ui/use-toast";
 
 export interface ProfileDataState {
   rating: number;
   jobsCompleted: number;
+  certifications: Certificate[];
   reviews: Array<{
     reviewer: string;
     task: string;
@@ -39,6 +40,7 @@ export const useProfileBasics = () => {
   const [profileData, setProfileData] = useState<ProfileDataState>({
     rating: 4.9,
     jobsCompleted: 23,
+    certifications: [], // Initialize with empty array
     reviews: [
       { 
         reviewer: "Sarah M.", 
@@ -96,7 +98,8 @@ export const useProfileBasics = () => {
       setProfileData(prev => ({
         ...prev,
         rating: profile.rating !== null ? profile.rating : prev.rating,
-        jobsCompleted: profile.jobs_completed !== null ? profile.jobs_completed : prev.jobsCompleted
+        jobsCompleted: profile.jobs_completed !== null ? profile.jobs_completed : prev.jobsCompleted,
+        certifications: profile.certifications || [] // Add this line
       }));
     }
   }, [profile]);

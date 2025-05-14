@@ -5,7 +5,7 @@ import { useProfileMedia } from './useProfileMedia';
 import { useCertificationManager } from './useCertificationManager';
 import { Profile } from '@/contexts/auth/types';
 
-export { ProfileDataState } from './useProfileBasics';
+export type { ProfileDataState } from './useProfileBasics';
 
 export const useProfileData = () => {
   const profileBasics = useProfileBasics();
@@ -32,12 +32,17 @@ export const useProfileData = () => {
   
   // Helper function to update the profile
   const updateProfile = useCallback(async (profileData: Partial<Profile>): Promise<Profile | null> => {
-    if (!profileBasics.profile) {
+    if (!profile) {
       return null;
     }
     
-    return await profileBasics.profile.updateProfile(profileData);
-  }, [profileBasics.profile]);
+    try {
+      return await profile.updateProfile(profileData);
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      return null;
+    }
+  }, [profile]);
   
   return {
     ...profileBasics,
