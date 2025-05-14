@@ -6,7 +6,6 @@ import TaskImageGallery from "@/components/task-detail/TaskImageGallery";
 import TaskPosterInfo from "@/components/task-detail/TaskPosterInfo";
 import MessageModal from "@/components/messages/MessageModal";
 import TaskDetailHeader from "@/components/task-detail/TaskDetailHeader";
-import TaskActionSection from "@/components/task-detail/TaskActionSection";
 import TaskOffersSection from "@/components/task-detail/TaskOffersSection";
 import TaskInterestSection from "./TaskInterestSection";
 
@@ -74,14 +73,6 @@ export default function TaskDetailView({
             <TaskPosterInfo
               userId={task.user_id}
               taskId={task.id}
-            />
-            
-            <TaskActionSection 
-              task={task}
-              isTaskPoster={isTaskPoster} 
-              onOpenMessageModal={onOpenMessageModal}
-              onTaskUpdated={onTaskUpdated}
-              hasAcceptedOffer={hasAcceptedOffer}
             />
           </div>
         </div>
