@@ -6,7 +6,6 @@ import TaskImageGallery from "@/components/task-detail/TaskImageGallery";
 import TaskPosterInfo from "@/components/task-detail/TaskPosterInfo";
 import MessageModal from "@/components/messages/MessageModal";
 import TaskDetailHeader from "@/components/task-detail/TaskDetailHeader";
-import TaskOffersSection from "@/components/task-detail/TaskOffersSection";
 import TaskInterestSection from "./TaskInterestSection";
 
 interface TaskDetailViewProps {
@@ -59,14 +58,6 @@ export default function TaskDetailView({
               hasAcceptedOffer={hasAcceptedOffer}
               status={task.status}
               onOpenMessageModal={onOpenMessageModal}
-            />
-            
-            {/* Always show offers section for task details */}
-            <TaskOffersSection 
-              taskId={task.id || ''}
-              isTaskPoster={isTaskPoster}
-              offers={offers}
-              onRefreshOffers={onRefreshOffers}
             />
           </div>
           
