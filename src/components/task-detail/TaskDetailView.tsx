@@ -7,6 +7,7 @@ import TaskPosterInfo from "@/components/task-detail/TaskPosterInfo";
 import MessageModal from "@/components/messages/MessageModal";
 import TaskDetailHeader from "@/components/task-detail/TaskDetailHeader";
 import TaskInterestSection from "./TaskInterestSection";
+import TaskOffersSection from "./TaskOffersSection";
 
 interface TaskDetailViewProps {
   task: any;
@@ -52,20 +53,35 @@ export default function TaskDetailView({
             <TaskDescription description={task.description} />
             
             {/* Interest section for non-task-posters */}
-            <TaskInterestSection 
-              taskId={task.id}
-              isTaskPoster={isTaskPoster}
-              hasAcceptedOffer={hasAcceptedOffer}
-              status={task.status}
-              onOpenMessageModal={onOpenMessageModal}
-            />
+            {!isTaskPoster && (
+              <TaskInterestSection 
+                taskId={task.id}
+                isTaskPoster={isTaskPoster}
+                hasAcceptedOffer={hasAcceptedOffer}
+                status={task.status}
+                onOpenMessageModal={onOpenMessageModal}
+              />
+            )}
+            
+            {/* Show offers section only for task posters */}
+            {isTaskPoster && offers.length > 0 && (
+              <TaskOffersSection 
+                taskId={task.id || ''}
+                isTaskPoster={isTaskPoster}
+                offers={offers}
+                onRefreshOffers={onRefreshOffers}
+              />
+            )}
           </div>
           
           <div className="space-y-6">
-            <TaskPosterInfo
-              userId={task.user_id}
-              taskId={task.id}
-            />
+            {/* Only show TaskPosterInfo if the current user is not the task poster */}
+            {!isTaskPoster && (
+              <TaskPosterInfo
+                userId={task.user_id}
+                taskId={task.id}
+              />
+            )}
           </div>
         </div>
       </div>

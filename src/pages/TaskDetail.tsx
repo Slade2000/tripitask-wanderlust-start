@@ -16,6 +16,7 @@ const TaskDetail = () => {
   
   const { 
     task, 
+    offers,
     loading, 
     error, 
     isTaskPoster,
@@ -24,6 +25,7 @@ const TaskDetail = () => {
     handleOpenMessageModal,
     handleCloseMessageModal,
     handleTaskUpdated,
+    refreshOffers
   } = useTaskDetail(taskId, user);
 
   useEffect(() => {
@@ -60,14 +62,14 @@ const TaskDetail = () => {
     <>
       <TaskDetailView
         task={task}
-        offers={[]} // Pass empty array since offers section is removed
+        offers={isTaskPoster ? offers : []} // Only pass offers if user is the task poster
         isTaskPoster={isTaskPoster}
         hasAcceptedOffer={hasAcceptedOffer}
         isMessageModalOpen={isMessageModalOpen}
         onOpenMessageModal={handleOpenMessageModal}
         onCloseMessageModal={handleCloseMessageModal}
         onTaskUpdated={handleTaskUpdated}
-        onRefreshOffers={async () => {}} // Empty function since offers section is removed
+        onRefreshOffers={refreshOffers}
       />
       <BottomNav currentPath={location.pathname} />
     </>
