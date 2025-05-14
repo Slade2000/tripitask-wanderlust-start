@@ -39,6 +39,13 @@ export const JobsTabContent = ({ offers, type }: JobsTabContentProps) => {
     );
   }
 
+  // For debugging - show the task status in the console
+  console.log("Offers with task status:", filteredOffers.map(offer => ({
+    id: offer.id,
+    taskTitle: offer.task?.title,
+    taskStatus: offer.task?.status
+  })));
+
   return (
     <div className="space-y-3">
       {filteredOffers.slice(0, 3).map(offer => (

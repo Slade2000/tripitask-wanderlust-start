@@ -1,4 +1,3 @@
-
 import { format } from "date-fns";
 import { Send } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -11,6 +10,32 @@ interface OfferCardProps {
 
 export const OfferCard = ({ offer }: OfferCardProps) => {
   const navigate = useNavigate();
+  
+  // Get the appropriate badge style and text based on task status
+  const getBadgeStyleAndText = () => {
+    // Check task status first (if available)
+    if (offer.task?.status === 'pending_complete') {
+      return {
+        className: 'bg-yellow-100 text-yellow-800 hover:bg-yellow-100',
+        text: 'Pending Approval'
+      };
+    }
+    
+    // Otherwise use offer status
+    if (offer.status === 'accepted') {
+      return {
+        className: 'bg-blue-100 text-blue-800 hover:bg-blue-100',
+        text: 'In Progress'
+      };
+    }
+    
+    return {
+      className: 'bg-yellow-100 text-yellow-800 hover:bg-yellow-100',
+      text: 'Pending'
+    };
+  };
+  
+  const badgeInfo = getBadgeStyleAndText();
   
   return (
     <Card 
@@ -28,14 +53,8 @@ export const OfferCard = ({ offer }: OfferCardProps) => {
               {offer.status === 'accepted' ? 'Amount:' : 'Your Offer:'} ${offer.amount}
             </p>
           </div>
-          <Badge 
-            className={
-              offer.status === 'accepted' 
-                ? 'bg-blue-100 text-blue-800 hover:bg-blue-100'
-                : 'bg-yellow-100 text-yellow-800 hover:bg-yellow-100'
-            }
-          >
-            {offer.status === 'accepted' ? 'In Progress' : 'Pending'}
+          <Badge className={badgeInfo.className}>
+            {badgeInfo.text}
           </Badge>
         </div>
         <div className="text-sm text-gray-600 mb-3 flex items-center">

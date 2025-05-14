@@ -29,7 +29,7 @@ const Dashboard = () => {
     enabled: !!user?.id
   });
 
-  // Fetch user's offers
+  // Fetch user's offers with task data included
   const {
     data: offers,
     isLoading: offersLoading
@@ -39,8 +39,11 @@ const Dashboard = () => {
     enabled: !!user?.id
   });
 
+  // Log the offers data to debug task status issues
+  console.log("Dashboard offers data:", offers);
+
   // Calculate statistics - all tasks posted by the user
-  const activeTasks = tasks?.filter(task => task.status === 'open' || task.status === 'assigned') || [];
+  const activeTasks = tasks?.filter(task => task.status === 'open' || task.status === 'assigned' || task.status === 'in_progress') || [];
   const completedTasks = tasks?.filter(task => task.status === 'completed') || [];
 
   // Get all pending offers made by the user

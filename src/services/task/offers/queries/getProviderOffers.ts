@@ -1,46 +1,34 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import type { Offer } from "@/types/offer";
 
-/**
- * Fetches all offers made by a specific provider
- */
-export async function getProviderOffers(providerId: string): Promise<Offer[]> {
+export async function getProviderOffers(providerId: string) {
   try {
+    console.log("Fetching offers for provider:", providerId);
+    
+    if (!providerId) {
+      console.error("No provider ID provided to getProviderOffers");
+      throw new Error("Provider ID is required to fetch offers");
+    }
+
+    // Fetch offers with task details
     const { data, error } = await supabase
       .from('offers')
       .select(`
         *,
-        task:tasks(
-          title,
-          description,
-          budget,
-          due_date,
-          status
-        )
+        task:tasks(id, title, budget, due_date, status)
       `)
-      .eq('provider_id', providerId);
+      .eq('provider_id', providerId)
+      .order('created_at', { ascending: false });
 
     if (error) {
       console.error("Error fetching provider offers:", error);
-      throw error;
+      throw new Error(error.message);
     }
 
-    const offers: Offer[] = data.map(offer => ({
-      id: offer.id,
-      task_id: offer.task_id,
-      provider_id: offer.provider_id,
-      amount: offer.amount,
-      expected_delivery_date: offer.expected_delivery_date,
-      message: offer.message || undefined,
-      status: offer.status as 'pending' | 'accepted' | 'rejected',
-      created_at: offer.created_at,
-      task: offer.task as Offer['task']
-    }));
-
-    return offers || [];
+    console.log(`Found ${data?.length || 0} offers for provider ${providerId}`);
+    return data || [];
   } catch (error) {
-    console.error("Error fetching provider offers:", error);
-    return [];
+    console.error("Error in getProviderOffers:", error);
+    throw error;
   }
 }
