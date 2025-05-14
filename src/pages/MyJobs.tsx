@@ -45,10 +45,6 @@ const MyJobs = () => {
     }
   });
 
-  const handleViewTask = (taskId: string) => {
-    navigate(`/tasks/${taskId}/offers`);
-  };
-
   const handleRefresh = () => {
     toast({
       title: "Refreshing tasks...",
@@ -127,7 +123,7 @@ const MyJobs = () => {
               <Card 
                 key={task.id} 
                 className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
-                onClick={() => handleViewTask(task.id)}
+                onClick={() => navigate(`/tasks/${task.id}`)}
               >
                 <CardContent className="p-0">
                   <div className="p-4">
@@ -160,21 +156,9 @@ const MyJobs = () => {
                       </div>
                     </div>
                     
-                    <div className="mt-4 flex justify-between items-center">
-                      <div className="flex items-center text-gray-600">
-                        <Users size={18} className="mr-2" />
-                        <span>{task.offer_count || 0} offers</span>
-                      </div>
-                      
-                      <Button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleViewTask(task.id);
-                        }}
-                        className="bg-teal hover:bg-teal-dark text-white"
-                      >
-                        View Offers
-                      </Button>
+                    <div className="mt-4 flex items-center text-gray-600">
+                      <Users size={18} className="mr-2" />
+                      <span>{task.offer_count || 0} offers</span>
                     </div>
                   </div>
                 </CardContent>

@@ -61,6 +61,7 @@ export default function TaskDetailView({
               onOpenMessageModal={onOpenMessageModal}
             />
             
+            {/* Always show offers section for task details */}
             <TaskOffersSection 
               taskId={task.id || ''}
               isTaskPoster={isTaskPoster}

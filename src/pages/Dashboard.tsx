@@ -1,4 +1,3 @@
-
 import { useLocation, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Activity, Award, Clock, DollarSign, Briefcase, Star, ArrowRight, CheckCircle, Send } from "lucide-react";
@@ -252,7 +251,8 @@ const Dashboard = () => {
             {acceptedOffers.length > 0 ? (
               <div className="space-y-3">
                 {acceptedOffers.slice(0, 3).map(offer => (
-                  <Card key={offer.id} className="overflow-hidden">
+                  <Card key={offer.id} className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
+                        onClick={() => navigate(`/tasks/${offer.task_id}`)}>
                     <CardContent className="p-4">
                       <div className="flex justify-between items-start mb-2">
                         <div>
@@ -268,14 +268,6 @@ const Dashboard = () => {
                       <div className="text-sm text-gray-600 mb-3">
                         Due: {format(new Date(offer.expected_delivery_date), 'dd MMM yyyy')}
                       </div>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={() => navigate(`/tasks/${offer.task_id}`)} 
-                        className="w-full sm:w-auto mt-2"
-                      >
-                        View Job <ArrowRight className="ml-1" size={16} />
-                      </Button>
                     </CardContent>
                   </Card>
                 ))}
@@ -310,7 +302,8 @@ const Dashboard = () => {
             {pendingOffers.length > 0 ? (
               <div className="space-y-3">
                 {pendingOffers.slice(0, 3).map(offer => (
-                  <Card key={offer.id} className="overflow-hidden">
+                  <Card key={offer.id} className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
+                        onClick={() => navigate(`/tasks/${offer.task_id}`)}>
                     <CardContent className="p-4">
                       <div className="flex justify-between items-start mb-2">
                         <div>
@@ -327,14 +320,6 @@ const Dashboard = () => {
                         <Send className="h-4 w-4 mr-1" />
                         <span>Offer sent: {format(new Date(offer.created_at), 'dd MMM yyyy')}</span>
                       </div>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={() => navigate(`/tasks/${offer.task_id}`)} 
-                        className="w-full sm:w-auto mt-2"
-                      >
-                        View Task <ArrowRight className="ml-1" size={16} />
-                      </Button>
                     </CardContent>
                   </Card>
                 ))}
@@ -436,7 +421,11 @@ const TaskCard = ({ task, navigate }) => {
   };
 
   return (
-    <Card key={task.id} className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow">
+    <Card 
+      key={task.id} 
+      className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
+      onClick={() => navigate(`/tasks/${task.id}`)}
+    >
       <CardContent className="p-4">
         <div className="flex justify-between items-start mb-2">
           <div>
@@ -450,20 +439,9 @@ const TaskCard = ({ task, navigate }) => {
           </Badge>
         </div>
         
-        <div className="flex items-center justify-between mt-2">
-          <div className="flex items-center text-gray-600 text-sm">
-            <Clock size={14} className="mr-1" />
-            <span>{task.offer_count || 0} offers</span>
-          </div>
-          
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => navigate(`/tasks/${task.id}/offers`)} 
-            className="text-xs"
-          >
-            View Offers
-          </Button>
+        <div className="flex items-center text-gray-600 text-sm">
+          <Clock size={14} className="mr-1" />
+          <span>{task.offer_count || 0} offers</span>
         </div>
       </CardContent>
     </Card>

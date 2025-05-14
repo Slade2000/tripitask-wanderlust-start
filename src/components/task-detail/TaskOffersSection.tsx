@@ -18,11 +18,7 @@ export default function TaskOffersSection({
 }: TaskOffersSectionProps) {
   const [offersLoading, setOffersLoading] = useState(false);
   
-  // Only show offers section to task poster
-  if (!isTaskPoster) {
-    return null;
-  }
-  
+  // Show offers section to everyone, but only task poster can see the actions
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
       <h2 className="text-xl font-semibold mb-4">Offers</h2>
@@ -31,6 +27,7 @@ export default function TaskOffersSection({
         offers={offers}
         loading={offersLoading}
         onRefresh={onRefreshOffers}
+        isTaskPoster={isTaskPoster}
       />
     </div>
   );

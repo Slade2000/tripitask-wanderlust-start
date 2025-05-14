@@ -12,13 +12,15 @@ interface TaskOffersListProps {
   offers: Offer[];
   loading: boolean;
   onRefresh: () => Promise<void>;
+  isTaskPoster: boolean;
 }
 
 export default function TaskOffersList({ 
   taskId, 
   offers,
   loading,
-  onRefresh
+  onRefresh,
+  isTaskPoster
 }: TaskOffersListProps) {
   const { toast } = useToast();
   const [updatingOfferId, setUpdatingOfferId] = useState<string | null>(null);
@@ -46,7 +48,7 @@ export default function TaskOffersList({
   };
 
   const handleAcceptOffer = async (offerId: string) => {
-    if (!taskId || hasAcceptedOffer) return;
+    if (!taskId || !isTaskPoster || hasAcceptedOffer) return;
     
     console.log("Accepting offer:", offerId);
     setUpdatingOfferId(offerId);
@@ -85,7 +87,7 @@ export default function TaskOffersList({
   };
 
   const handleRejectOffer = async (offerId: string) => {
-    if (!taskId || hasAcceptedOffer) return;
+    if (!taskId || !isTaskPoster || hasAcceptedOffer) return;
     
     console.log("Rejecting offer:", offerId);
     setUpdatingOfferId(offerId);
@@ -149,7 +151,7 @@ export default function TaskOffersList({
           onReject={() => handleRejectOffer(offer.id)}
           onViewDetails={() => handleViewOfferDetails(offer.id)}
           isUpdating={updatingOfferId === offer.id}
-          disableActions={hasAcceptedOffer || offer.status !== 'pending'}
+          disableActions={!isTaskPoster || hasAcceptedOffer || offer.status !== 'pending'}
         />
       ))}
 
