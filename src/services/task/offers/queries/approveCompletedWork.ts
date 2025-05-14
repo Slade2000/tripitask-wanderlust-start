@@ -11,11 +11,32 @@ import { getTaskById } from "../../queries/getTaskById";
  */
 export async function approveCompletedWork(taskId: string, offerId: string) {
   if (!taskId || !offerId) {
-    toast.error("Missing required information to approve completion");
+    toast.error("Invalid task or offer information. Unable to proceed.");
+    console.error("Missing required parameters:", { taskId, offerId });
     return null;
   }
   
   try {
+    // First verify the offer belongs to this task and is in work_completed status
+    const { data: offerData, error: offerCheckError } = await supabase
+      .from('offers')
+      .select('id, status, provider_id')
+      .eq('id', offerId)
+      .eq('task_id', taskId)
+      .single();
+      
+    if (offerCheckError || !offerData) {
+      console.error(`Error verifying offer ${offerId} for task ${taskId}:`, offerCheckError);
+      toast.error("Could not verify the completed work offer");
+      return null;
+    }
+    
+    if (offerData.status !== 'work_completed') {
+      console.error(`Cannot approve offer ${offerId} with status ${offerData.status}`);
+      toast.error("This offer is not marked as completed by the provider");
+      return null;
+    }
+    
     // First, update the offer status to 'completed'
     const { error: offerError } = await supabase
       .from('offers')
@@ -25,23 +46,36 @@ export async function approveCompletedWork(taskId: string, offerId: string) {
       .eq('id', offerId);
       
     if (offerError) {
-      console.error("Error updating offer status:", offerError);
+      console.error(`Error updating offer ${offerId} status:`, offerError);
       toast.error("Error approving work completion");
       return null;
     }
     
-    // Then update the task status to completed
-    const { error: taskError } = await supabase
-      .from('tasks')
-      .update({ 
-        status: 'completed',
-        completed_at: new Date().toISOString()
-      })
-      .eq('id', taskId);
+    // Then update the task status to completed with retry logic
+    let taskError = null;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const { error } = await supabase
+        .from('tasks')
+        .update({ 
+          status: 'completed',
+          completed_at: new Date().toISOString()
+        })
+        .eq('id', taskId);
+        
+      taskError = error;
+      
+      if (!error) {
+        break; // Success, exit retry loop
+      } else {
+        console.warn(`Task completion update attempt ${attempt + 1} failed:`, error);
+        // Small delay before retry
+        if (attempt < 2) await new Promise(r => setTimeout(r, 500));
+      }
+    }
       
     if (taskError) {
-      console.error("Error completing task:", taskError);
-      toast.error("Error marking task as completed");
+      console.error(`Task completion update failed after 3 attempts for task ${taskId}:`, taskError);
+      toast.error(`Failed to mark task as completed. Please try again.`);
       return null;
     }
     
@@ -51,7 +85,7 @@ export async function approveCompletedWork(taskId: string, offerId: string) {
     const updatedTask = await getTaskById(taskId);
     return updatedTask;
   } catch (err) {
-    console.error("Error approving work completion:", err);
+    console.error(`Error in approveCompletedWork for task ${taskId}, offer ${offerId}:`, err);
     toast.error("Error approving work completion");
     return null;
   }
