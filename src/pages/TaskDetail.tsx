@@ -21,6 +21,7 @@ const TaskDetail = () => {
     error, 
     isTaskPoster,
     hasAcceptedOffer,
+    isCurrentUserProvider,
     isMessageModalOpen,
     handleOpenMessageModal,
     handleCloseMessageModal,
@@ -37,8 +38,10 @@ const TaskDetail = () => {
     // Debug logging for task status
     if (task) {
       console.log("TaskDetail received task with status:", task.status);
+      console.log("Current user is task poster:", isTaskPoster);
+      console.log("Current user is service provider:", isCurrentUserProvider);
     }
-  }, [task]);
+  }, [task, isTaskPoster, isCurrentUserProvider]);
 
   if (loading) {
     return (
@@ -65,6 +68,7 @@ const TaskDetail = () => {
         offers={isTaskPoster ? offers : []} // Only pass offers if user is the task poster
         isTaskPoster={isTaskPoster}
         hasAcceptedOffer={hasAcceptedOffer}
+        isCurrentUserProvider={isCurrentUserProvider}
         isMessageModalOpen={isMessageModalOpen}
         onOpenMessageModal={handleOpenMessageModal}
         onCloseMessageModal={handleCloseMessageModal}

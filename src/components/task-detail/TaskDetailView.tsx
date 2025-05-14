@@ -8,12 +8,14 @@ import MessageModal from "@/components/messages/MessageModal";
 import TaskDetailHeader from "@/components/task-detail/TaskDetailHeader";
 import TaskInterestSection from "./TaskInterestSection";
 import TaskOffersSection from "./TaskOffersSection";
+import TaskActionSection from "./TaskActionSection";
 
 interface TaskDetailViewProps {
   task: any;
   offers: any[];
   isTaskPoster: boolean;
   hasAcceptedOffer: boolean;
+  isCurrentUserProvider: boolean;
   isMessageModalOpen: boolean;
   onOpenMessageModal: () => void;
   onCloseMessageModal: () => void;
@@ -26,6 +28,7 @@ export default function TaskDetailView({
   offers, 
   isTaskPoster, 
   hasAcceptedOffer,
+  isCurrentUserProvider,
   isMessageModalOpen,
   onOpenMessageModal,
   onCloseMessageModal,
@@ -52,8 +55,18 @@ export default function TaskDetailView({
             
             <TaskDescription description={task.description} />
             
+            {/* Action section for task posters and service providers */}
+            <TaskActionSection
+              task={task}
+              isTaskPoster={isTaskPoster}
+              hasAcceptedOffer={hasAcceptedOffer}
+              isCurrentUserProvider={isCurrentUserProvider}
+              onOpenMessageModal={onOpenMessageModal}
+              onTaskUpdated={onTaskUpdated}
+            />
+            
             {/* Interest section for non-task-posters */}
-            {!isTaskPoster && (
+            {!isTaskPoster && !isCurrentUserProvider && (
               <TaskInterestSection 
                 taskId={task.id}
                 isTaskPoster={isTaskPoster}

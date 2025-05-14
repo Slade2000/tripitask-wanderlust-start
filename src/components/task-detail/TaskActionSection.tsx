@@ -1,6 +1,8 @@
 
 import TaskActionButtons from "./TaskActionButtons";
 import { useTaskCompletion } from "@/hooks/useTaskCompletion";
+import { useTaskProviderCompletion } from "@/hooks/useTaskProviderCompletion";
+import { useAuth } from "@/contexts/auth";
 
 interface TaskActionSectionProps {
   task: any;
@@ -8,6 +10,7 @@ interface TaskActionSectionProps {
   onOpenMessageModal: () => void;
   onTaskUpdated: (updatedTask: any) => void;
   hasAcceptedOffer?: boolean;
+  isCurrentUserProvider?: boolean;
 }
 
 export default function TaskActionSection({
@@ -15,12 +18,26 @@ export default function TaskActionSection({
   isTaskPoster,
   onOpenMessageModal,
   onTaskUpdated,
-  hasAcceptedOffer = false
+  hasAcceptedOffer = false,
+  isCurrentUserProvider = false
 }: TaskActionSectionProps) {
+  const { user } = useAuth();
+  
+  // For task poster completion
   const {
     isSubmittingCompletion,
     handleCompleteTask
   } = useTaskCompletion(task.id, task.user_id, onTaskUpdated);
+  
+  // For service provider completion
+  const {
+    isSubmittingCompletion: isSubmittingProviderCompletion,
+    handleCompleteWork
+  } = useTaskProviderCompletion(
+    task.id, 
+    user?.id || '', 
+    onTaskUpdated
+  );
   
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
@@ -30,9 +47,12 @@ export default function TaskActionSection({
         isProviderPage={!isTaskPoster}
         taskStatus={task.status}
         isTaskPoster={isTaskPoster}
+        isCurrentUserProvider={isCurrentUserProvider}
         onMessageClick={onOpenMessageModal}
         onCompleteTask={handleCompleteTask}
+        onProviderCompleteTask={handleCompleteWork}
         isSubmittingCompletion={isSubmittingCompletion}
+        isSubmittingProviderCompletion={isSubmittingProviderCompletion}
         hasAcceptedOffer={hasAcceptedOffer}
       />
     </div>

@@ -9,8 +9,11 @@ interface TaskActionButtonsProps {
   isTaskPoster: boolean;
   onMessageClick: () => void;
   onCompleteTask?: () => void;
+  onProviderCompleteTask?: () => void;
   isSubmittingCompletion?: boolean;
+  isSubmittingProviderCompletion?: boolean;
   hasAcceptedOffer?: boolean;
+  isCurrentUserProvider?: boolean;
 }
 
 export default function TaskActionButtons({ 
@@ -20,13 +23,16 @@ export default function TaskActionButtons({
   isTaskPoster,
   onMessageClick,
   onCompleteTask,
+  onProviderCompleteTask,
   isSubmittingCompletion = false,
-  hasAcceptedOffer = false
+  isSubmittingProviderCompletion = false,
+  hasAcceptedOffer = false,
+  isCurrentUserProvider = false
 }: TaskActionButtonsProps) {
   const navigate = useNavigate();
 
   // If user is task poster and task is in progress, show complete button
-  if (isTaskPoster && taskStatus === "in_progress" || isTaskPoster && taskStatus === "assigned") {
+  if (isTaskPoster && (taskStatus === "in_progress" || taskStatus === "assigned")) {
     return (
       <div className="flex space-x-2">
         <Button
@@ -35,6 +41,28 @@ export default function TaskActionButtons({
           disabled={isSubmittingCompletion}
         >
           {isSubmittingCompletion ? "Processing..." : "Complete Task"}
+        </Button>
+        <Button
+          onClick={onMessageClick}
+          variant="outline"
+          className="border-teal text-teal hover:bg-teal/10"
+        >
+          Messages
+        </Button>
+      </div>
+    );
+  }
+
+  // If user is the service provider and task is in progress, show mark work complete button
+  if (isCurrentUserProvider && (taskStatus === "in_progress" || taskStatus === "assigned")) {
+    return (
+      <div className="flex space-x-2">
+        <Button
+          onClick={onProviderCompleteTask}
+          className="w-full bg-green-600 hover:bg-green-700 text-white"
+          disabled={isSubmittingProviderCompletion}
+        >
+          {isSubmittingProviderCompletion ? "Processing..." : "Mark Work Complete"}
         </Button>
         <Button
           onClick={onMessageClick}
@@ -68,8 +96,8 @@ export default function TaskActionButtons({
     );
   }
 
-  // If provider view and task is in progress, show only message button
-  if (isProviderPage && (taskStatus === "in_progress" || taskStatus === "assigned")) {
+  // If provider view and task is in progress but not current user's task, show only message button
+  if (isProviderPage && (taskStatus === "in_progress" || taskStatus === "assigned") && !isCurrentUserProvider) {
     return (
       <div className="flex space-x-2">
         <Button

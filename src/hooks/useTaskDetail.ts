@@ -19,6 +19,7 @@ export function useTaskDetail(taskId: string | undefined, user: User | null) {
   const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
   const [isTaskPoster, setIsTaskPoster] = useState(false);
   const [hasAcceptedOffer, setHasAcceptedOffer] = useState(false);
+  const [isCurrentUserProvider, setIsCurrentUserProvider] = useState(false);
 
   useEffect(() => {
     const fetchTask = async () => {
@@ -68,7 +69,7 @@ export function useTaskDetail(taskId: string | undefined, user: User | null) {
 
   useEffect(() => {
     const fetchOffers = async () => {
-      if (!taskId || !isTaskPoster) return;
+      if (!taskId) return;
       
       setOffersLoading(true);
       try {
@@ -78,6 +79,11 @@ export function useTaskDetail(taskId: string | undefined, user: User | null) {
         // Check if there's any accepted offer
         const acceptedOffer = offersData?.find((offer: any) => offer.status === 'accepted');
         setHasAcceptedOffer(!!acceptedOffer || (task?.status === 'inprogress' || task?.status === 'in_progress' || task?.status === 'assigned' || task?.status === 'completed'));
+        
+        // Check if current user is the provider of an accepted offer
+        if (user?.id && acceptedOffer) {
+          setIsCurrentUserProvider(acceptedOffer.provider_id === user.id);
+        }
       } catch (err) {
         console.error("Error fetching offers:", err);
       } finally {
@@ -85,10 +91,8 @@ export function useTaskDetail(taskId: string | undefined, user: User | null) {
       }
     };
 
-    if (isTaskPoster) {
-      fetchOffers();
-    }
-  }, [taskId, isTaskPoster, task?.status]);
+    fetchOffers();
+  }, [taskId, user?.id, task?.status]);
 
   const handleOpenMessageModal = () => {
     if (!user) {
@@ -114,6 +118,11 @@ export function useTaskDetail(taskId: string | undefined, user: User | null) {
       const acceptedOffer = offersData?.find((offer: any) => offer.status === 'accepted');
       setHasAcceptedOffer(!!acceptedOffer || (task?.status === 'inprogress' || task?.status === 'in_progress' || task?.status === 'assigned' || task?.status === 'completed'));
       
+      // Check if current user is the provider of an accepted offer
+      if (user?.id && acceptedOffer) {
+        setIsCurrentUserProvider(acceptedOffer.provider_id === user.id);
+      }
+      
       // Also refresh the task to get the latest status
       const refreshedTask = await getTaskById(taskId);
       if (refreshedTask) {
@@ -128,6 +137,8 @@ export function useTaskDetail(taskId: string | undefined, user: User | null) {
     setTask(updatedTask);
     // Update accepted offer state based on task status
     setHasAcceptedOffer(updatedTask.status === 'inprogress' || updatedTask.status === 'in_progress' || updatedTask.status === 'assigned' || updatedTask.status === 'completed');
+    // Refresh offers to get the latest status
+    refreshOffers();
   };
 
   return {
@@ -138,6 +149,7 @@ export function useTaskDetail(taskId: string | undefined, user: User | null) {
     error,
     isTaskPoster,
     hasAcceptedOffer,
+    isCurrentUserProvider,
     isMessageModalOpen,
     handleOpenMessageModal,
     handleCloseMessageModal,
