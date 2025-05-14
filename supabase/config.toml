@@ -3,3 +3,14 @@ project_id = "dftdrtfpvojruqkbzcuw"
 
 [functions.google-places]
 verify_jwt = false
+
+[[storage.policies]]
+name = "Allow public access to task-photos"
+definition = {
+    id = "public_task_photos",
+    storage = {
+        urls = true,
+        paths = ["task-photos/**"],
+        operations = ["read"]
+    }
+}
