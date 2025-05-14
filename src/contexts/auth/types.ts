@@ -2,6 +2,13 @@
 import { User as SupabaseUser } from '@supabase/supabase-js';
 import { User } from '../../types/user';
 
+// Define certificate interface
+export interface Certificate {
+  name: string;
+  verified: boolean;
+  file_url?: string;
+}
+
 // Profile interface with all the fields
 export interface Profile {
   id: string;
@@ -15,6 +22,8 @@ export interface Profile {
   rating?: number | null;
   jobs_completed?: number | null;
   updated_at?: string | null;
+  certifications?: Certificate[] | null;
+  trade_registry_number?: string | null;
   // Computed properties
   first_name: string | null;
   last_name: string | null;

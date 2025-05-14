@@ -4,7 +4,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft, RefreshCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/use-toast";
 import BottomNav from "@/components/BottomNav";
 import { Profile } from "@/contexts/auth/types";
 import { User } from "@/types/user";
@@ -36,7 +36,13 @@ const PersonalInformation = () => {
     getBusinessName, 
     refreshProfile,
     updateProfile: originalUpdateProfile,
-    handleRetryLoadProfile
+    handleRetryLoadProfile,
+    uploadAvatar,
+    uploadCertificate,
+    addCertificate,
+    removeCertificate,
+    uploadingAvatar,
+    uploadingCertificate
   } = useProfileData();
   
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -115,6 +121,12 @@ const PersonalInformation = () => {
             setFormData={setFormData}
             updateProfile={updateProfile}
             setIsEditMode={setIsEditMode}
+            uploadAvatar={uploadAvatar}
+            uploadCertificate={uploadCertificate}
+            addCertificate={addCertificate}
+            removeCertificate={removeCertificate}
+            uploadingAvatar={uploadingAvatar}
+            uploadingCertificate={uploadingCertificate}
           />
         ) : (
           <>

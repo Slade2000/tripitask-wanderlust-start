@@ -262,6 +262,7 @@ export type Database = {
           about: string | null
           avatar_url: string | null
           business_name: string | null
+          certifications: Json | null
           created_at: string | null
           full_name: string | null
           id: string
@@ -269,12 +270,14 @@ export type Database = {
           location: string | null
           rating: number | null
           services: string[] | null
+          trade_registry_number: string | null
           updated_at: string | null
         }
         Insert: {
           about?: string | null
           avatar_url?: string | null
           business_name?: string | null
+          certifications?: Json | null
           created_at?: string | null
           full_name?: string | null
           id: string
@@ -282,12 +285,14 @@ export type Database = {
           location?: string | null
           rating?: number | null
           services?: string[] | null
+          trade_registry_number?: string | null
           updated_at?: string | null
         }
         Update: {
           about?: string | null
           avatar_url?: string | null
           business_name?: string | null
+          certifications?: Json | null
           created_at?: string | null
           full_name?: string | null
           id?: string
@@ -295,6 +300,7 @@ export type Database = {
           location?: string | null
           rating?: number | null
           services?: string[] | null
+          trade_registry_number?: string | null
           updated_at?: string | null
         }
         Relationships: []

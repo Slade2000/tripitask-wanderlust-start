@@ -1,16 +1,15 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/contexts/profile/ProfileProvider";
 import { toast } from "sonner";
-import { Profile } from "@/contexts/auth/types";
+import { Profile, Certificate } from "@/contexts/auth/types";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface ProfileDataState {
   rating: number;
   jobsCompleted: number;
-  certifications: Array<{
-    name: string;
-    verified: boolean;
-  }>;
+  certifications: Certificate[];
   reviews: Array<{
     reviewer: string;
     task: string;
@@ -25,6 +24,8 @@ export const useProfileData = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [isEditMode, setIsEditMode] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [uploadingCertificate, setUploadingCertificate] = useState(false);
   
   // Form state
   const [formData, setFormData] = useState({
@@ -33,7 +34,9 @@ export const useProfileData = () => {
     about: "",
     location: "",
     services: "",
-    avatar_url: ""
+    avatar_url: "",
+    trade_registry_number: "",
+    certifications: [] as Certificate[]
   });
   
   // Mock data that would eventually come from the database
@@ -93,14 +96,17 @@ export const useProfileData = () => {
         about: profile.about || "",
         location: profile.location || "",
         services: profile.services?.join(", ") || "",
-        avatar_url: profile.avatar_url || ""
+        avatar_url: profile.avatar_url || "",
+        trade_registry_number: profile.trade_registry_number || "",
+        certifications: profile.certifications || []
       });
       
       // Update mock data with real data where available
       setProfileData(prev => ({
         ...prev,
         rating: profile.rating !== null ? profile.rating : prev.rating,
-        jobsCompleted: profile.jobs_completed !== null ? profile.jobs_completed : prev.jobsCompleted
+        jobsCompleted: profile.jobs_completed !== null ? profile.jobs_completed : prev.jobsCompleted,
+        certifications: profile.certifications || prev.certifications
       }));
     }
   };
@@ -120,14 +126,17 @@ export const useProfileData = () => {
         about: profile.about || "",
         location: profile.location || "",
         services: profile.services?.join(", ") || "",
-        avatar_url: profile.avatar_url || ""
+        avatar_url: profile.avatar_url || "",
+        trade_registry_number: profile.trade_registry_number || "",
+        certifications: profile.certifications || []
       });
       
       // Update mock data with real data where available
       setProfileData(prev => ({
         ...prev,
         rating: profile.rating !== null ? profile.rating : prev.rating,
-        jobsCompleted: profile.jobs_completed !== null ? profile.jobs_completed : prev.jobsCompleted
+        jobsCompleted: profile.jobs_completed !== null ? profile.jobs_completed : prev.jobsCompleted,
+        certifications: profile.certifications || prev.certifications
       }));
     }
   }, [profile]);
@@ -159,6 +168,120 @@ export const useProfileData = () => {
     return profile?.business_name || "Your Business";
   }, [profile]);
 
+  const uploadAvatar = async (file: File): Promise<string | null> => {
+    if (!user?.id) {
+      toast.error("You must be logged in to upload an avatar");
+      return null;
+    }
+    
+    try {
+      setUploadingAvatar(true);
+      
+      // Create the path where we'll store the avatar
+      const filePath = `${user.id}/${Date.now()}_${file.name}`;
+      
+      // Upload the file to the avatars bucket
+      const { error: uploadError, data } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true
+        });
+        
+      if (uploadError) {
+        console.error("Error uploading avatar:", uploadError);
+        toast.error("Failed to upload avatar");
+        return null;
+      }
+      
+      // Get the public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+      
+      return publicUrl;
+    } catch (error) {
+      console.error("Exception uploading avatar:", error);
+      toast.error("An unexpected error occurred");
+      return null;
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
+  const uploadCertificate = async (file: File, certName: string): Promise<string | null> => {
+    if (!user?.id) {
+      toast.error("You must be logged in to upload a certificate");
+      return null;
+    }
+    
+    try {
+      setUploadingCertificate(true);
+      
+      // Create the path where we'll store the certificate
+      const filePath = `${user.id}/${Date.now()}_${file.name}`;
+      
+      // Upload the file to the certificates bucket
+      const { error: uploadError, data } = await supabase.storage
+        .from('certificates')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true
+        });
+        
+      if (uploadError) {
+        console.error("Error uploading certificate:", uploadError);
+        toast.error("Failed to upload certificate");
+        return null;
+      }
+      
+      // Get the public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('certificates')
+        .getPublicUrl(filePath);
+      
+      return publicUrl;
+    } catch (error) {
+      console.error("Exception uploading certificate:", error);
+      toast.error("An unexpected error occurred");
+      return null;
+    } finally {
+      setUploadingCertificate(false);
+    }
+  };
+
+  const addCertificate = async (name: string, file?: File) => {
+    const newCert: Certificate = {
+      name,
+      verified: false // New certificates start as unverified
+    };
+    
+    // If a file was provided, upload it
+    if (file) {
+      const fileUrl = await uploadCertificate(file, name);
+      if (fileUrl) {
+        newCert.file_url = fileUrl;
+      }
+    }
+    
+    // Add the new certificate to the form data
+    const updatedCerts = [...formData.certifications, newCert];
+    setFormData({
+      ...formData,
+      certifications: updatedCerts
+    });
+  };
+
+  const removeCertificate = (index: number) => {
+    const updatedCerts = [...formData.certifications];
+    updatedCerts.splice(index, 1);
+    
+    setFormData({
+      ...formData,
+      certifications: updatedCerts
+    });
+  };
+
   const handleRetryLoadProfile = useCallback(() => {
     setRetryCount(prev => prev + 1);
   }, []);
@@ -172,12 +295,18 @@ export const useProfileData = () => {
     isEditMode,
     formData,
     profileData,
+    uploadingAvatar,
+    uploadingCertificate,
     setIsEditMode,
     setFormData,
     getUserName,
     getBusinessName,
     refreshProfile,
     updateProfile,
-    handleRetryLoadProfile
+    handleRetryLoadProfile,
+    uploadAvatar,
+    uploadCertificate,
+    addCertificate,
+    removeCertificate
   };
 };
