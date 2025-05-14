@@ -1,7 +1,6 @@
-
 import { Link } from "react-router-dom";
 import { HelpCircle, Briefcase, LayoutDashboard, MessageSquare, User } from "lucide-react";
-import { useUnreadMessageCount } from "@/hooks/useUnreadMessageCount";
+import { useUnreadMessageCount } from "@/hooks/unread-messages";
 
 interface NavItemProps {
   icon: React.ReactNode;

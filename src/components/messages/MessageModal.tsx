@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import MessageInput from "./MessageInput";
@@ -9,7 +8,7 @@ import { sendMessage, getMessages, markMessagesAsRead } from "@/services/message
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/contexts/profile/ProfileProvider";
 import { useNetworkStatus } from "@/components/NetworkStatusMonitor";
-import { useUnreadMessageCount } from "@/hooks/useUnreadMessageCount";
+import { useUnreadMessageCount } from "@/hooks/unread-messages";
 
 interface MessageModalProps {
   isOpen: boolean;

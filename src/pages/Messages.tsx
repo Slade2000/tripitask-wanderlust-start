@@ -1,4 +1,3 @@
-
 import { useEffect, useState, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import BottomNav from "@/components/BottomNav";
@@ -11,7 +10,7 @@ import { getMessageThreads } from "@/services/message";
 import { MessageThreadSummary } from "@/services/message/types";
 import ThreadContent from "@/components/messages/ThreadContent";
 import { supabase } from "@/integrations/supabase/client"; 
-import { useUnreadMessageCount } from "@/hooks/useUnreadMessageCount";
+import { useUnreadMessageCount } from "@/hooks/unread-messages";
 
 const Messages = () => {
   const location = useLocation();
