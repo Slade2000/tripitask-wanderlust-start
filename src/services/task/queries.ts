@@ -1,3 +1,3 @@
 
-// Re-export all query functions from their dedicated files
+// Re-export all query functions from the queries directory
 export * from './queries/index';

@@ -1,7 +1,7 @@
 
-// Re-export all query functions from their dedicated files
-export * from './getTaskById';
-export * from './getAllAvailableTasks';
-export * from './getUserTasks';
-export * from './filterTasks';
+// Export all task query functions
 export * from './completeTask';
+export * from './filterTasks';
+export * from './getAllAvailableTasks';
+export * from './getTaskById';
+export * from './getUserTasks';

@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useCallback } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth";
 import { useProfile } from "@/contexts/profile/ProfileProvider";
 import { Profile, Certificate } from "@/contexts/auth/types";
 import { toast } from "@/components/ui/use-toast";
@@ -10,10 +10,16 @@ export interface ProfileDataState {
   jobsCompleted: number;
   certifications: Certificate[];
   reviews: Array<{
+    id?: string;
+    task_id?: string;
+    reviewer_id?: string;
+    reviewee_id?: string;
+    rating: number;
+    feedback?: string;
+    created_at?: string;
+    is_provider_review?: boolean;
     reviewer: string;
     task: string;
-    rating: number;
-    feedback: string;
   }>;
 }
 
@@ -43,22 +49,40 @@ export const useProfileBasics = () => {
     certifications: [], // Initialize with empty array
     reviews: [
       { 
+        id: "1",
+        task_id: "task1",
+        reviewer_id: "user1",
+        reviewee_id: "",
+        rating: 5,
+        feedback: "John was fantastic - arrived on time, did excellent work, and cleaned up afterward. Very professional.",
+        created_at: new Date().toISOString(),
+        is_provider_review: false,
         reviewer: "Sarah M.", 
-        task: "Kitchen Light Fixture Installation", 
-        rating: 5, 
-        feedback: "John was fantastic - arrived on time, did excellent work, and cleaned up afterward. Very professional." 
+        task: "Kitchen Light Fixture Installation"
       },
       { 
+        id: "2",
+        task_id: "task2",
+        reviewer_id: "user2",
+        reviewee_id: "",
+        rating: 5,
+        feedback: "Great service, fair price. Fixed my leaking sink quickly and efficiently.",
+        created_at: new Date().toISOString(),
+        is_provider_review: false,
         reviewer: "Michael T.", 
-        task: "Bathroom Sink Repair", 
-        rating: 5, 
-        feedback: "Great service, fair price. Fixed my leaking sink quickly and efficiently." 
+        task: "Bathroom Sink Repair"
       },
       { 
+        id: "3",
+        task_id: "task3",
+        reviewer_id: "user3",
+        reviewee_id: "",
+        rating: 4,
+        feedback: "Good work, just a bit delayed in arriving.",
+        created_at: new Date().toISOString(),
+        is_provider_review: false,
         reviewer: "Rachel K.", 
-        task: "Fan Installation", 
-        rating: 4, 
-        feedback: "Good work, just a bit delayed in arriving." 
+        task: "Fan Installation"
       },
     ]
   });

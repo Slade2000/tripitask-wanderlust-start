@@ -76,13 +76,13 @@ const PersonalInformation = () => {
   // Convert profileData.reviews to the expected Review type format
   const formattedReviews: Review[] = profileData.reviews ? 
     profileData.reviews.map(review => ({
-      id: review.id || "",
+      id: review.id || crypto.randomUUID(), // Generate unique ID if not present
       task_id: review.task_id || "",
       reviewer_id: review.reviewer_id || "",
       reviewee_id: review.reviewee_id || "",
       rating: review.rating,
       feedback: review.feedback || "",
-      created_at: review.created_at || "",
+      created_at: review.created_at || new Date().toISOString(),
       is_provider_review: review.is_provider_review || false,
       reviewer: {
         id: review.reviewer_id || "",
