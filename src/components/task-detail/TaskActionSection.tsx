@@ -62,7 +62,7 @@ export default function TaskActionSection({
         <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md text-sm">
           <p className="text-yellow-800">
             <strong>Action Required:</strong> The service provider has marked this task as complete. 
-            Please review their work and approve the completion if satisfactory.
+            Please review their work and confirm completion if satisfactory.
           </p>
         </div>
       )}

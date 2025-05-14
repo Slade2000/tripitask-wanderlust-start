@@ -46,7 +46,7 @@ export default function TaskActionButtons({
           className="w-full bg-green-600 hover:bg-green-700 text-white"
           disabled={isApprovingCompletion}
         >
-          {isApprovingCompletion ? "Processing..." : "Approve Work Completion"}
+          {isApprovingCompletion ? "Processing..." : "Confirm Completion"}
         </Button>
         <Button
           onClick={onMessageClick}
