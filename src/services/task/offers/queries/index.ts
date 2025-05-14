@@ -7,3 +7,4 @@ export * from './submitOffer';
 export * from './updateOfferStatus';
 export * from './completeWorkDone';
 export * from './approveCompletedWork';
+export * from './updateTaskStatusForProvider';

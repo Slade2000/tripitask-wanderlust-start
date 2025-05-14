@@ -2,6 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { getTaskById } from "../../queries/getTaskById";
+import { updateTaskStatusForProvider } from "./updateTaskStatusForProvider";
 
 /**
  * Marks a service provider's work as complete on a task, but pending approval
@@ -17,6 +18,8 @@ export async function completeWorkDone(taskId: string, providerId: string) {
   }
   
   try {
+    console.log(`Marking work as complete for task: ${taskId} by provider: ${providerId}`);
+
     // Find the provider's offer for this task
     const { data: offerData, error: offerError } = await supabase
       .from('offers')
@@ -26,10 +29,12 @@ export async function completeWorkDone(taskId: string, providerId: string) {
       .single();
       
     if (offerError || !offerData) {
-      console.error(`Error finding provider's offer for task ${taskId}, provider ${providerId}:`, offerError);
+      console.error(`Error finding provider's offer:`, offerError);
       toast.error("Could not verify your offer for this task");
       return null;
     }
+    
+    console.log(`Found provider offer:`, offerData);
     
     // Update offer status to work_completed (pending approval)
     const { error: updateOfferError } = await supabase
@@ -40,45 +45,31 @@ export async function completeWorkDone(taskId: string, providerId: string) {
       .eq('id', offerData.id);
       
     if (updateOfferError) {
-      console.error(`Error marking work as completed for offer ${offerData.id}:`, updateOfferError);
+      console.error(`Error updating offer status:`, updateOfferError);
       toast.error("Error marking your work as completed");
       return null;
     }
-
-    // Update task status to pending_complete with retry logic
-    let updateTaskError = null;
-    for (let attempt = 0; attempt < 3; attempt++) {
-      const { error } = await supabase
-        .from('tasks')
-        .update({
-          status: 'pending_complete'
-        })
-        .eq('id', taskId);
-      
-      updateTaskError = error;
-      
-      if (!error) {
-        break; // Success, exit retry loop
-      } else {
-        console.warn(`Task status update attempt ${attempt + 1} failed:`, error);
-        // Small delay before retry
-        if (attempt < 2) await new Promise(r => setTimeout(r, 500));
-      }
-    }
     
-    if (updateTaskError) {
-      console.error(`Task status update failed after 3 attempts for task ${taskId}:`, updateTaskError);
-      toast.error(`Failed to update task status. Please try again.`);
+    console.log(`Successfully updated offer status to 'work_completed'`);
+
+    // Now use the secure function to update task status to 'pending_complete'
+    const updateResult = await updateTaskStatusForProvider(taskId, providerId);
+    
+    if (!updateResult.success) {
+      console.error(`Failed to update task status:`, updateResult.error);
+      toast.error(`Failed to update task status: ${updateResult.error}`);
       return null;
     }
     
+    console.log(`Task status successfully updated to 'pending_complete'`);
     toast.success("You've marked your work as completed! Awaiting customer approval.");
     
     // Refresh task data
     const updatedTask = await getTaskById(taskId);
+    console.log("Updated task:", updatedTask);
     return updatedTask;
   } catch (err) {
-    console.error(`Error in completeWorkDone for task ${taskId}, provider ${providerId}:`, err);
+    console.error(`Error in completeWorkDone:`, err);
     toast.error("Error marking work as completed");
     return null;
   }
