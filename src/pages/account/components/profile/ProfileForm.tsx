@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "@/components/ui/use-toast";
 import { Profile, Certificate } from "@/contexts/auth/types";
 
-// Import the new components
+// Import the components
 import AvatarUpload from "./AvatarUpload";
 import CertificationsManager from "./CertificationsManager";
 import BasicProfileInfo from "./BasicProfileInfo";
