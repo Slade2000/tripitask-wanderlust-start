@@ -1,7 +1,7 @@
 
 import { useEffect } from "react";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
-import { useMessageDetail } from "@/hooks/useMessageDetail";
+import { useMessageDetail } from "@/hooks/messages";
 import { useNetworkStatus } from "@/components/NetworkStatusMonitor";
 import { useProfile } from "@/contexts/profile/ProfileProvider";
 import { useToast } from "@/hooks/use-toast";
