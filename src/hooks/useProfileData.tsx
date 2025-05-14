@@ -1,12 +1,17 @@
+
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/auth";
-import { Profile } from "@/contexts/auth/types";
+import { Profile, Certificate } from "@/contexts/auth/types";
 import { supabase } from "@/integrations/supabase/client";
 import { getUserReviews } from "@/services/task/reviews";
 import { toast } from "@/components/ui/use-toast";
+import { Review } from "@/services/task/reviews/getTaskReviews";
 
 // Define the structure of the profile data
-interface ProfileData {
+export interface ProfileDataState {
+  rating: number;
+  jobsCompleted: number;
+  certifications: Certificate[];
   reviews: Array<{
     id?: string;
     task_id?: string;
@@ -28,8 +33,33 @@ export const useProfileData = () => {
   const [error, setError] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
-  const [formData, setFormData] = useState<Partial<Profile> | null>(null);
-  const [profileData, setProfileData] = useState<ProfileData>({ reviews: [] });
+  const [formData, setFormData] = useState<{
+    full_name: string;
+    business_name: string;
+    about: string;
+    location: string;
+    services: string;
+    avatar_url: string;
+    trade_registry_number: string;
+    certifications: Certificate[];
+  }>({
+    full_name: "",
+    business_name: "",
+    about: "",
+    location: "",
+    services: "",
+    avatar_url: "",
+    trade_registry_number: "",
+    certifications: []
+  });
+  
+  const [profileData, setProfileData] = useState<ProfileDataState>({
+    rating: 0,
+    jobsCompleted: 0,
+    certifications: [],
+    reviews: []
+  });
+  
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [uploadingCertificate, setUploadingCertificate] = useState(false);
 
@@ -93,11 +123,19 @@ export const useProfileData = () => {
         task: review.task?.title || "Task"
       }));
       
-      setProfileData({ reviews: formattedReviews });
+      setProfileData(prev => ({
+        ...prev,
+        reviews: formattedReviews,
+        rating: authProfile?.rating || 0,
+        jobsCompleted: authProfile?.jobs_completed || 0
+      }));
       
     } catch (error) {
       console.error("Error loading profile data:", error);
-      setProfileData({ reviews: [] });
+      setProfileData(prev => ({
+        ...prev,
+        reviews: []
+      }));
     }
   };
 
@@ -110,7 +148,24 @@ export const useProfileData = () => {
 
       try {
         if (user && authProfile) {
-          setFormData({ ...authProfile });
+          setFormData({
+            full_name: authProfile.full_name || "",
+            business_name: authProfile.business_name || "",
+            about: authProfile.about || "",
+            location: authProfile.location || "",
+            services: authProfile.services?.join(", ") || "",
+            avatar_url: authProfile.avatar_url || "",
+            trade_registry_number: authProfile.trade_registry_number || "",
+            certifications: authProfile.certifications || []
+          });
+          
+          setProfileData(prev => ({
+            ...prev,
+            rating: authProfile.rating || 0,
+            jobsCompleted: authProfile.jobs_completed || 0,
+            certifications: authProfile.certifications || []
+          }));
+          
           await loadProfileData(user.id);
         }
       } catch (err) {
@@ -229,8 +284,16 @@ export const useProfileData = () => {
   };
 
   // Add certificate to profile
-  const addCertificate = async (name: string, fileUrl: string) => {
+  const addCertificate = async (name: string, file?: File) => {
     if (!authProfile?.certifications) return;
+    
+    let fileUrl = "";
+    if (file) {
+      const uploadedUrl = await uploadCertificate(file);
+      if (uploadedUrl) {
+        fileUrl = uploadedUrl;
+      }
+    }
     
     const newCertifications = [
       ...(authProfile.certifications || []),

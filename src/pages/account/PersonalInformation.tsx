@@ -36,7 +36,7 @@ const PersonalInformation = () => {
     getUserName, 
     getBusinessName, 
     refreshProfile,
-    updateProfile: originalUpdateProfile,
+    updateProfile,
     handleRetryLoadProfile,
     uploadAvatar,
     uploadCertificate,
@@ -47,11 +47,6 @@ const PersonalInformation = () => {
   } = useProfileData();
   
   const [isRefreshing, setIsRefreshing] = useState(false);
-  
-  // Create a wrapper function for updateProfile that conforms to the expected type
-  const updateProfile = async (data: Partial<Profile>) => {
-    await originalUpdateProfile(data);
-  };
   
   const handleRefresh = async () => {
     try {
@@ -81,7 +76,7 @@ const PersonalInformation = () => {
       reviewer_id: review.reviewer_id || "",
       reviewee_id: review.reviewee_id || "",
       rating: review.rating,
-      feedback: review.feedback,
+      feedback: review.feedback || "",
       created_at: review.created_at || "",
       is_provider_review: review.is_provider_review || false,
       reviewer: {
