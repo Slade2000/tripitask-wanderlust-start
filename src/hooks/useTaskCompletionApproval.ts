@@ -1,33 +1,40 @@
 
 import { useState } from "react";
-import { approveCompletedWork } from "@/services/task/offers/queries/approveCompletedWork";
+import { approveCompletedWork } from "@/services/taskService";
+import { toast } from "sonner";
 
 /**
- * Hook to handle task poster's approval of completed work
+ * Hook to handle task completion approval by the task poster
  */
-export function useTaskCompletionApproval(taskId: string, onTaskUpdated: (task: any) => void) {
+export function useTaskCompletionApproval(taskId: string, onTaskUpdated: (updatedTask: any) => void) {
   const [isApprovingCompletion, setIsApprovingCompletion] = useState(false);
-  
-  /**
-   * Handles approving a completed task by the service provider
-   */
+
   const handleApproveCompletion = async (offerId: string) => {
-    if (!taskId || !offerId) return;
+    if (!taskId || !offerId) {
+      toast.error("Missing task or offer information");
+      return;
+    }
     
     setIsApprovingCompletion(true);
     try {
       const updatedTask = await approveCompletedWork(taskId, offerId);
       
       if (updatedTask) {
-        onTaskUpdated(updatedTask);
+        toast.success("Work completion approved! Task has been marked as completed.");
+        if (onTaskUpdated) {
+          onTaskUpdated(updatedTask);
+        }
+      } else {
+        toast.error("Failed to approve work completion. Please try again.");
       }
     } catch (error) {
-      console.error("Error in handleApproveCompletion:", error);
+      console.error("Error approving work completion:", error);
+      toast.error("An unexpected error occurred while approving completion");
     } finally {
       setIsApprovingCompletion(false);
     }
   };
-  
+
   return {
     isApprovingCompletion,
     handleApproveCompletion
