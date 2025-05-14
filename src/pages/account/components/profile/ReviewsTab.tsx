@@ -2,13 +2,7 @@
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Star } from "lucide-react";
-
-interface Review {
-  reviewer: string;
-  task: string;
-  rating: number;
-  feedback: string;
-}
+import { Review } from "@/services/task/reviews/getTaskReviews";
 
 interface ReviewsTabProps {
   reviews: Review[];
@@ -22,9 +16,9 @@ const ReviewsTab = ({ reviews }: ReviewsTabProps) => {
       </CardHeader>
       <CardContent className="space-y-4">
         {reviews.map((review, index) => (
-          <div key={index} className="pb-4">
+          <div key={review.id} className="pb-4">
             <div className="flex justify-between mb-1">
-              <h3 className="font-medium">{review.reviewer}</h3>
+              <h3 className="font-medium">{review.reviewer?.full_name || "Anonymous"}</h3>
               <div className="flex items-center">
                 {[...Array(5)].map((_, i) => (
                   <Star 
@@ -35,8 +29,8 @@ const ReviewsTab = ({ reviews }: ReviewsTabProps) => {
                 ))}
               </div>
             </div>
-            <p className="text-sm text-gray-500 mb-1">{review.task}</p>
-            <p className="text-sm">{review.feedback}</p>
+            <p className="text-sm text-gray-500 mb-1">{review.task?.title || "Task"}</p>
+            <p className="text-sm">{review.feedback || "No feedback provided."}</p>
             {index < reviews.length - 1 && <Separator className="mt-4" />}
           </div>
         ))}

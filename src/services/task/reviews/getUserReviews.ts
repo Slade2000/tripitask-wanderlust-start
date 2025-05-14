@@ -8,8 +8,8 @@ export async function getUserReviews(userId: string): Promise<Review[]> {
       .from('reviews')
       .select(`
         *,
-        reviewer:reviewer_id(id, full_name, avatar_url),
-        task:task_id(title)
+        reviewer:profiles(id, full_name, avatar_url),
+        task:tasks(title)
       `)
       .eq('reviewee_id', userId);
       
@@ -18,7 +18,7 @@ export async function getUserReviews(userId: string): Promise<Review[]> {
       return [];
     }
     
-    return reviews as Review[];
+    return reviews as unknown as Review[];
   } catch (err) {
     console.error("Error fetching user reviews:", err);
     return [];

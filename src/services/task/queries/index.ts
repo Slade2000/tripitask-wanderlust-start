@@ -1,5 +1,5 @@
 
-// Export all task query functions
+// Re-export all query functions from their dedicated files
 export * from './getTaskById';
 export * from './getAllAvailableTasks';
 export * from './getUserTasks';

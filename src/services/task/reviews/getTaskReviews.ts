@@ -26,7 +26,7 @@ export async function getTaskReviews(taskId: string): Promise<Review[]> {
       .from('reviews')
       .select(`
         *,
-        reviewer:reviewer_id(id, full_name, avatar_url)
+        reviewer:profiles(id, full_name, avatar_url)
       `)
       .eq('task_id', taskId);
       
@@ -35,7 +35,7 @@ export async function getTaskReviews(taskId: string): Promise<Review[]> {
       return [];
     }
     
-    return reviews as Review[];
+    return reviews as unknown as Review[];
   } catch (err) {
     console.error("Error fetching task reviews:", err);
     return [];
