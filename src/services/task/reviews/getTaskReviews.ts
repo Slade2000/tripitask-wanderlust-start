@@ -15,6 +15,9 @@ export interface Review {
     full_name: string | null;
     avatar_url: string | null;
   };
+  task?: {
+    title: string;
+  };
 }
 
 export async function getTaskReviews(taskId: string): Promise<Review[]> {
