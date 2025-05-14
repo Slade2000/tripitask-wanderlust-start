@@ -1,11 +1,10 @@
-
 import { useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { getMessages } from "@/services/message";
 import { Message } from "@/services/message/types";
 import { getTaskById } from "@/services/task/queries/getTaskById";
 import { markMessagesAsRead } from "@/services/message";
-import { useUnreadMessageCount } from "@/hooks/useUnreadMessageCount";
+import { useUnreadMessageCount } from "@/hooks/unread-messages";
 
 interface UseLoadMessagesProps {
   userId: string | undefined;

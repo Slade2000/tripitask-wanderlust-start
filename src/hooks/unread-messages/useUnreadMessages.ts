@@ -21,7 +21,8 @@ export function useUnreadMessages() {
       const count = await fetchUnreadCount(user.id, unreadCount);
       console.log(`Setting new unread count: ${count}`);
       setUnreadCount(count);
-      return count;
+      // Return void instead of count to match expected Promise<void> type
+      return;
     } catch (error) {
       console.error("Error refreshing unread count:", error);
       toast({
@@ -29,7 +30,6 @@ export function useUnreadMessages() {
         description: "Failed to refresh unread message count",
         variant: "destructive",
       });
-      return unreadCount;
     }
   }, [fetchUnreadCount, user, unreadCount]);
 
