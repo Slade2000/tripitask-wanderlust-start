@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import BottomNav from "@/components/BottomNav";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -24,35 +24,19 @@ const Messages = () => {
   const { profile } = useProfile(); 
   const { isOnline } = useNetworkStatus(); 
   const { toast } = useToast();
-  const { refreshCount } = useUnreadMessageCount();
+  const { refreshCount, unreadCount } = useUnreadMessageCount();
   
-  useEffect(() => {
-    if (user) {
-      loadThreads();
-    }
-  }, [user]);
-
-  // Add effect to handle online status changes
-  useEffect(() => {
-    if (isOnline && error && user) {
-      console.log("Back online, retrying message thread load");
-      loadThreads();
-    }
-  }, [isOnline]);
-  
-  const loadThreads = async () => {
+  const loadThreads = useCallback(async () => {
     if (!user) return;
     
     setLoading(true);
     setError(null);
     try {
       console.log("Loading message threads for user:", user.id);
-      console.log("User ID type:", typeof user.id);
       
       // Get session status and debug info
       const { data: sessionData } = await supabase.auth.getSession();
       console.log("Current session status:", sessionData?.session ? "Active" : "None");
-      console.log("Session user ID:", sessionData?.session?.user?.id);
       
       const threadData = await getMessageThreads(user.id);
       console.log("Received thread data:", threadData);
@@ -67,7 +51,8 @@ const Messages = () => {
       }
       
       // Refresh the unread message count
-      refreshCount();
+      await refreshCount();
+      console.log("Unread count refreshed after loading threads");
     } catch (error) {
       console.error("Error loading message threads:", error);
       setError(error instanceof Error ? error.message : "Unknown error occurred");
@@ -79,7 +64,53 @@ const Messages = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, isOnline, toast, refreshCount]);
+
+  useEffect(() => {
+    if (user) {
+      loadThreads();
+    }
+  }, [user, loadThreads]);
+
+  // Add effect to handle online status changes
+  useEffect(() => {
+    if (isOnline && error && user) {
+      console.log("Back online, retrying message thread load");
+      loadThreads();
+    }
+  }, [isOnline, error, user, loadThreads]);
+
+  // Set up real-time subscription for thread updates
+  useEffect(() => {
+    if (!user) return;
+    
+    console.log("Setting up real-time subscription for thread updates");
+    
+    const threadSubscription = supabase
+      .channel('thread-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'messages',
+          filter: `receiver_id=eq.${user.id}`,
+        },
+        (payload) => {
+          console.log("Message update detected in Messages component:", payload);
+          if (payload.new.read !== payload.old.read) {
+            console.log("Read status changed, refreshing threads and count");
+            loadThreads();
+          }
+        }
+      )
+      .subscribe();
+      
+    return () => {
+      console.log("Removing thread update subscription");
+      supabase.removeChannel(threadSubscription);
+    };
+  }, [user, loadThreads]);
 
   const handleThreadClick = (thread: MessageThreadSummary) => {
     console.log("Navigating to message detail with:", {
@@ -105,10 +136,9 @@ const Messages = () => {
   
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
+    console.log(`Tab changed to ${tab}, refreshing data`);
     // Refresh threads when switching tabs
-    if (tab === "unread") {
-      loadThreads();
-    }
+    loadThreads();
   };
   
   return (
@@ -124,6 +154,7 @@ const Messages = () => {
             <div>User ID: {user?.id || 'Not logged in'}</div>
             <div>Auth Status: {user ? 'Logged In' : 'Not logged in'}</div>
             <div>Network Status: {isOnline ? 'Online' : 'Offline'}</div>
+            <div>Unread Count: {unreadCount}</div>
             {error && <div className="text-red-600">Error: {error}</div>}
           </div>
         )}
@@ -131,7 +162,7 @@ const Messages = () => {
         <Tabs defaultValue="all" onValueChange={handleTabChange}>
           <TabsList className="grid grid-cols-2 mb-6">
             <TabsTrigger value="all">All Messages</TabsTrigger>
-            <TabsTrigger value="unread">Unread</TabsTrigger>
+            <TabsTrigger value="unread">Unread {unreadCount > 0 && `(${unreadCount})`}</TabsTrigger>
           </TabsList>
           
           <TabsContent value="all">

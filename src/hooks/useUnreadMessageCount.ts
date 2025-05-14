@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNetworkStatus } from "@/components/NetworkStatusMonitor";
+import { toast } from "@/hooks/use-toast";
 
 export function useUnreadMessageCount() {
   const { user } = useAuth();
@@ -45,11 +46,18 @@ export function useUnreadMessageCount() {
     if (!user) return;
     
     try {
+      console.log("Manually refreshing unread message count");
       const count = await fetchUnreadCount(user.id);
+      console.log(`Setting new unread count: ${count}`);
       setUnreadCount(count);
       return count;
     } catch (error) {
       console.error("Error refreshing unread count:", error);
+      toast({
+        title: "Error",
+        description: "Failed to refresh unread message count",
+        variant: "destructive",
+      });
       return unreadCount;
     }
   }, [fetchUnreadCount, user, unreadCount]);
@@ -66,6 +74,38 @@ export function useUnreadMessageCount() {
       setLoading(false);
     }
   }, [user, isOnline, fetchUnreadCount]); // Re-fetch when online status changes
+
+  // Set up real-time subscription for message updates
+  useEffect(() => {
+    if (!user) return;
+    
+    console.log("Setting up real-time subscription for message updates");
+    
+    const subscription = supabase
+      .channel('message-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'messages',
+          filter: `receiver_id=eq.${user.id}`,
+        },
+        (payload) => {
+          console.log("Message update detected:", payload);
+          if (payload.new.read !== payload.old.read) {
+            console.log("Read status changed, refreshing count");
+            refreshCount();
+          }
+        }
+      )
+      .subscribe();
+      
+    return () => {
+      console.log("Removing message update subscription");
+      supabase.removeChannel(subscription);
+    };
+  }, [user, refreshCount]);
 
   return {
     unreadCount,

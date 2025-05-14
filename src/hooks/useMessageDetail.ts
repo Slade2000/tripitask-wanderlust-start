@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/contexts/profile/ProfileProvider";
@@ -21,7 +21,7 @@ export function useMessageDetail({ otherUserId: initialOtherUserId, initialTaskT
   const { user } = useAuth();
   const { profile } = useProfile();
   const { toast } = useToast();
-  const { refreshCount } = useUnreadMessageCount(); // Import the refreshCount function
+  const { refreshCount } = useUnreadMessageCount();
   
   // Use taskId from props or from URL params
   const taskId = propTaskId || paramTaskId;
@@ -59,7 +59,7 @@ export function useMessageDetail({ otherUserId: initialOtherUserId, initialTaskT
     }
   }, [user, taskId, initialOtherUserId]);
   
-  const loadMessages = async () => {
+  const loadMessages = useCallback(async () => {
     if (!user || !otherUserId) return;
     
     setLoading(true);
@@ -102,7 +102,7 @@ export function useMessageDetail({ otherUserId: initialOtherUserId, initialTaskT
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, otherUserId, toast]);
   
   const loadTaskDetails = async (taskId: string) => {
     try {
@@ -119,10 +119,14 @@ export function useMessageDetail({ otherUserId: initialOtherUserId, initialTaskT
     if (!user) return;
     
     try {
+      console.log(`Marking all messages from ${senderId} as read for ${user.id}`);
       // Mark all messages from sender as read (pass null for taskId to mark all)
-      await markMessagesAsRead(null, user.id, senderId);
+      const success = await markMessagesAsRead(null, user.id, senderId);
+      console.log(`Marked messages as read, success: ${success}`);
+      
       // Refresh the unread count in the UI
-      refreshCount();
+      await refreshCount();
+      console.log("Unread count refreshed after marking messages as read");
     } catch (error) {
       console.error("Error marking messages as read:", error);
     }
@@ -200,4 +204,4 @@ export function useMessageDetail({ otherUserId: initialOtherUserId, initialTaskT
     handleSendMessage,
     loadMessages
   };
-}
+}, []);

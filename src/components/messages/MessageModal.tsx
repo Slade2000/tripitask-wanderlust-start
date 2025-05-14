@@ -71,9 +71,14 @@ export default function MessageModal({
       
       // Mark messages as read when they are loaded
       if (receiverId) {
+        console.log(`Marking messages as read from user ${receiverId} for task ${taskId}`);
         try {
-          await markMessagesAsRead(taskId, user.id, receiverId);
-          refreshCount(); // Refresh unread count after marking messages as read
+          const success = await markMessagesAsRead(taskId, user.id, receiverId);
+          console.log(`Messages marked as read: ${success}`);
+          
+          // Refresh unread count after marking messages as read
+          await refreshCount();
+          console.log("Unread count refreshed in MessageModal");
         } catch (error) {
           console.error("Error marking messages as read:", error);
         }
