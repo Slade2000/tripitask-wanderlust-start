@@ -31,16 +31,30 @@ export async function completeWorkDone(taskId: string, providerId: string) {
     }
     
     // Update offer status to work_completed (pending approval)
-    const { error: updateError } = await supabase
+    const { error: updateOfferError } = await supabase
       .from('offers')
       .update({ 
         status: 'work_completed'
       })
       .eq('id', offerData.id);
       
-    if (updateError) {
-      console.error("Error marking work as completed:", updateError);
+    if (updateOfferError) {
+      console.error("Error marking work as completed:", updateOfferError);
       toast.error("Error marking your work as completed");
+      return null;
+    }
+
+    // Update task status to pending_complete
+    const { error: updateTaskError } = await supabase
+      .from('tasks')
+      .update({
+        status: 'pending_complete'
+      })
+      .eq('id', taskId);
+    
+    if (updateTaskError) {
+      console.error("Error updating task status:", updateTaskError);
+      toast.error("Error updating task status");
       return null;
     }
     

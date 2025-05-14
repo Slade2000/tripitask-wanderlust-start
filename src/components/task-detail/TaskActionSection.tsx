@@ -58,7 +58,7 @@ export default function TaskActionSection({
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
       <h3 className="text-lg font-medium mb-3">Task Actions</h3>
       
-      {isTaskPoster && pendingCompletionOffer && (
+      {isTaskPoster && task.status === 'pending_complete' && pendingCompletionOffer && (
         <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md text-sm">
           <p className="text-yellow-800">
             <strong>Action Required:</strong> The service provider has marked this task as complete. 

@@ -14,6 +14,7 @@ export default function TaskStatusBadge({ status }: TaskStatusBadgeProps) {
       'open': 'Open',
       'inprogress': 'In Progress',
       'in_progress': 'In Progress',
+      'pending_complete': 'Pending Approval',
       'completed': 'Completed',
       'cancelled': 'Cancelled'
     };
@@ -29,6 +30,8 @@ export default function TaskStatusBadge({ status }: TaskStatusBadgeProps) {
       return 'bg-teal-100 text-teal-800';
     } else if (status === 'assigned' || status === 'inprogress' || status === 'in_progress') {
       return 'bg-blue-100 text-blue-800';
+    } else if (status === 'pending_complete') {
+      return 'bg-yellow-100 text-yellow-800';
     } else if (status === 'completed') {
       return 'bg-green-100 text-green-800';
     } else if (status === 'cancelled') {

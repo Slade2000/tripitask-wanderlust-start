@@ -37,8 +37,8 @@ export default function TaskActionButtons({
 }: TaskActionButtonsProps) {
   const navigate = useNavigate();
 
-  // If task poster and there's a work_completed offer, show the approve button
-  if (isTaskPoster && pendingCompletionOfferId && onApproveCompletion) {
+  // If task poster and task status is 'pending_complete' and there's a work_completed offer, show the approve button
+  if (isTaskPoster && (taskStatus === 'pending_complete') && pendingCompletionOfferId && onApproveCompletion) {
     return (
       <div className="flex space-x-2">
         <Button
@@ -125,7 +125,7 @@ export default function TaskActionButtons({
   }
 
   // If provider view and task is in progress but not current user's task, show only message button
-  if (isProviderPage && (taskStatus === "in_progress" || taskStatus === "assigned") && !isCurrentUserProvider) {
+  if (isProviderPage && (taskStatus === "in_progress" || taskStatus === "assigned" || taskStatus === "pending_complete") && !isCurrentUserProvider) {
     return (
       <div className="flex space-x-2">
         <Button
