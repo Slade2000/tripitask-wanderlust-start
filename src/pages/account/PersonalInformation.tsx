@@ -48,6 +48,11 @@ const PersonalInformation = () => {
   
   const [isRefreshing, setIsRefreshing] = useState(false);
   
+  // Create a wrapper function for updateProfile that conforms to the expected type in ProfileForm
+  const handleUpdateProfile = async (data: Partial<Profile>): Promise<void> => {
+    await updateProfile(data);
+  };
+  
   const handleRefresh = async () => {
     try {
       setIsRefreshing(true);
@@ -143,7 +148,7 @@ const PersonalInformation = () => {
             formData={formData}
             loading={loading}
             setFormData={setFormData}
-            updateProfile={updateProfile}
+            updateProfile={handleUpdateProfile}
             setIsEditMode={setIsEditMode}
             uploadAvatar={uploadAvatar}
             uploadCertificate={uploadCertificate}
