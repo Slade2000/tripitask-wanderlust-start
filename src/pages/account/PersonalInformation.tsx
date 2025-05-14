@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft, RefreshCcw } from "lucide-react";
@@ -7,6 +8,7 @@ import { toast } from "@/components/ui/use-toast";
 import BottomNav from "@/components/BottomNav";
 import { Profile } from "@/contexts/auth/types";
 import { User } from "@/types/user";
+import { Review } from "@/services/task/reviews/getTaskReviews";
 
 // Import the refactored components
 import ProfileHeader from "./components/profile/ProfileHeader";
@@ -70,6 +72,27 @@ const PersonalInformation = () => {
       setIsRefreshing(false);
     }
   };
+
+  // Convert profileData.reviews to the expected Review type format
+  const formattedReviews: Review[] = profileData.reviews ? 
+    profileData.reviews.map(review => ({
+      id: review.id || "",
+      task_id: review.task_id || "",
+      reviewer_id: review.reviewer_id || "",
+      reviewee_id: review.reviewee_id || "",
+      rating: review.rating,
+      feedback: review.feedback,
+      created_at: review.created_at || "",
+      is_provider_review: review.is_provider_review || false,
+      reviewer: {
+        id: review.reviewer_id || "",
+        full_name: review.reviewer || "Anonymous",
+        avatar_url: null
+      },
+      task: {
+        title: review.task || "Task"
+      }
+    })) : [];
 
   return (
     <div className="bg-cream min-h-screen pb-20">
@@ -162,7 +185,7 @@ const PersonalInformation = () => {
               </TabsContent>
               
               <TabsContent value="reviews" className="mt-4">
-                <ReviewsTab reviews={profileData.reviews} />
+                <ReviewsTab reviews={formattedReviews} />
               </TabsContent>
             </Tabs>
           </>
