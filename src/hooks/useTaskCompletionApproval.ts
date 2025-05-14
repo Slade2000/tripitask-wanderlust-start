@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { approveCompletedWork } from "@/services/taskService";
+import { approveCompletedWork } from "@/services/task/offers/queries/approveCompletedWork";
 import { toast } from "sonner";
 
 /**

@@ -49,10 +49,14 @@ export default function TaskActionSection({
     handleApproveCompletion
   } = useTaskCompletionApproval(task.id, onTaskUpdated);
   
-  // Find if there's a pending completion offer
-  const pendingCompletionOffer = offers.find(offer => 
-    offer.status === 'work_completed'
-  );
+  // Find any offer that should be used for completion approval
+  // If the task is pending_complete, find any accepted offer from the list
+  const pendingCompletionOffer = task.status === 'pending_complete' 
+    ? offers.find(offer => 
+        // Check for either work_completed or accepted status
+        offer.status === 'work_completed' || offer.status === 'accepted'
+      )
+    : null;
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">

@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 
@@ -37,8 +36,8 @@ export default function TaskActionButtons({
 }: TaskActionButtonsProps) {
   const navigate = useNavigate();
 
-  // If task poster and task status is 'pending_complete' and there's a work_completed offer, show the approve button
-  if (isTaskPoster && (taskStatus === 'pending_complete') && pendingCompletionOfferId && onApproveCompletion) {
+  // If task poster and task status is 'pending_complete' and there's a pendingCompletionOfferId, show the approve button
+  if (isTaskPoster && taskStatus === 'pending_complete' && pendingCompletionOfferId && onApproveCompletion) {
     return (
       <div className="flex space-x-2">
         <Button
