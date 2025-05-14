@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft, RefreshCcw } from "lucide-react";
@@ -56,10 +55,17 @@ const PersonalInformation = () => {
     try {
       setIsRefreshing(true);
       await refreshProfile();
-      toast.success("Profile data refreshed");
+      toast({
+        title: "Success",
+        description: "Profile data refreshed",
+      });
     } catch (err) {
       console.error("Failed to refresh profile:", err);
-      toast.error("Failed to refresh profile data");
+      toast({
+        title: "Error",
+        description: "Failed to refresh profile data",
+        variant: "destructive",
+      });
     } finally {
       setIsRefreshing(false);
     }

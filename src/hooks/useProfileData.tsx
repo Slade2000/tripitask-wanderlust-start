@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/contexts/profile/ProfileProvider";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/use-toast";
 import { Profile, Certificate } from "@/contexts/auth/types";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -170,7 +170,11 @@ export const useProfileData = () => {
 
   const uploadAvatar = async (file: File): Promise<string | null> => {
     if (!user?.id) {
-      toast.error("You must be logged in to upload an avatar");
+      toast({
+        title: "Error",
+        description: "You must be logged in to upload an avatar",
+        variant: "destructive",
+      });
       return null;
     }
     
@@ -190,7 +194,11 @@ export const useProfileData = () => {
         
       if (uploadError) {
         console.error("Error uploading avatar:", uploadError);
-        toast.error("Failed to upload avatar");
+        toast({
+          title: "Error",
+          description: "Failed to upload avatar",
+          variant: "destructive",
+        });
         return null;
       }
       
@@ -202,7 +210,11 @@ export const useProfileData = () => {
       return publicUrl;
     } catch (error) {
       console.error("Exception uploading avatar:", error);
-      toast.error("An unexpected error occurred");
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred",
+        variant: "destructive",
+      });
       return null;
     } finally {
       setUploadingAvatar(false);
@@ -211,7 +223,11 @@ export const useProfileData = () => {
 
   const uploadCertificate = async (file: File, certName: string): Promise<string | null> => {
     if (!user?.id) {
-      toast.error("You must be logged in to upload a certificate");
+      toast({
+        title: "Error",
+        description: "You must be logged in to upload a certificate",
+        variant: "destructive",
+      });
       return null;
     }
     
@@ -231,7 +247,11 @@ export const useProfileData = () => {
         
       if (uploadError) {
         console.error("Error uploading certificate:", uploadError);
-        toast.error("Failed to upload certificate");
+        toast({
+          title: "Error",
+          description: "Failed to upload certificate",
+          variant: "destructive",
+        });
         return null;
       }
       
@@ -243,7 +263,11 @@ export const useProfileData = () => {
       return publicUrl;
     } catch (error) {
       console.error("Exception uploading certificate:", error);
-      toast.error("An unexpected error occurred");
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred",
+        variant: "destructive",
+      });
       return null;
     } finally {
       setUploadingCertificate(false);

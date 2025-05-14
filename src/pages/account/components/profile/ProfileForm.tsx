@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
@@ -6,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Profile, Certificate } from "@/contexts/auth/types";
 import { Card, CardContent } from "@/components/ui/card";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/use-toast";
 import LocationSearchInput from "@/components/location/LocationSearchInput";
 import { useLocationSearch } from "@/hooks/useLocationSearch";
 import { PlusCircle, X, Upload } from "lucide-react";
@@ -101,7 +100,11 @@ const ProfileForm = ({
 
   const handleAddCertificate = async () => {
     if (!newCertName.trim()) {
-      toast.error("Please enter a certificate name");
+      toast({
+        title: "Error",
+        description: "Please enter a certificate name",
+        variant: "destructive",
+      });
       return;
     }
     
@@ -148,11 +151,18 @@ const ProfileForm = ({
         certifications: formData.certifications
       });
       
-      toast.success("Profile updated successfully");
+      toast({
+        title: "Success",
+        description: "Profile updated successfully",
+      });
       setIsEditMode(false);
     } catch (error) {
       console.error("Failed to update profile:", error);
-      toast.error("Failed to update profile");
+      toast({
+        title: "Error",
+        description: "Failed to update profile",
+        variant: "destructive",
+      });
     } finally {
       setIsSaving(false);
     }
