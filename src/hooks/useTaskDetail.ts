@@ -33,8 +33,8 @@ export function useTaskDetail(taskId: string | undefined, user: User | null) {
           // Check if the current user is the task poster
           setIsTaskPoster(user?.id === taskData.user_id);
           
-          // Check if the task status indicates an accepted offer ("assigned" status)
-          setHasAcceptedOffer(taskData.status === 'assigned' || taskData.status === 'in_progress');
+          // Check if the task status indicates an accepted offer ("inprogress" status)
+          setHasAcceptedOffer(taskData.status === 'inprogress' || taskData.status === 'in_progress' || taskData.status === 'assigned' || taskData.status === 'completed');
 
           // Check for data consistency between task status and offers
           const checkResult = await syncTaskStatusWithOffers(taskId);
@@ -48,7 +48,7 @@ export function useTaskDetail(taskId: string | undefined, user: User | null) {
             const refreshedTask = await getTaskById(taskId);
             if (refreshedTask) {
               setTask(refreshedTask);
-              setHasAcceptedOffer(refreshedTask.status === 'assigned' || refreshedTask.status === 'in_progress');
+              setHasAcceptedOffer(refreshedTask.status === 'inprogress' || refreshedTask.status === 'in_progress' || refreshedTask.status === 'assigned' || refreshedTask.status === 'completed');
             }
           }
         } else {
@@ -76,7 +76,7 @@ export function useTaskDetail(taskId: string | undefined, user: User | null) {
         
         // Check if there's any accepted offer
         const acceptedOffer = offersData?.find((offer: any) => offer.status === 'accepted');
-        setHasAcceptedOffer(!!acceptedOffer || (task?.status === 'assigned' || task?.status === 'in_progress'));
+        setHasAcceptedOffer(!!acceptedOffer || (task?.status === 'inprogress' || task?.status === 'in_progress' || task?.status === 'assigned' || task?.status === 'completed'));
       } catch (err) {
         console.error("Error fetching offers:", err);
       } finally {
@@ -111,7 +111,7 @@ export function useTaskDetail(taskId: string | undefined, user: User | null) {
       
       // Update the hasAcceptedOffer state
       const acceptedOffer = offersData?.find((offer: any) => offer.status === 'accepted');
-      setHasAcceptedOffer(!!acceptedOffer || (task?.status === 'assigned' || task?.status === 'in_progress'));
+      setHasAcceptedOffer(!!acceptedOffer || (task?.status === 'inprogress' || task?.status === 'in_progress' || task?.status === 'assigned' || task?.status === 'completed'));
       
       // Also refresh the task to get the latest status
       const refreshedTask = await getTaskById(taskId);
@@ -126,7 +126,7 @@ export function useTaskDetail(taskId: string | undefined, user: User | null) {
   const handleTaskUpdated = (updatedTask: any) => {
     setTask(updatedTask);
     // Update accepted offer state based on task status
-    setHasAcceptedOffer(updatedTask.status === 'assigned' || updatedTask.status === 'in_progress');
+    setHasAcceptedOffer(updatedTask.status === 'inprogress' || updatedTask.status === 'in_progress' || updatedTask.status === 'assigned' || updatedTask.status === 'completed');
   };
 
   return {

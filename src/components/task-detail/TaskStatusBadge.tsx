@@ -12,6 +12,7 @@ export default function TaskStatusBadge({ status }: TaskStatusBadgeProps) {
     const statusMap: Record<string, string> = {
       'assigned': 'In Progress',
       'open': 'Open',
+      'inprogress': 'In Progress',
       'in_progress': 'In Progress',
       'completed': 'Completed',
       'cancelled': 'Cancelled'
@@ -26,7 +27,7 @@ export default function TaskStatusBadge({ status }: TaskStatusBadgeProps) {
     
     if (status === 'open') {
       return 'bg-teal-100 text-teal-800';
-    } else if (status === 'assigned' || status === 'in_progress') {
+    } else if (status === 'assigned' || status === 'inprogress' || status === 'in_progress') {
       return 'bg-blue-100 text-blue-800';
     } else if (status === 'completed') {
       return 'bg-green-100 text-green-800';
