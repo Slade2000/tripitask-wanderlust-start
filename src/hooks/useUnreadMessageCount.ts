@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNetworkStatus } from "@/components/NetworkStatusMonitor";
@@ -11,7 +11,7 @@ export function useUnreadMessageCount() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchUnreadCount = async (userId: string) => {
+  const fetchUnreadCount = useCallback(async (userId: string) => {
     if (!isOnline) {
       console.log("Network is offline, skipping unread count fetch");
       return unreadCount; // Return the current count when offline
@@ -39,7 +39,20 @@ export function useUnreadMessageCount() {
       setError(error instanceof Error ? error.message : "Unknown error");
       return unreadCount; // Keep current count on error
     }
-  };
+  }, [isOnline, unreadCount]);
+
+  const refreshCount = useCallback(async () => {
+    if (!user) return;
+    
+    try {
+      const count = await fetchUnreadCount(user.id);
+      setUnreadCount(count);
+      return count;
+    } catch (error) {
+      console.error("Error refreshing unread count:", error);
+      return unreadCount;
+    }
+  }, [fetchUnreadCount, user, unreadCount]);
 
   useEffect(() => {
     if (user) {
@@ -52,12 +65,12 @@ export function useUnreadMessageCount() {
       setUnreadCount(0);
       setLoading(false);
     }
-  }, [user, isOnline]); // Re-fetch when online status changes
+  }, [user, isOnline, fetchUnreadCount]); // Re-fetch when online status changes
 
   return {
     unreadCount,
     loading,
     error,
-    refreshCount: user ? () => fetchUnreadCount(user.id).then(setUnreadCount) : () => {}
+    refreshCount
   };
 }

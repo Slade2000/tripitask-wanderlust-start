@@ -4,13 +4,14 @@ import { useLocation, useNavigate } from "react-router-dom";
 import BottomNav from "@/components/BottomNav";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
-import { useProfile } from "@/contexts/profile/ProfileProvider"; // Import the profile context
-import { useNetworkStatus } from "@/components/NetworkStatusMonitor"; // Import network status
+import { useProfile } from "@/contexts/profile/ProfileProvider"; 
+import { useNetworkStatus } from "@/components/NetworkStatusMonitor"; 
 import { useToast } from "@/hooks/use-toast";
 import { getMessageThreads } from "@/services/message";
 import { MessageThreadSummary } from "@/services/message/types";
 import ThreadContent from "@/components/messages/ThreadContent";
-import { supabase } from "@/integrations/supabase/client"; // Add the missing import
+import { supabase } from "@/integrations/supabase/client"; 
+import { useUnreadMessageCount } from "@/hooks/useUnreadMessageCount";
 
 const Messages = () => {
   const location = useLocation();
@@ -18,10 +19,12 @@ const Messages = () => {
   const [threads, setThreads] = useState<MessageThreadSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState("all");
   const { user } = useAuth();
-  const { profile } = useProfile(); // Use the profile from context
-  const { isOnline } = useNetworkStatus(); // Check network status
+  const { profile } = useProfile(); 
+  const { isOnline } = useNetworkStatus(); 
   const { toast } = useToast();
+  const { refreshCount } = useUnreadMessageCount();
   
   useEffect(() => {
     if (user) {
@@ -62,6 +65,9 @@ const Messages = () => {
           console.log(`Thread with user ${thread.other_user_id}: ${thread.other_user_name}`);
         });
       }
+      
+      // Refresh the unread message count
+      refreshCount();
     } catch (error) {
       console.error("Error loading message threads:", error);
       setError(error instanceof Error ? error.message : "Unknown error occurred");
@@ -97,6 +103,14 @@ const Messages = () => {
   // For debugging in development mode
   const isDevMode = process.env.NODE_ENV === 'development';
   
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    // Refresh threads when switching tabs
+    if (tab === "unread") {
+      loadThreads();
+    }
+  };
+  
   return (
     <div className="min-h-screen bg-cream p-4 pb-20">
       <div className="max-w-4xl mx-auto">
@@ -114,7 +128,7 @@ const Messages = () => {
           </div>
         )}
         
-        <Tabs defaultValue="all">
+        <Tabs defaultValue="all" onValueChange={handleTabChange}>
           <TabsList className="grid grid-cols-2 mb-6">
             <TabsTrigger value="all">All Messages</TabsTrigger>
             <TabsTrigger value="unread">Unread</TabsTrigger>
@@ -151,6 +165,7 @@ const Messages = () => {
                   <div>User ID: {thread.other_user_id}</div>
                   <div>Name: {thread.other_user_name || '(missing)'}</div>
                   <div>Avatar: {thread.other_user_avatar ? 'Yes' : 'No'}</div>
+                  <div>Unread: {thread.unread_count}</div>
                 </div>
               ))}
             </div>

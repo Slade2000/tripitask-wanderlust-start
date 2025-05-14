@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { getMessages, sendMessage, markMessagesAsRead } from "@/services/message";
 import { Message } from "@/services/message/types";
 import { getTaskById } from "@/services/task/queries/getTaskById";
+import { useUnreadMessageCount } from "@/hooks/useUnreadMessageCount";
 
 interface UseMessageDetailProps {
   otherUserId?: string;
@@ -18,8 +19,9 @@ export function useMessageDetail({ otherUserId: initialOtherUserId, initialTaskT
   const { taskId: paramTaskId } = useParams<{ taskId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { profile } = useProfile(); // Use the centralized profile
+  const { profile } = useProfile();
   const { toast } = useToast();
+  const { refreshCount } = useUnreadMessageCount(); // Import the refreshCount function
   
   // Use taskId from props or from URL params
   const taskId = propTaskId || paramTaskId;
@@ -119,6 +121,8 @@ export function useMessageDetail({ otherUserId: initialOtherUserId, initialTaskT
     try {
       // Mark all messages from sender as read (pass null for taskId to mark all)
       await markMessagesAsRead(null, user.id, senderId);
+      // Refresh the unread count in the UI
+      refreshCount();
     } catch (error) {
       console.error("Error marking messages as read:", error);
     }

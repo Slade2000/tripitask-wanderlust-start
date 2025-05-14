@@ -1,13 +1,15 @@
+
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import MessageInput from "./MessageInput";
 import MessageList from "./MessageList";
 import { useToast } from "@/hooks/use-toast";
 import { Message } from "@/services/message/types";
-import { sendMessage, getMessages } from "@/services/message";
+import { sendMessage, getMessages, markMessagesAsRead } from "@/services/message";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/contexts/profile/ProfileProvider";
 import { useNetworkStatus } from "@/components/NetworkStatusMonitor";
+import { useUnreadMessageCount } from "@/hooks/useUnreadMessageCount";
 
 interface MessageModalProps {
   isOpen: boolean;
@@ -32,6 +34,7 @@ export default function MessageModal({
   const { user } = useAuth();
   const { profile } = useProfile();
   const { isOnline } = useNetworkStatus();
+  const { refreshCount } = useUnreadMessageCount();
 
   // Load messages when the modal opens
   useEffect(() => {
@@ -65,6 +68,16 @@ export default function MessageModal({
       // Add the current task to the map
       tasksMap[taskId] = taskTitle;
       setTasksByIds(tasksMap);
+      
+      // Mark messages as read when they are loaded
+      if (receiverId) {
+        try {
+          await markMessagesAsRead(taskId, user.id, receiverId);
+          refreshCount(); // Refresh unread count after marking messages as read
+        } catch (error) {
+          console.error("Error marking messages as read:", error);
+        }
+      }
     } catch (error) {
       console.error("Error loading messages:", error);
       toast({
