@@ -1,7 +1,7 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Profile } from "@/contexts/auth/types";
-import { ProfileDataState } from "@/hooks/useProfileData";
+import { ProfileDataState } from "@/hooks/profile";
 import { CheckCircle } from "lucide-react";
 
 interface AboutTabProps {

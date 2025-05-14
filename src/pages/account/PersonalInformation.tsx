@@ -17,7 +17,7 @@ import ServicesTab from "./components/profile/ServicesTab";
 import ReviewsTab from "./components/profile/ReviewsTab";
 import ProfileForm from "./components/profile/ProfileForm";
 import ProfileLoading from "./components/profile/ProfileLoading";
-import { useProfileData } from "@/hooks/useProfileData";
+import { useProfileData } from "@/hooks/profile";
 
 const PersonalInformation = () => {
   const navigate = useNavigate();

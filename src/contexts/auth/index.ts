@@ -1,3 +1,3 @@
 
 export * from './AuthProvider';
-export type * from './types';
+export * from './types';
