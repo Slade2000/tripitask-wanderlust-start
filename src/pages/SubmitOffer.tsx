@@ -1,6 +1,5 @@
-
 import { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,10 +11,12 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/contexts/profile/ProfileProvider";
 import { toast } from "sonner";
 import CommissionCalculator from "@/components/commission/CommissionCalculator";
+import BottomNav from "@/components/BottomNav";
 
 const SubmitOffer = () => {
   const { taskId } = useParams<{ taskId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const { profile } = useProfile();
   const [task, setTask] = useState<any>(null);
@@ -93,116 +94,125 @@ const SubmitOffer = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-cream p-4 flex items-center justify-center">
-        <div className="animate-spin h-8 w-8 border-4 border-teal border-t-transparent rounded-full"></div>
-      </div>
+      <>
+        <div className="min-h-screen bg-cream p-4 flex items-center justify-center pb-20">
+          <div className="animate-spin h-8 w-8 border-4 border-teal border-t-transparent rounded-full"></div>
+        </div>
+        <BottomNav currentPath={location.pathname} />
+      </>
     );
   }
 
   if (!task) {
     return (
-      <div className="min-h-screen bg-cream p-4 flex items-center justify-center">
-        <p className="text-lg">Task not found</p>
-      </div>
+      <>
+        <div className="min-h-screen bg-cream p-4 flex items-center justify-center pb-20">
+          <p className="text-lg">Task not found</p>
+        </div>
+        <BottomNav currentPath={location.pathname} />
+      </>
     );
   }
 
   return (
-    <div className="min-h-screen bg-cream p-4">
-      <div className="max-w-2xl mx-auto">
-        <div className="mb-6">
-          <button
-            onClick={() => navigate(`/tasks/${taskId}`)}
-            className="text-teal hover:text-teal-dark mb-4"
-          >
-            &larr; Back to task
-          </button>
-          <h1 className="text-3xl font-bold text-teal">Submit Offer</h1>
-          <p className="text-gray-600">
-            Task: {task.title}
-          </p>
-        </div>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle>Offer Details</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="amount">Amount ($)</Label>
-                <div className="flex items-center">
-                  <span className="mr-2">$</span>
+    <>
+      <div className="min-h-screen bg-cream p-4 pb-20">
+        <div className="max-w-2xl mx-auto">
+          <div className="mb-6">
+            <button
+              onClick={() => navigate(`/tasks/${taskId}`)}
+              className="text-teal hover:text-teal-dark mb-4"
+            >
+              &larr; Back to task
+            </button>
+            <h1 className="text-3xl font-bold text-teal">Submit Offer</h1>
+            <p className="text-gray-600">
+              Task: {task.title}
+            </p>
+          </div>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle>Offer Details</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="amount">Amount ($)</Label>
+                  <div className="flex items-center">
+                    <span className="mr-2">$</span>
+                    <Input
+                      id="amount"
+                      type="text"
+                      value={amount}
+                      onChange={handleAmountChange}
+                      placeholder="Enter amount"
+                      required
+                      disabled={submitting}
+                      className="bg-white"
+                    />
+                  </div>
+                  {amount && parseFloat(amount) > 0 && (
+                    <CommissionCalculator 
+                      amount={parseFloat(amount)} 
+                      isProvider={true}
+                      onCalculated={handleCalculationDone}
+                    />
+                  )}
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="deliveryDate">Expected Delivery Date</Label>
                   <Input
-                    id="amount"
-                    type="text"
-                    value={amount}
-                    onChange={handleAmountChange}
-                    placeholder="Enter amount"
+                    id="deliveryDate"
+                    type="date"
+                    value={deliveryDate}
+                    onChange={(e) => setDeliveryDate(e.target.value)}
                     required
+                    disabled={submitting}
+                    className="bg-white"
+                    min={new Date().toISOString().split('T')[0]} // Set min date to today
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="message">Message to Task Owner (Optional)</Label>
+                  <Textarea
+                    id="message"
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    placeholder="Introduce yourself and explain why you're a good fit for this task"
+                    rows={5}
                     disabled={submitting}
                     className="bg-white"
                   />
                 </div>
-                {amount && parseFloat(amount) > 0 && (
-                  <CommissionCalculator 
-                    amount={parseFloat(amount)} 
-                    isProvider={true}
-                    onCalculated={handleCalculationDone}
-                  />
-                )}
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="deliveryDate">Expected Delivery Date</Label>
-                <Input
-                  id="deliveryDate"
-                  type="date"
-                  value={deliveryDate}
-                  onChange={(e) => setDeliveryDate(e.target.value)}
-                  required
-                  disabled={submitting}
-                  className="bg-white"
-                  min={new Date().toISOString().split('T')[0]} // Set min date to today
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="message">Message to Task Owner (Optional)</Label>
-                <Textarea
-                  id="message"
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  placeholder="Introduce yourself and explain why you're a good fit for this task"
-                  rows={5}
-                  disabled={submitting}
-                  className="bg-white"
-                />
-              </div>
-              
-              <div className="flex gap-4">
-                <Button
-                  type="submit"
-                  className="w-full bg-teal hover:bg-teal-dark"
-                  disabled={submitting}
-                >
-                  {submitting ? "Submitting..." : "Submit Offer"}
-                </Button>
-                <Button
-                  type="button"
-                  onClick={() => navigate(`/tasks/${taskId}`)}
-                  className="w-full"
-                  variant="outline"
-                  disabled={submitting}
-                >
-                  Cancel
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
+                
+                <div className="flex gap-4">
+                  <Button
+                    type="submit"
+                    className="w-full bg-teal hover:bg-teal-dark"
+                    disabled={submitting}
+                  >
+                    {submitting ? "Submitting..." : "Submit Offer"}
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={() => navigate(`/tasks/${taskId}`)}
+                    className="w-full"
+                    variant="outline"
+                    disabled={submitting}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
       </div>
-    </div>
+      <BottomNav currentPath={location.pathname} />
+    </>
   );
 };
 

@@ -39,39 +39,46 @@ interface BottomNavProps {
 const BottomNav = ({ currentPath }: BottomNavProps) => {
   const { unreadCount } = useUnreadMessageCount();
   
+  // Determine active state based on path patterns
+  const isHome = currentPath === "/home" || currentPath === "/post-task";
+  const isFindWork = currentPath === "/find-work" || currentPath.startsWith("/tasks/");
+  const isDashboard = currentPath === "/dashboard";
+  const isMessages = currentPath.startsWith("/messages");
+  const isAccount = currentPath === "/account" || currentPath.startsWith("/account/");
+  
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 py-2">
       <div className="flex justify-around items-center max-w-md mx-auto">
         <NavItem
           icon={<HelpCircle size={24} />}
           label="Post a Task"
-          to="/home"
-          active={currentPath === "/post-task"}
+          to="/post-task"
+          active={isHome}
         />
         <NavItem
           icon={<Briefcase size={24} />}
           label="Find Work"
           to="/find-work"
-          active={currentPath === "/find-work"}
+          active={isFindWork}
         />
         <NavItem
           icon={<LayoutDashboard size={24} />}
           label="Dashboard"
           to="/dashboard"
-          active={currentPath === "/dashboard"}
+          active={isDashboard}
         />
         <NavItem
           icon={<MessageSquare size={24} />}
           label="Messages"
           to="/messages"
-          active={currentPath === "/messages"}
+          active={isMessages}
           badge={unreadCount}
         />
         <NavItem
           icon={<User size={24} />}
           label="Account"
           to="/account"
-          active={currentPath === "/account"}
+          active={isAccount}
         />
       </div>
     </div>

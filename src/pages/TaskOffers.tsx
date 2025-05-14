@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { ChevronLeft } from "lucide-react";
@@ -125,67 +124,68 @@ export default function TaskOffersPage() {
   };
 
   return (
-    <div className="min-h-screen bg-cream p-4 pb-20">
-      <div className="flex items-center justify-between">
-        <button 
-          onClick={handleBack} 
-          className="flex items-center text-teal hover:text-teal-dark"
-        >
-          <ChevronLeft size={24} />
-          <span className="ml-1">Back</span>
-        </button>
-        <Logo />
-      </div>
-      
-      <h1 className="text-2xl font-bold text-teal text-center my-6">
-        {loading ? "Loading..." : task ? `Offers for ${task.title}` : "Task Not Found"}
-      </h1>
-      
-      {error && (
-        <div className="bg-red-100 text-red-800 p-4 rounded-md mb-4 text-center">
-          <p>{error}</p>
-          <Button 
-            variant="outline" 
-            className="mt-2 text-red-800 border-red-800 hover:bg-red-50"
-            onClick={handleRetry}
+    <>
+      <div className="min-h-screen bg-cream p-4 pb-20">
+        <div className="flex items-center justify-between">
+          <button 
+            onClick={handleBack} 
+            className="flex items-center text-teal hover:text-teal-dark"
           >
-            Retry
-          </Button>
+            <ChevronLeft size={24} />
+            <span className="ml-1">Back</span>
+          </button>
+          <Logo />
         </div>
-      )}
-      
-      <div className="max-w-4xl mx-auto mb-16">
-        <OffersList 
-          offers={offers} 
-          taskId={taskId || ''} 
-          loading={loading} 
-          onRefresh={loadTaskAndOffers}
-        />
         
-        {!loading && !error && task && (
-          <div className="mt-8 text-center">
-            <button 
-              onClick={toggleDebugInfo} 
-              className="text-sm text-gray-500 hover:text-teal"
+        <h1 className="text-2xl font-bold text-teal text-center my-6">
+          {loading ? "Loading..." : task ? `Offers for ${task.title}` : "Task Not Found"}
+        </h1>
+        
+        {error && (
+          <div className="bg-red-100 text-red-800 p-4 rounded-md mb-4 text-center">
+            <p>{error}</p>
+            <Button 
+              variant="outline" 
+              className="mt-2 text-red-800 border-red-800 hover:bg-red-50"
+              onClick={handleRetry}
             >
-              {showDebugInfo ? "Hide Debug Info" : "Show Debug Info"}
-            </button>
-            
-            {showDebugInfo && debugInfo && (
-              <div className="mt-2 p-4 bg-gray-100 rounded text-left text-xs overflow-auto max-h-60">
-                <p><strong>Task ID:</strong> {taskId}</p>
-                <p><strong>Task Title:</strong> {task.title}</p>
-                <p><strong>Offers Data Type:</strong> {debugInfo.offersDataType}</p>
-                <p><strong>Is Array:</strong> {String(debugInfo.offersIsArray)}</p>
-                <p><strong>Offers Length:</strong> {debugInfo.offersLength}</p>
-                <p><strong>Raw Offers Data:</strong> {JSON.stringify(debugInfo.offersData, null, 2)}</p>
-              </div>
-            )}
+              Retry
+            </Button>
           </div>
         )}
+        
+        <div className="max-w-4xl mx-auto mb-16">
+          <OffersList 
+            offers={offers} 
+            taskId={taskId || ''} 
+            loading={loading} 
+            onRefresh={loadTaskAndOffers}
+          />
+          
+          {!loading && !error && task && (
+            <div className="mt-8 text-center">
+              <button 
+                onClick={toggleDebugInfo} 
+                className="text-sm text-gray-500 hover:text-teal"
+              >
+                {showDebugInfo ? "Hide Debug Info" : "Show Debug Info"}
+              </button>
+              
+              {showDebugInfo && debugInfo && (
+                <div className="mt-2 p-4 bg-gray-100 rounded text-left text-xs overflow-auto max-h-60">
+                  <p><strong>Task ID:</strong> {taskId}</p>
+                  <p><strong>Task Title:</strong> {task.title}</p>
+                  <p><strong>Offers Data Type:</strong> {debugInfo.offersDataType}</p>
+                  <p><strong>Is Array:</strong> {String(debugInfo.offersIsArray)}</p>
+                  <p><strong>Offers Length:</strong> {debugInfo.offersLength}</p>
+                  <p><strong>Raw Offers Data:</strong> {JSON.stringify(debugInfo.offersData, null, 2)}</p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
-      
       <BottomNav currentPath={location.pathname} />
-    </div>
+    </>
   );
 }

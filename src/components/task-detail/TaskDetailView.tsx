@@ -34,7 +34,7 @@ export default function TaskDetailView({
   onRefreshOffers
 }: TaskDetailViewProps) {
   return (
-    <div className="min-h-screen bg-cream p-4">
+    <div className="min-h-screen bg-cream p-4 pb-24">
       <div className="max-w-4xl mx-auto">
         <TaskDetailHeader title={task.title} status={task.status} />
         
