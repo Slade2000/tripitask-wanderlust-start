@@ -17,7 +17,9 @@ export async function approveCompletedWork(taskId: string, offerId: string) {
   }
   
   try {
-    // First verify the offer belongs to this task and is in work_completed status
+    console.log("Starting approval process for task:", taskId, "offer:", offerId);
+    
+    // First verify the offer belongs to this task and has the correct status
     const { data: offerData, error: offerCheckError } = await supabase
       .from('offers')
       .select('id, status, provider_id')
@@ -31,7 +33,10 @@ export async function approveCompletedWork(taskId: string, offerId: string) {
       return null;
     }
     
-    if (offerData.status !== 'work_completed') {
+    console.log("Found offer with status:", offerData.status);
+    
+    // Accept both 'work_completed' and 'accepted' statuses for backward compatibility
+    if (offerData.status !== 'work_completed' && offerData.status !== 'accepted') {
       console.error(`Cannot approve offer ${offerId} with status ${offerData.status}`);
       toast.error("This offer is not marked as completed by the provider");
       return null;
@@ -51,34 +56,24 @@ export async function approveCompletedWork(taskId: string, offerId: string) {
       return null;
     }
     
-    // Then update the task status to completed with retry logic
-    let taskError = null;
-    for (let attempt = 0; attempt < 3; attempt++) {
-      const { error } = await supabase
-        .from('tasks')
-        .update({ 
-          status: 'completed',
-          completed_at: new Date().toISOString()
-        })
-        .eq('id', taskId);
-        
-      taskError = error;
-      
-      if (!error) {
-        break; // Success, exit retry loop
-      } else {
-        console.warn(`Task completion update attempt ${attempt + 1} failed:`, error);
-        // Small delay before retry
-        if (attempt < 2) await new Promise(r => setTimeout(r, 500));
-      }
-    }
+    console.log("Offer status updated to completed, now updating task");
+    
+    // Then update the task status to completed
+    const { error: taskError } = await supabase
+      .from('tasks')
+      .update({ 
+        status: 'completed',
+        completed_at: new Date().toISOString()
+      })
+      .eq('id', taskId);
       
     if (taskError) {
-      console.error(`Task completion update failed after 3 attempts for task ${taskId}:`, taskError);
-      toast.error(`Failed to mark task as completed. Please try again.`);
+      console.error(`Error updating task ${taskId} status:`, taskError);
+      toast.error("Failed to mark task as completed");
       return null;
     }
     
+    console.log("Task updated to completed status");
     toast.success("Work completion approved! Task marked as completed.");
     
     // Refresh task data
