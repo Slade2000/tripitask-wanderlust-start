@@ -19,15 +19,15 @@ BEGIN
   -- Check if the provider is an accepted provider for this task
   SELECT EXISTS(
     SELECT 1 FROM offers 
-    WHERE task_id = $1 
-    AND provider_id = $2 
-    AND status = 'accepted'
+    WHERE offers.task_id = $1 
+    AND offers.provider_id = $2 
+    AND offers.status = 'accepted'
   ) INTO is_accepted;
   
   -- Check if the task exists
   SELECT EXISTS(
     SELECT 1 FROM tasks
-    WHERE id = $1
+    WHERE tasks.id = $1
   ) INTO task_exists;
   
   -- If not accepted or task doesn't exist, return false
