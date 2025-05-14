@@ -196,6 +196,61 @@ export interface Database {
           }
         ]
       }
+      reviews: {
+        Row: {
+          id: string
+          task_id: string
+          reviewer_id: string
+          reviewee_id: string
+          rating: number
+          feedback?: string
+          created_at: string
+          is_provider_review: boolean
+        }
+        Insert: {
+          id?: string
+          task_id: string
+          reviewer_id: string
+          reviewee_id: string
+          rating: number
+          feedback?: string
+          created_at?: string
+          is_provider_review: boolean
+        }
+        Update: {
+          id?: string
+          task_id?: string
+          reviewer_id?: string
+          reviewee_id?: string
+          rating?: number
+          feedback?: string
+          created_at?: string
+          is_provider_review?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_reviewer_id_fkey"
+            columns: ["reviewer_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_reviewee_id_fkey"
+            columns: ["reviewee_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       task_photos: {
         Row: {
           id: string

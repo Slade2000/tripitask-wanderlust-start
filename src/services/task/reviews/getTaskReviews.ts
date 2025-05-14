@@ -1,6 +1,5 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Profile } from "@/types/user";
 
 export interface Review {
   id: string;
@@ -11,7 +10,11 @@ export interface Review {
   feedback?: string;
   created_at: string;
   is_provider_review: boolean;
-  reviewer?: Profile;
+  reviewer?: {
+    id: string;
+    full_name: string | null;
+    avatar_url: string | null;
+  };
 }
 
 export async function getTaskReviews(taskId: string): Promise<Review[]> {
@@ -29,7 +32,7 @@ export async function getTaskReviews(taskId: string): Promise<Review[]> {
       return [];
     }
     
-    return reviews || [];
+    return reviews as Review[];
   } catch (err) {
     console.error("Error fetching task reviews:", err);
     return [];

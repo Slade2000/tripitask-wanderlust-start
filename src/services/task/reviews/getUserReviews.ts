@@ -18,7 +18,7 @@ export async function getUserReviews(userId: string): Promise<Review[]> {
       return [];
     }
     
-    return reviews || [];
+    return reviews as Review[];
   } catch (err) {
     console.error("Error fetching user reviews:", err);
     return [];
