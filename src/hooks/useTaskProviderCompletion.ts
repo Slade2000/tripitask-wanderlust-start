@@ -21,6 +21,8 @@ export function useTaskProviderCompletion(taskId: string, providerId: string, on
       if (updatedTask) {
         onTaskUpdated(updatedTask);
       }
+    } catch (error) {
+      console.error("Error in handleCompleteWork:", error);
     } finally {
       setIsSubmittingCompletion(false);
     }

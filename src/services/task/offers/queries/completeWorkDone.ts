@@ -31,11 +31,11 @@ export async function completeWorkDone(taskId: string, providerId: string) {
     }
     
     // Update offer status to work_completed
+    // Removed the completed_at field since it doesn't exist in the schema
     const { error: updateError } = await supabase
       .from('offers')
       .update({ 
-        status: 'work_completed',
-        completed_at: new Date().toISOString()
+        status: 'work_completed'
       })
       .eq('id', offerData.id);
       
