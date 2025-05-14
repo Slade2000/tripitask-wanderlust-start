@@ -1,3 +1,4 @@
+
 export type Json =
   | string
   | number
@@ -472,6 +473,14 @@ export interface Database {
             name?: string;
           };
         }[]
+      }
+      update_task_status_for_provider: {
+        Args: {
+          task_id: string;
+          provider_id: string;
+          new_status: string;
+        }
+        Returns: boolean
       }
     }
     Enums: {

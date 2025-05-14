@@ -30,7 +30,7 @@ export async function updateTaskStatusForProvider(taskId: string, providerId: st
       return { success: false, error: error.message };
     }
     
-    if (!data) {
+    if (data === null) {
       console.warn("No data returned from secure function, might not have updated");
       return { success: false, error: "Failed to update task status - verify permissions" };
     }

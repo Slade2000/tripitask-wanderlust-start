@@ -2330,6 +2330,10 @@ export type Database = {
         Args: { "": string }
         Returns: number
       }
+      update_task_status_for_provider: {
+        Args: { task_id: string; provider_id: string; new_status: string }
+        Returns: boolean
+      }
       updategeometrysrid: {
         Args: {
           catalogn_name: string
