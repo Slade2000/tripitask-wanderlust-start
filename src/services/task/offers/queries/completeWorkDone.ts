@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { getTaskById } from "../../queries/getTaskById";
 
 /**
- * Marks a service provider's work as complete on a task
+ * Marks a service provider's work as complete on a task, but pending approval
  * @param taskId The ID of the task to mark as work completed
  * @param providerId The ID of the service provider
  * @returns The updated task data or null if the operation failed
@@ -30,8 +30,7 @@ export async function completeWorkDone(taskId: string, providerId: string) {
       return null;
     }
     
-    // Update offer status to work_completed
-    // Removed the completed_at field since it doesn't exist in the schema
+    // Update offer status to work_completed (pending approval)
     const { error: updateError } = await supabase
       .from('offers')
       .update({ 
@@ -45,7 +44,7 @@ export async function completeWorkDone(taskId: string, providerId: string) {
       return null;
     }
     
-    toast.success("You've marked your work as completed!");
+    toast.success("You've marked your work as completed! Awaiting customer approval.");
     
     // Refresh task data
     const updatedTask = await getTaskById(taskId);

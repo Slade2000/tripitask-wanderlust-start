@@ -9,6 +9,7 @@ import TaskDetailHeader from "@/components/task-detail/TaskDetailHeader";
 import TaskInterestSection from "./TaskInterestSection";
 import TaskOffersSection from "./TaskOffersSection";
 import TaskActionSection from "./TaskActionSection";
+import { Offer } from "@/types/offer";
 
 interface TaskDetailViewProps {
   task: any;
@@ -58,6 +59,7 @@ export default function TaskDetailView({
             {/* Action section for task posters and service providers */}
             <TaskActionSection
               task={task}
+              offers={offers}
               isTaskPoster={isTaskPoster}
               hasAcceptedOffer={hasAcceptedOffer}
               isCurrentUserProvider={isCurrentUserProvider}

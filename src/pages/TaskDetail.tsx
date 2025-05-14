@@ -65,7 +65,7 @@ const TaskDetail = () => {
     <>
       <TaskDetailView
         task={task}
-        offers={isTaskPoster ? offers : []} // Only pass offers if user is the task poster
+        offers={offers} // Pass all offers, regardless of user type
         isTaskPoster={isTaskPoster}
         hasAcceptedOffer={hasAcceptedOffer}
         isCurrentUserProvider={isCurrentUserProvider}

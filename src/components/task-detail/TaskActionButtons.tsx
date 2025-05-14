@@ -10,10 +10,13 @@ interface TaskActionButtonsProps {
   onMessageClick: () => void;
   onCompleteTask?: () => void;
   onProviderCompleteTask?: () => void;
+  onApproveCompletion?: (offerId: string) => void;
   isSubmittingCompletion?: boolean;
   isSubmittingProviderCompletion?: boolean;
+  isApprovingCompletion?: boolean;
   hasAcceptedOffer?: boolean;
   isCurrentUserProvider?: boolean;
+  pendingCompletionOfferId?: string;
 }
 
 export default function TaskActionButtons({ 
@@ -24,12 +27,37 @@ export default function TaskActionButtons({
   onMessageClick,
   onCompleteTask,
   onProviderCompleteTask,
+  onApproveCompletion,
   isSubmittingCompletion = false,
   isSubmittingProviderCompletion = false,
+  isApprovingCompletion = false,
   hasAcceptedOffer = false,
-  isCurrentUserProvider = false
+  isCurrentUserProvider = false,
+  pendingCompletionOfferId = ''
 }: TaskActionButtonsProps) {
   const navigate = useNavigate();
+
+  // If task poster and there's a work_completed offer, show the approve button
+  if (isTaskPoster && pendingCompletionOfferId && onApproveCompletion) {
+    return (
+      <div className="flex space-x-2">
+        <Button
+          onClick={() => onApproveCompletion(pendingCompletionOfferId)}
+          className="w-full bg-green-600 hover:bg-green-700 text-white"
+          disabled={isApprovingCompletion}
+        >
+          {isApprovingCompletion ? "Processing..." : "Approve Work Completion"}
+        </Button>
+        <Button
+          onClick={onMessageClick}
+          variant="outline"
+          className="border-teal text-teal hover:bg-teal/10"
+        >
+          Messages
+        </Button>
+      </div>
+    );
+  }
 
   // If user is task poster and task is in progress, show complete button
   if (isTaskPoster && (taskStatus === "in_progress" || taskStatus === "assigned")) {

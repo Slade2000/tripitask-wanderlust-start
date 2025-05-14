@@ -7,7 +7,7 @@ export interface Offer {
   net_amount?: number; // Amount after commission
   expected_delivery_date: string;
   message?: string;
-  status: 'pending' | 'accepted' | 'rejected';
+  status: 'pending' | 'accepted' | 'rejected' | 'work_completed' | 'completion_approved';
   created_at: string;
   provider?: {
     id: string;
