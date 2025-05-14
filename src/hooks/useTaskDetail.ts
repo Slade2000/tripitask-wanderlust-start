@@ -33,7 +33,8 @@ export function useTaskDetail(taskId: string | undefined, user: User | null) {
           // Check if the current user is the task poster
           setIsTaskPoster(user?.id === taskData.user_id);
           
-          // Check if the task status indicates an accepted offer ("inprogress" status)
+          // Check if the task status indicates an accepted offer
+          // Support both "inprogress" (without underscore) and "in_progress" (with underscore)
           setHasAcceptedOffer(taskData.status === 'inprogress' || taskData.status === 'in_progress' || taskData.status === 'assigned' || taskData.status === 'completed');
 
           // Check for data consistency between task status and offers

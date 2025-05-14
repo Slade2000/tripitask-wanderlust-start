@@ -41,9 +41,9 @@ export async function updateOfferStatus(
 
     console.log(`Successfully updated offer status to: ${status}`);
 
-    // If the offer is accepted, update the task status to 'inprogress'
+    // If the offer is accepted, update the task status to 'in_progress' (with underscore)
     if (status === 'accepted') {
-      console.log(`Attempting to update task ${taskId} status to 'inprogress'`);
+      console.log(`Attempting to update task ${taskId} status to 'in_progress'`);
       
       const { data: taskData, error: taskCheckError } = await supabase
         .from('tasks')
@@ -60,7 +60,7 @@ export async function updateOfferStatus(
       
       const { error: updateTaskError } = await supabase
         .from('tasks')
-        .update({ status: 'inprogress' })
+        .update({ status: 'in_progress' })
         .eq('id', taskId);
 
       if (updateTaskError) {
@@ -68,7 +68,7 @@ export async function updateOfferStatus(
         return { success: false, error: updateTaskError.message };
       }
       
-      console.log(`Successfully updated task ${taskId} status to 'inprogress'`);
+      console.log(`Successfully updated task ${taskId} status to 'in_progress'`);
       
       // Verify the task was updated correctly
       const { data: verifyData, error: verifyError } = await supabase
@@ -79,7 +79,7 @@ export async function updateOfferStatus(
         
       if (verifyError) {
         console.warn("Could not verify task status update:", verifyError);
-      } else if (verifyData?.status !== 'inprogress') {
+      } else if (verifyData?.status !== 'in_progress') {
         console.warn("Task status verification failed. Current status:", verifyData?.status);
         return { success: false, error: "Task status verification failed" };
       } else {
@@ -126,10 +126,10 @@ export async function syncTaskStatusWithOffers(taskId: string): Promise<{ succes
       return { success: false, error: taskError.message };
     }
     
-    // If there are accepted offers but task is not inprogress/completed
+    // If there are accepted offers but task is not in_progress/completed
     const hasAcceptedOffer = offers && offers.length > 0;
     const needsUpdate = hasAcceptedOffer && 
-                        taskData.status !== 'inprogress' && 
+                        taskData.status !== 'in_progress' && 
                         taskData.status !== 'completed';
     
     if (needsUpdate) {
@@ -137,7 +137,7 @@ export async function syncTaskStatusWithOffers(taskId: string): Promise<{ succes
       
       const { error: updateError } = await supabase
         .from('tasks')
-        .update({ status: 'inprogress' })
+        .update({ status: 'in_progress' })
         .eq('id', taskId);
         
       if (updateError) {
@@ -145,7 +145,7 @@ export async function syncTaskStatusWithOffers(taskId: string): Promise<{ succes
         return { success: false, error: updateError.message };
       }
       
-      console.log(`Fixed task ${taskId} status to 'inprogress'`);
+      console.log(`Fixed task ${taskId} status to 'in_progress'`);
       return { success: true, updated: true };
     }
     
