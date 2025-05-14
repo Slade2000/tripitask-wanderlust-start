@@ -305,6 +305,47 @@ export type Database = {
         }
         Relationships: []
       }
+      reviews: {
+        Row: {
+          created_at: string
+          feedback: string | null
+          id: string
+          is_provider_review: boolean
+          rating: number
+          reviewee_id: string
+          reviewer_id: string
+          task_id: string
+        }
+        Insert: {
+          created_at?: string
+          feedback?: string | null
+          id?: string
+          is_provider_review?: boolean
+          rating: number
+          reviewee_id: string
+          reviewer_id: string
+          task_id: string
+        }
+        Update: {
+          created_at?: string
+          feedback?: string | null
+          id?: string
+          is_provider_review?: boolean
+          rating?: number
+          reviewee_id?: string
+          reviewer_id?: string
+          task_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       spatial_ref_sys: {
         Row: {
           auth_name: string | null
@@ -362,6 +403,7 @@ export type Database = {
         Row: {
           budget: string
           category_id: string | null
+          completed_at: string | null
           created_at: string
           description: string
           due_date: string
@@ -376,6 +418,7 @@ export type Database = {
         Insert: {
           budget: string
           category_id?: string | null
+          completed_at?: string | null
           created_at?: string
           description: string
           due_date: string
@@ -390,6 +433,7 @@ export type Database = {
         Update: {
           budget?: string
           category_id?: string | null
+          completed_at?: string | null
           created_at?: string
           description?: string
           due_date?: string

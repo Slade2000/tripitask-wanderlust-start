@@ -19,7 +19,10 @@ export async function completeTask(taskId: string, userId: string) {
     // Update task status to completed
     const { error } = await supabase
       .from('tasks')
-      .update({ status: 'completed' })
+      .update({ 
+        status: 'completed',
+        completed_at: new Date().toISOString()
+      })
       .eq('id', taskId)
       .eq('user_id', userId); // Ensure the user is the task poster
       
