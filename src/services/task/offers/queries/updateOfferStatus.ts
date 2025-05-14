@@ -126,11 +126,12 @@ export async function syncTaskStatusWithOffers(taskId: string): Promise<{ succes
       return { success: false, error: taskError.message };
     }
     
-    // If there are accepted offers but task is not in_progress/completed
+    // If there are accepted offers but task is not in_progress/completed/pending_complete
     const hasAcceptedOffer = offers && offers.length > 0;
     const needsUpdate = hasAcceptedOffer && 
                         taskData.status !== 'in_progress' && 
-                        taskData.status !== 'completed';
+                        taskData.status !== 'completed' && 
+                        taskData.status !== 'pending_complete';
     
     if (needsUpdate) {
       console.log(`Data inconsistency found: Task ${taskId} has accepted offers but status is '${taskData.status}'`);
