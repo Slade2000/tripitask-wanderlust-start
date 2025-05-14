@@ -102,7 +102,7 @@ export function useMessageDetail({ otherUserId: initialOtherUserId, initialTaskT
     } finally {
       setLoading(false);
     }
-  }, [user, otherUserId, toast]);
+  }, [user, otherUserId, toast, refreshCount]);
   
   const loadTaskDetails = async (taskId: string) => {
     try {
@@ -204,4 +204,4 @@ export function useMessageDetail({ otherUserId: initialOtherUserId, initialTaskT
     handleSendMessage,
     loadMessages
   };
-}, []);
+}
