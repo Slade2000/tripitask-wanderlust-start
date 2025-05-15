@@ -5,6 +5,7 @@ export * from './getProviderEarnings';
 // Export specifically from getProviderEarningsStatistics to avoid duplicate exports
 export { getProviderEarningsStatistics, refreshProviderEarnings } from './getProviderEarningsStatistics';
 export * from './getWalletTransactions';
+export * from './getWalletTransactionDetails';
 export * from './recordEarnings';
 export * from './updateEarningsStatus';
 export * from './createWalletTransaction';
