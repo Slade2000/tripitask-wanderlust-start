@@ -1,5 +1,5 @@
 
-import { CalendarIcon, MapPinIcon, TagIcon, BanknotesIcon } from "lucide-react";
+import { CalendarIcon, MapPinIcon, TagIcon, BanknoteIcon } from "lucide-react";
 
 export interface TaskBasicInfoProps {
   category?: string | { name: string, description?: string };
@@ -46,7 +46,7 @@ export default function TaskBasicInfo({
       </div>
       
       <div className="flex items-start">
-        <BanknotesIcon className="h-5 w-5 mr-2 text-gray-500 mt-0.5" />
+        <BanknoteIcon className="h-5 w-5 mr-2 text-gray-500 mt-0.5" />
         <div>
           <p className="text-sm text-gray-500">Budget</p>
           <p className="font-medium">${budget} AUD</p>
