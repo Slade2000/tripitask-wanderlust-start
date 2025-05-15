@@ -11,7 +11,7 @@ export async function getUserReviews(userId: string): Promise<Review[]> {
       return [];
     }
     
-    // Using explicit join syntax instead of relying on foreign key relationships
+    // Now we can use foreign key relationships with our new constraints
     const { data: reviews, error } = await supabase
       .from('reviews')
       .select(`
@@ -23,9 +23,9 @@ export async function getUserReviews(userId: string): Promise<Review[]> {
         feedback,
         created_at,
         is_provider_review,
-        reviewer:profiles!reviewer_id(id, full_name, avatar_url),
-        reviewee:profiles!reviewee_id(id, full_name, avatar_url),
-        task:tasks!task_id(id, title)
+        reviewer:profiles!reviewer_id(*),
+        reviewee:profiles!reviewee_id(*),
+        task:tasks!task_id(*)
       `)
       .eq('reviewee_id', userId)
       .order('created_at', { ascending: false });
