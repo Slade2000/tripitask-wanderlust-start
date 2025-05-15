@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
@@ -28,7 +27,7 @@ interface ProfileFormProps {
   updateProfile: (data: Partial<Profile>) => Promise<void>;
   setIsEditMode: (edit: boolean) => void;
   uploadAvatar: (file: File) => Promise<string | null>;
-  uploadCertificate: (file: File, certName: string) => Promise<string | null>;
+  uploadCertificate: (file: File) => Promise<string | null>;
   addCertificate: (name: string, file?: File) => Promise<void>;
   removeCertificate: (index: number) => void;
   uploadingAvatar: boolean;

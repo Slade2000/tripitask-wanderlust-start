@@ -30,17 +30,16 @@ export const useProfileData = () => {
     handleCertificationsChange
   );
   
-  // Helper function to update the profile
-  const updateProfile = useCallback(async (profileData: Partial<Profile>) => {
+  // Helper function to update the profile - ensure return type matches ProfileForm expectations
+  const updateProfile = useCallback(async (profileData: Partial<Profile>): Promise<void> => {
     if (!profile) {
-      return null;
+      return;
     }
     
     try {
-      return await profile.updateProfile(profileData);
+      await profile.updateProfile(profileData);
     } catch (error) {
       console.error("Error updating profile:", error);
-      return null;
     }
   }, [profile]);
   

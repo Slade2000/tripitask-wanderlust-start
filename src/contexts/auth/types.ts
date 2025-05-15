@@ -70,7 +70,7 @@ export const certificationsToJson = (certs: Certificate[] | null): Json => {
     name: cert.name,
     verified: cert.verified,
     file_url: cert.file_url || null
-  })) as unknown as Json;
+  })) as Json;
 };
 
 // Auth context interface
