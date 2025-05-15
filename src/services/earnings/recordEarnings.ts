@@ -69,9 +69,9 @@ export async function recordEarnings(taskId: string, offerId: string): Promise<P
     const { error: profileUpdateError } = await supabase
       .from('profiles')
       .update({
-        jobs_completed: supabase.rpc('increment', { inc: 1 }),
-        pending_earnings: supabase.rpc('increment', { inc: netAmount }),
-        total_earnings: supabase.rpc('increment', { inc: netAmount })
+        jobs_completed: supabase.rpc('increment', { row_id: offerData.provider_id, inc: 1 }),
+        pending_earnings: supabase.rpc('increment', { row_id: offerData.provider_id, inc: netAmount }),
+        total_earnings: supabase.rpc('increment', { row_id: offerData.provider_id, inc: netAmount })
       })
       .eq('id', offerData.provider_id);
     
@@ -82,7 +82,7 @@ export async function recordEarnings(taskId: string, offerId: string): Promise<P
       toast.error("Provider statistics could not be updated");
     }
     
-    return earningsData;
+    return earningsData as ProviderEarning;
   } catch (error) {
     console.error("Unexpected error in recordEarnings:", error);
     toast.error("Failed to record earnings due to an unexpected error");

@@ -11,6 +11,14 @@ export interface ProviderEarning {
   created_at: string;
   available_at: string | null;
   withdrawn_at: string | null;
+  tasks?: {
+    title: string;
+    description: string;
+  };
+  offers?: {
+    amount: number;
+    expected_delivery_date: string;
+  };
 }
 
 export interface ProviderEarningsStatistics {

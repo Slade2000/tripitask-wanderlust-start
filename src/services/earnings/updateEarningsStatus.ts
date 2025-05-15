@@ -58,8 +58,8 @@ export async function updateEarningsStatus(
       const { error: profileUpdateError } = await supabase
         .from('profiles')
         .update({
-          pending_earnings: supabase.rpc('decrement', { dec: currentEarning.net_amount }),
-          available_balance: supabase.rpc('increment', { inc: currentEarning.net_amount })
+          pending_earnings: supabase.rpc('decrement', { row_id: currentEarning.provider_id, dec: currentEarning.net_amount }),
+          available_balance: supabase.rpc('increment', { row_id: currentEarning.provider_id, inc: currentEarning.net_amount })
         })
         .eq('id', currentEarning.provider_id);
       
@@ -69,7 +69,7 @@ export async function updateEarningsStatus(
       }
     }
     
-    return updatedEarning;
+    return updatedEarning as ProviderEarning;
   } catch (error) {
     console.error("Unexpected error in updateEarningsStatus:", error);
     toast.error("Failed to update earnings status due to an unexpected error");

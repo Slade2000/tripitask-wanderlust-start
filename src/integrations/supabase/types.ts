@@ -260,6 +260,7 @@ export type Database = {
       profiles: {
         Row: {
           about: string | null
+          available_balance: number | null
           avatar_url: string | null
           business_name: string | null
           certifications: Json | null
@@ -268,13 +269,17 @@ export type Database = {
           id: string
           jobs_completed: number | null
           location: string | null
+          pending_earnings: number | null
           rating: number | null
           services: string[] | null
+          total_earnings: number | null
+          total_withdrawn: number | null
           trade_registry_number: string | null
           updated_at: string | null
         }
         Insert: {
           about?: string | null
+          available_balance?: number | null
           avatar_url?: string | null
           business_name?: string | null
           certifications?: Json | null
@@ -283,13 +288,17 @@ export type Database = {
           id: string
           jobs_completed?: number | null
           location?: string | null
+          pending_earnings?: number | null
           rating?: number | null
           services?: string[] | null
+          total_earnings?: number | null
+          total_withdrawn?: number | null
           trade_registry_number?: string | null
           updated_at?: string | null
         }
         Update: {
           about?: string | null
+          available_balance?: number | null
           avatar_url?: string | null
           business_name?: string | null
           certifications?: Json | null
@@ -298,12 +307,79 @@ export type Database = {
           id?: string
           jobs_completed?: number | null
           location?: string | null
+          pending_earnings?: number | null
           rating?: number | null
           services?: string[] | null
+          total_earnings?: number | null
+          total_withdrawn?: number | null
           trade_registry_number?: string | null
           updated_at?: string | null
         }
         Relationships: []
+      }
+      provider_earnings: {
+        Row: {
+          amount: number
+          available_at: string | null
+          commission_amount: number
+          created_at: string | null
+          id: string
+          net_amount: number
+          offer_id: string
+          provider_id: string
+          status: string
+          task_id: string
+          withdrawn_at: string | null
+        }
+        Insert: {
+          amount: number
+          available_at?: string | null
+          commission_amount: number
+          created_at?: string | null
+          id?: string
+          net_amount: number
+          offer_id: string
+          provider_id: string
+          status?: string
+          task_id: string
+          withdrawn_at?: string | null
+        }
+        Update: {
+          amount?: number
+          available_at?: string | null
+          commission_amount?: number
+          created_at?: string | null
+          id?: string
+          net_amount?: number
+          offer_id?: string
+          provider_id?: string
+          status?: string
+          task_id?: string
+          withdrawn_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_earnings_offer_id_fkey"
+            columns: ["offer_id"]
+            isOneToOne: false
+            referencedRelation: "offers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "provider_earnings_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "provider_earnings_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       reviews: {
         Row: {
@@ -505,6 +581,47 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      wallet_transactions: {
+        Row: {
+          amount: number
+          completed_at: string | null
+          created_at: string | null
+          id: string
+          provider_id: string
+          reference: string | null
+          status: string
+          transaction_type: string
+        }
+        Insert: {
+          amount: number
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          provider_id: string
+          reference?: string | null
+          status: string
+          transaction_type: string
+        }
+        Update: {
+          amount?: number
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          provider_id?: string
+          reference?: string | null
+          status?: string
+          transaction_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wallet_transactions_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
