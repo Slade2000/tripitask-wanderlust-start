@@ -15,12 +15,12 @@ export const applyMigration = async (filePath: string): Promise<void> => {
     const sql = fs.readFileSync(fullPath, 'utf8');
     console.log('SQL to execute:', sql);
     
-    // Execute SQL directly with multiple statements
+    // Execute SQL statements one by one
     const statements = sql.split(';').filter(stmt => stmt.trim());
     
     for (const statement of statements) {
       if (statement.trim()) {
-        const { error } = await supabase.from('_sqlexec').select().eq('query', statement);
+        const { error } = await supabase.rpc('execute_sql', { query: statement });
         
         if (error) {
           console.error('Error applying migration statement:', error);

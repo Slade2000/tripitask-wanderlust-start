@@ -24,15 +24,11 @@ export const applyReviewsMigration = async (): Promise<boolean> => {
        FOREIGN KEY (task_id) REFERENCES public.tasks (id)`
     ];
     
-    // Execute each SQL statement
+    // Execute each SQL statement using raw API call
     for (const sql of statements) {
-      // Using the execute_sql stored function if available in your Supabase instance
-      const { error } = await supabase.rpc('execute_sql', { query: sql });
-      
-      if (error) {
-        // Fallback approach: many Supabase instances allow executing SQL via the REST endpoint
-        console.log(`Using fallback approach for: ${sql}`);
-        const res = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/rpc/execute_sql`, {
+      try {
+        // Attempt to run with direct API call instead of RPC
+        const res = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/`, {
           method: 'POST',
           headers: {
             'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
@@ -46,6 +42,9 @@ export const applyReviewsMigration = async (): Promise<boolean> => {
         if (!res.ok) {
           throw new Error(`Failed to execute SQL: ${await res.text()}`);
         }
+      } catch (innerError) {
+        console.error("Inner SQL execution error:", innerError);
+        throw innerError;
       }
     }
     

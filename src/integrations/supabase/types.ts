@@ -414,6 +414,20 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "fk_reviewee"
+            columns: ["reviewee_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_reviewer"
+            columns: ["reviewer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "reviews_task_id_fkey"
             columns: ["task_id"]
             isOneToOne: false

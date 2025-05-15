@@ -26,3 +26,6 @@ export interface ProfileContextType {
   refreshProfile: () => Promise<Profile | null>;
   updateProfile: (profileData: Partial<Profile>) => Promise<Profile | null>;
 }
+
+// Re-export the Profile type from auth/types
+export type { Profile } from "@/contexts/auth/types";
