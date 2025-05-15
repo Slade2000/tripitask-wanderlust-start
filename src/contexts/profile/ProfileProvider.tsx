@@ -1,19 +1,11 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
-import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/auth';
-import { Profile, Certificate, certificationsFromJson, certificationsToJson } from '@/contexts/auth/types';
+import { Profile } from '@/contexts/auth/types';
 import { fetchUserProfile } from '@/contexts/auth/profileUtils';
-
-// Define the context type
-export interface ProfileContextType {
-  profile: Profile | null;
-  loading: boolean;
-  error: Error | null;
-  refreshProfile: () => Promise<Profile | null>;
-  updateProfile: (profileData: Partial<Profile>) => Promise<Profile | null>;
-}
+import { updateUserProfile, subscribeToProfileChanges } from './profileUtils';
+import { ProfileContextType } from './types';
+import { supabase } from '@/integrations/supabase/client';
 
 // Create the context with default values
 const ProfileContext = createContext<ProfileContextType>({
@@ -92,71 +84,35 @@ export const ProfileProvider: React.FC<ProfileProviderProps> = ({ children }) =>
   }, [user, lastLoadTime, profile]);
   
   // Function to update profile data
-  const updateProfile = async (profileData: Partial<Profile>): Promise<Profile | null> => {
+  const updateProfile = useCallback(async (profileData: Partial<Profile>): Promise<Profile | null> => {
     if (!user) {
-      toast.error("You must be logged in to update your profile");
       return null;
     }
     
     setLoading(true);
     
     try {
-      // Create a data object for the update
-      const dataToUpdate: Record<string, any> = {
-        ...profileData,
-        updated_at: new Date().toISOString(),
-      };
+      const updatedProfile = await updateUserProfile(user.id, profileData);
       
-      // Convert certificates array to JSON if present
-      if (profileData.certifications !== undefined) {
-        dataToUpdate.certifications = certificationsToJson(profileData.certifications);
-      }
-      
-      const { data, error } = await supabase
-        .from("profiles")
-        .update(dataToUpdate)
-        .eq("id", user.id)
-        .select()
-        .single();
+      if (updatedProfile) {
+        // Add the updateProfile method to the profile object
+        updatedProfile.updateProfile = async (newProfileData) => {
+          return await updateProfile(newProfileData);
+        };
         
-      if (error) {
-        console.error("Error updating profile:", error);
-        toast.error("Failed to update profile");
-        setError(error);
-        return null;
+        setProfile(updatedProfile);
+        setLastLoadTime(Date.now());
+        return updatedProfile;
       }
       
-      // Create profile with computed properties
-      const updatedProfile: Profile = {
-        ...data,
-        // Convert JSON certifications to properly typed Certificate array
-        certifications: certificationsFromJson(data.certifications),
-        first_name: data.full_name && data.full_name.includes(' ') 
-          ? data.full_name.split(' ')[0] 
-          : data.full_name,
-        last_name: data.full_name && data.full_name.includes(' ')
-          ? data.full_name.split(' ').slice(1).join(' ')
-          : null
-      };
-      
-      // Add the updateProfile method to the profile object
-      updatedProfile.updateProfile = async (newProfileData) => {
-        return await updateProfile(newProfileData);
-      };
-      
-      setProfile(updatedProfile);
-      setLastLoadTime(Date.now());
-      toast.success("Profile updated successfully");
-      return updatedProfile;
+      return null;
     } catch (err) {
-      console.error("Exception updating profile:", err);
-      toast.error("An unexpected error occurred");
       setError(err as Error);
       return null;
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
   // Load profile when user changes
   useEffect(() => {
@@ -172,23 +128,7 @@ export const ProfileProvider: React.FC<ProfileProviderProps> = ({ children }) =>
   useEffect(() => {
     if (!user) return;
     
-    // Subscribe to profile changes
-    const subscription = supabase
-      .channel(`profile:${user.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*', 
-          schema: 'public',
-          table: 'profiles',
-          filter: `id=eq.${user.id}`
-        },
-        async (payload) => {
-          console.log('Profile changed:', payload);
-          await refreshProfile();
-        }
-      )
-      .subscribe();
+    const subscription = subscribeToProfileChanges(user.id, refreshProfile);
     
     return () => {
       supabase.removeChannel(subscription);

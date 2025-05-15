@@ -1,6 +1,5 @@
 
-import { Certificate } from "@/contexts/auth/types";
-import { Profile } from "@/contexts/auth/types";
+import { Certificate, Profile } from "@/contexts/auth/types";
 
 export interface ProfileState {
   profile: Profile | null;
@@ -18,4 +17,12 @@ export interface ProfileMediaState {
 export interface CertificationManagerState {
   addCertificate: (name: string, file?: File) => Promise<void>;
   removeCertificate: (index: number) => void;
+}
+
+export interface ProfileContextType {
+  profile: Profile | null;
+  loading: boolean;
+  error: Error | null;
+  refreshProfile: () => Promise<Profile | null>;
+  updateProfile: (profileData: Partial<Profile>) => Promise<Profile | null>;
 }
