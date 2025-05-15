@@ -27,9 +27,37 @@ export async function getProviderOffers(providerId: string): Promise<Offer[]> {
     }
 
     console.log(`Found ${data?.length || 0} offers for provider ${providerId}`);
-    return data || []; // Ensure we always return an array
+    
+    // Map the data to ensure it conforms to our Offer type
+    const typedOffers: Offer[] = (data || []).map(offer => ({
+      ...offer,
+      // Cast the status to the union type expected by our Offer interface
+      status: mapOfferStatus(offer.status),
+      task: offer.task ? {
+        ...offer.task,
+        // Ensure description is always defined, even if null/undefined
+        description: offer.task.description || undefined
+      } : undefined
+    }));
+    
+    return typedOffers;
   } catch (error) {
     console.error("Error in getProviderOffers:", error);
     return []; // Return empty array on any error
   }
+}
+
+/**
+ * Maps any string status from the database to our defined status types
+ */
+function mapOfferStatus(status: string): "pending" | "accepted" | "rejected" | "work_completed" | "completed" {
+  const validStatuses = ["pending", "accepted", "rejected", "work_completed", "completed"];
+  
+  if (validStatuses.includes(status)) {
+    return status as "pending" | "accepted" | "rejected" | "work_completed" | "completed";
+  }
+  
+  // Default fallback for any unknown statuses
+  console.warn(`Unknown offer status encountered: ${status}, falling back to pending`);
+  return "pending";
 }
