@@ -101,17 +101,15 @@ export const ProfileProvider: React.FC<ProfileProviderProps> = ({ children }) =>
     setLoading(true);
     
     try {
-      // Convert the certifications array to JSON format for database storage
-      const dataToUpdate = {
+      // Create a data object for the update
+      const dataToUpdate: Record<string, any> = {
         ...profileData,
         updated_at: new Date().toISOString(),
       };
       
       // Convert certificates array to JSON if present
       if (profileData.certifications !== undefined) {
-        // Use the conversion utility to properly format certifications for the database
-        const jsonCertifications = certificationsToJson(profileData.certifications);
-        dataToUpdate.certifications = jsonCertifications;
+        dataToUpdate.certifications = certificationsToJson(profileData.certifications);
       }
       
       const { data, error } = await supabase

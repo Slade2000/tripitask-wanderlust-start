@@ -63,10 +63,14 @@ export const certificationsFromJson = (json: Json | null): Certificate[] | null 
 };
 
 export const certificationsToJson = (certs: Certificate[] | null): Json => {
-  if (!certs) return [];
+  if (!certs) return [] as Json;
   // Convert Certificate array to a format compatible with Json
-  // We need to explicitly create a new array to ensure proper typing
-  return certs as unknown as Json;
+  // Make sure we return a plain object array that's compatible with Json type
+  return certs.map(cert => ({
+    name: cert.name,
+    verified: cert.verified,
+    file_url: cert.file_url || null
+  })) as unknown as Json;
 };
 
 // Auth context interface
