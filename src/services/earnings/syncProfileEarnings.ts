@@ -12,152 +12,105 @@ export async function syncProfileEarnings(providerId: string): Promise<boolean> 
   try {
     console.log(`Syncing profile earnings for provider: ${providerId}`);
     
-    // Get total of all earnings by status using a raw SQL query instead of groupBy
-    const { data: earningsSummary, error: summaryError } = await supabase
+    // Step 1: Calculate total completed earnings from provider_earnings
+    const { data: completedEarnings, error: completedError } = await supabase
       .from('provider_earnings')
-      .select('status, net_amount')
-      .eq('provider_id', providerId);
+      .select('net_amount')
+      .eq('provider_id', providerId)
+      .eq('status', 'available');
     
-    if (summaryError) {
-      console.error("Error fetching earnings summary:", summaryError);
+    if (completedError) {
+      console.error("Error fetching completed earnings:", completedError);
+      return false;
+    }
+
+    // Step 2: Calculate pending earnings from pending offers that are accepted
+    const { data: pendingOffers, error: pendingError } = await supabase
+      .from('offers')
+      .select('net_amount, task_id')
+      .eq('provider_id', providerId)
+      .eq('status', 'accepted');
+    
+    if (pendingError) {
+      console.error("Error fetching pending offers:", pendingError);
       return false;
     }
     
-    // If the query succeeds, process the results
-    if (earningsSummary && earningsSummary.length > 0) {
-      // Group the earnings by status and sum the amounts
-      const summarizedData = earningsSummary.reduce((acc: {status: string, sum: number}[], item) => {
-        const existingGroup = acc.find(g => g.status === item.status);
-        if (existingGroup) {
-          existingGroup.sum += parseFloat(item.net_amount as any);
-        } else {
-          acc.push({ 
-            status: item.status, 
-            sum: parseFloat(item.net_amount as any)
-          });
-        }
-        return acc;
-      }, []);
+    // Step 3: Calculate withdrawn amounts from wallet_transactions
+    const { data: withdrawals, error: withdrawalsError } = await supabase
+      .from('wallet_transactions')
+      .select('amount')
+      .eq('provider_id', providerId)
+      .eq('transaction_type', 'withdrawal')
+      .eq('status', 'completed');
       
-      // Extract values from the query result
-      let pendingTotal = 0;
-      let availableTotal = 0;
-      let totalEarnings = 0;
-      
-      summarizedData.forEach((row) => {
-        if (row.status === 'pending') {
-          pendingTotal = row.sum;
-        } else if (row.status === 'available') {
-          availableTotal = row.sum;
-        }
-        totalEarnings += row.sum;
-      });
-      
-      // Get count of completed jobs (offers with 'completed' status)
-      const { count: jobsCompleted, error: countError } = await supabase
-        .from('offers')
-        .select('id', { count: 'exact', head: true })
-        .eq('provider_id', providerId)
-        .eq('status', 'completed');
-      
-      if (countError) {
-        console.error("Error counting completed jobs:", countError);
-        return false;
-      }
-      
-      // Update the profile with the correct totals
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({
-          pending_earnings: pendingTotal,
-          available_balance: availableTotal,
-          total_earnings: totalEarnings,
-          jobs_completed: jobsCompleted || 0
-        })
-        .eq('id', providerId);
-      
-      if (updateError) {
-        console.error("Error updating profile earnings totals:", updateError);
-        return false;
-      }
-      
-      console.log(`Successfully synced profile earnings for provider ${providerId}`, {
-        pendingTotal,
-        availableTotal,
-        totalEarnings,
-        jobsCompleted
-      });
-      
-      return true;
-    } 
-    
-    else {
-      // If the query fails or returns empty, let's use a manual approach
-      // Fetch all earnings for this provider and calculate totals manually
-      const { data: allEarnings, error: allEarningsError } = await supabase
-        .from('provider_earnings')
-        .select('status, net_amount')
-        .eq('provider_id', providerId);
-      
-      if (allEarningsError) {
-        console.error("Error fetching all earnings:", allEarningsError);
-        return false;
-      }
-      
-      // Calculate totals by status
-      let pendingTotal = 0;
-      let availableTotal = 0;
-      let totalEarnings = 0;
-      
-      allEarnings.forEach(row => {
-        const amount = parseFloat(row.net_amount.toString());
-        if (row.status === 'pending') {
-          pendingTotal += amount;
-        } else if (row.status === 'available') {
-          availableTotal += amount;
-        }
-        
-        // Total earnings includes all statuses
-        totalEarnings += amount;
-      });
-      
-      // Get count of completed jobs (offers with 'completed' status)
-      const { count: jobsCompleted, error: countError } = await supabase
-        .from('offers')
-        .select('id', { count: 'exact', head: true })
-        .eq('provider_id', providerId)
-        .eq('status', 'completed');
-      
-      if (countError) {
-        console.error("Error counting completed jobs:", countError);
-        return false;
-      }
-      
-      // Update the profile with the correct totals
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({
-          pending_earnings: pendingTotal,
-          available_balance: availableTotal,
-          total_earnings: totalEarnings,
-          jobs_completed: jobsCompleted || 0
-        })
-        .eq('id', providerId);
-      
-      if (updateError) {
-        console.error("Error updating profile earnings totals:", updateError);
-        return false;
-      }
-      
-      console.log(`Successfully synced profile earnings for provider ${providerId}`, {
-        pendingTotal,
-        availableTotal,
-        totalEarnings,
-        jobsCompleted
-      });
-      
-      return true;
+    if (withdrawalsError) {
+      console.error("Error fetching withdrawals:", withdrawalsError);
+      return false;
     }
+    
+    // Calculate total earnings - sum of all net_amounts in provider_earnings
+    let totalEarnings = 0;
+    if (completedEarnings && completedEarnings.length > 0) {
+      totalEarnings = completedEarnings.reduce((sum, item) => 
+        sum + parseFloat(item.net_amount.toString()), 0);
+    }
+    
+    // Calculate pending earnings - sum of all net_amounts in pending offers
+    let pendingEarnings = 0;
+    if (pendingOffers && pendingOffers.length > 0) {
+      pendingEarnings = pendingOffers.reduce((sum, item) => 
+        sum + (item.net_amount ? parseFloat(item.net_amount.toString()) : 0), 0);
+    }
+    
+    // Calculate total withdrawn amount
+    let totalWithdrawn = 0;
+    if (withdrawals && withdrawals.length > 0) {
+      totalWithdrawn = withdrawals.reduce((sum, item) => 
+        sum + parseFloat(item.amount.toString()), 0);
+    }
+
+    // Available balance is total earnings minus withdrawn
+    const availableBalance = totalEarnings - totalWithdrawn;
+    
+    // Get count of completed jobs (offers with 'completed' status)
+    const { count: jobsCompleted, error: countError } = await supabase
+      .from('offers')
+      .select('id', { count: 'exact', head: true })
+      .eq('provider_id', providerId)
+      .eq('status', 'completed');
+    
+    if (countError) {
+      console.error("Error counting completed jobs:", countError);
+      return false;
+    }
+    
+    // Update the profile with the correct totals
+    const { error: updateError } = await supabase
+      .from('profiles')
+      .update({
+        pending_earnings: pendingEarnings,
+        available_balance: availableBalance,
+        total_earnings: totalEarnings,
+        total_withdrawn: totalWithdrawn,
+        jobs_completed: jobsCompleted || 0
+      })
+      .eq('id', providerId);
+    
+    if (updateError) {
+      console.error("Error updating profile earnings totals:", updateError);
+      return false;
+    }
+    
+    console.log(`Successfully synced profile earnings for provider ${providerId}`, {
+      pendingEarnings,
+      availableBalance,
+      totalEarnings,
+      totalWithdrawn,
+      jobsCompleted
+    });
+    
+    return true;
   } catch (error) {
     console.error("Error syncing profile earnings:", error);
     return false;

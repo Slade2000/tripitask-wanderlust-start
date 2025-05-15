@@ -77,7 +77,18 @@ export async function recordEarnings(taskId: string, offerId: string): Promise<P
     
     console.log("Provider earnings recorded successfully:", earningsData);
     
-    // Get current profile values before update for debugging
+    // Update offer status to completed
+    const { error: offerUpdateError } = await supabase
+      .from('offers')
+      .update({ status: 'completed' })
+      .eq('id', offerId);
+      
+    if (offerUpdateError) {
+      console.error("Error updating offer status:", offerUpdateError);
+      toast.error("Offer status could not be updated");
+    }
+    
+    // Get current profile values before update
     const { data: currentProfile, error: profileFetchError } = await supabase
       .from('profiles')
       .select('pending_earnings, total_earnings, jobs_completed')
@@ -90,23 +101,8 @@ export async function recordEarnings(taskId: string, offerId: string): Promise<P
       console.log("Current profile values before update:", currentProfile);
     }
     
-    // Direct update to the provider's profile with new earnings data
-    // This is better than using the RPC functions which might not be working correctly
-    const { error: profileUpdateError } = await supabase
-      .from('profiles')
-      .update({
-        jobs_completed: (currentProfile?.jobs_completed || 0) + 1,
-        pending_earnings: (currentProfile?.pending_earnings || 0) + netAmount,
-        total_earnings: (currentProfile?.total_earnings || 0) + netAmount
-      })
-      .eq('id', offerData.provider_id);
-    
-    if (profileUpdateError) {
-      console.error("Error updating provider profile:", profileUpdateError);
-      toast.error("Provider statistics could not be updated");
-    } else {
-      console.log("Provider profile updated successfully with new earnings");
-    }
+    // Call the sync function to properly update all earnings
+    await syncProfileEarnings(offerData.provider_id);
 
     // Create a wallet transaction record for this deposit
     const reference = `earnings:${earningsData.id}`;

@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { ProviderEarning } from "./types";
+import { syncProfileEarnings } from "./syncProfileEarnings";
 
 /**
  * Updates the status of provider earnings
@@ -52,34 +53,8 @@ export async function updateEarningsStatus(
       return null;
     }
     
-    // Get the provider's current profile data
-    const { data: profileData, error: profileError } = await supabase
-      .from('profiles')
-      .select('pending_earnings, available_balance')
-      .eq('id', earningData.provider_id)
-      .single();
-    
-    if (profileError) {
-      console.error("Error fetching profile data:", profileError);
-      return updatedEarning as unknown as ProviderEarning;
-    }
-    
-    // If moving from pending to available, update the profile balance
-    if (earningData.status === 'pending' && newStatus === 'available') {
-      const { error: profileUpdateError } = await supabase
-        .from('profiles')
-        .update({
-          pending_earnings: (profileData.pending_earnings || 0) - earningData.net_amount,
-          available_balance: (profileData.available_balance || 0) + earningData.net_amount
-        })
-        .eq('id', earningData.provider_id);
-      
-      if (profileUpdateError) {
-        console.error("Error updating profile balances:", profileUpdateError);
-      } else {
-        console.log("Updated profile balances: moved amount from pending to available");
-      }
-    }
+    // Sync the profile earnings to ensure all values are correct
+    await syncProfileEarnings(earningData.provider_id);
     
     return updatedEarning as unknown as ProviderEarning;
   } catch (error) {
@@ -98,7 +73,7 @@ export async function processAvailableEarnings(): Promise<number> {
     const now = new Date().toISOString();
     const { data: earningsToUpdate, error: fetchError } = await supabase
       .from('provider_earnings')
-      .select('id')
+      .select('id, provider_id')
       .eq('status', 'pending')
       .lt('available_at', now);
     
@@ -116,6 +91,9 @@ export async function processAvailableEarnings(): Promise<number> {
     for (const earning of earningsToUpdate) {
       const updated = await updateEarningsStatus(earning.id, 'available');
       if (updated) updatedCount++;
+      
+      // Sync profile earnings after each update to ensure accuracy
+      await syncProfileEarnings(earning.provider_id);
     }
     
     return updatedCount;
