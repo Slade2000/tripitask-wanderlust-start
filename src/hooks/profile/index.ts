@@ -31,7 +31,7 @@ export const useProfileData = () => {
   );
   
   // Helper function to update the profile
-  const updateProfile = useCallback(async (profileData: Partial<Profile>): Promise<Profile | null> => {
+  const updateProfile = useCallback(async (profileData: Partial<Profile>) => {
     if (!profile) {
       return null;
     }

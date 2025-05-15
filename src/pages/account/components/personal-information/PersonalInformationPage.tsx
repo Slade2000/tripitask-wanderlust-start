@@ -15,6 +15,7 @@ const PersonalInformationPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { 
+    user, 
     profile, 
     loading, 
     error,
@@ -23,6 +24,17 @@ const PersonalInformationPage = () => {
     formData, 
     profileData,
     setIsEditMode,
+    setFormData,
+    getUserName,
+    getBusinessName,
+    refreshProfile,
+    updateProfile,
+    uploadAvatar,
+    uploadCertificate,
+    addCertificate,
+    removeCertificate,
+    uploadingAvatar,
+    uploadingCertificate,
     handleRetryLoadProfile
   } = useProfileData();
   
@@ -31,7 +43,7 @@ const PersonalInformationPage = () => {
   const handleRefresh = async () => {
     try {
       setIsRefreshing(true);
-      await profile?.refreshProfile();
+      await refreshProfile();
       toast.success("Profile data refreshed");
     } catch (err) {
       console.error("Failed to refresh profile:", err);
@@ -91,26 +103,26 @@ const PersonalInformationPage = () => {
           </div>
         ) : isEditMode ? (
           <ProfileForm 
-            user={profile.user}
+            user={user}
             formData={formData}
             loading={loading}
-            setFormData={profile.setFormData}
-            updateProfile={profile.updateProfile}
+            setFormData={setFormData}
+            updateProfile={updateProfile}
             setIsEditMode={setIsEditMode}
-            uploadAvatar={profile.uploadAvatar}
-            uploadCertificate={profile.uploadCertificate}
-            addCertificate={profile.addCertificate}
-            removeCertificate={profile.removeCertificate}
-            uploadingAvatar={profile.uploadingAvatar}
-            uploadingCertificate={profile.uploadingCertificate}
+            uploadAvatar={uploadAvatar}
+            uploadCertificate={uploadCertificate}
+            addCertificate={addCertificate}
+            removeCertificate={removeCertificate}
+            uploadingAvatar={uploadingAvatar}
+            uploadingCertificate={uploadingCertificate}
           />
         ) : (
           <>
             <ProfileHeader 
               profile={profile}
               profileData={profileData}
-              getUserName={profile.getUserName}
-              getBusinessName={profile.getBusinessName}
+              getUserName={getUserName}
+              getBusinessName={getBusinessName}
             />
             
             <ProfileTabs 
