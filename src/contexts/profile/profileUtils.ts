@@ -3,6 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { getUserRatingStats } from "@/services/task/reviews/getAggregateRatings";
 import { Profile } from "./types";
 
+// Re-export Profile type
+export type { Profile } from "./types";
+
 /**
  * Update a user's profile information
  */

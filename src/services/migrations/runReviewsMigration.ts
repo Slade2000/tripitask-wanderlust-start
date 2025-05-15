@@ -1,8 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from "sonner";
-import path from 'path';
-import fs from 'fs';
 
 /**
  * Execute migration SQL directly
@@ -11,41 +9,43 @@ export const applyReviewsMigration = async (): Promise<boolean> => {
   try {
     toast.info("Applying reviews foreign key migration...");
     
-    // Read the migration file
-    const migrationPath = path.join(process.cwd(), 'src/services/migrations/add_reviews_foreign_keys.sql');
-    const sql = fs.existsSync(migrationPath) 
-      ? fs.readFileSync(migrationPath, 'utf8')
-      : `
-        -- Add foreign key constraints to reviews table
-        ALTER TABLE public.reviews
-        ADD CONSTRAINT fk_reviewer
-        FOREIGN KEY (reviewer_id) REFERENCES public.profiles (id);
-        
-        ALTER TABLE public.reviews
-        ADD CONSTRAINT fk_reviewee
-        FOREIGN KEY (reviewee_id) REFERENCES public.profiles (id);
-        
-        -- Add additional constraint to link reviews to tasks
-        ALTER TABLE public.reviews
-        ADD CONSTRAINT fk_review_task
-        FOREIGN KEY (task_id) REFERENCES public.tasks (id);
-      `;
+    // SQL statements to execute - we'll run them one at a time
+    const statements = [
+      `ALTER TABLE public.reviews
+       ADD CONSTRAINT fk_reviewer
+       FOREIGN KEY (reviewer_id) REFERENCES public.profiles (id)`,
       
-    // Execute statements one by one for better error handling
-    const statements = sql.split(';')
-      .map(stmt => stmt.trim())
-      .filter(stmt => stmt.length > 0);
+      `ALTER TABLE public.reviews
+       ADD CONSTRAINT fk_reviewee
+       FOREIGN KEY (reviewee_id) REFERENCES public.profiles (id)`,
       
-    for (const statement of statements) {
-      // Use REST API directly since RPC is limited
-      const { error } = await supabase.postgrest.rpc('execute_sql', { 
-        query: statement 
-      });
+      `ALTER TABLE public.reviews
+       ADD CONSTRAINT fk_review_task
+       FOREIGN KEY (task_id) REFERENCES public.tasks (id)`
+    ];
+    
+    // Execute each SQL statement
+    for (const sql of statements) {
+      // Using the execute_sql stored function if available in your Supabase instance
+      const { error } = await supabase.rpc('execute_sql', { query: sql });
       
       if (error) {
-        console.error('Error applying migration statement:', error);
-        toast.error(`Migration error: ${error.message}`);
-        return false;
+        // Fallback approach: many Supabase instances allow executing SQL via the REST endpoint
+        console.log(`Using fallback approach for: ${sql}`);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/rpc/execute_sql`, {
+          method: 'POST',
+          headers: {
+            'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
+            'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=minimal'
+          },
+          body: JSON.stringify({ query: sql })
+        });
+        
+        if (!res.ok) {
+          throw new Error(`Failed to execute SQL: ${await res.text()}`);
+        }
       }
     }
     
