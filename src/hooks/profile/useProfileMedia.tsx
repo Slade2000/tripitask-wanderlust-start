@@ -1,58 +1,38 @@
 
 import { useState } from "react";
-import { toast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/components/ui/use-toast";
 import { User } from "@/types/user";
 
 export const useProfileMedia = (user: User | null) => {
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [uploadingCertificate, setUploadingCertificate] = useState(false);
-  
-  const uploadAvatar = async (file: File): Promise<string | null> => {
-    if (!user?.id) {
-      toast({
-        title: "Error",
-        description: "You must be logged in to upload an avatar",
-        variant: "destructive",
-      });
-      return null;
-    }
+
+  // Upload avatar function
+  const uploadAvatar = async (file: File) => {
+    if (!user) return null;
     
+    setUploadingAvatar(true);
     try {
-      setUploadingAvatar(true);
+      const fileExt = file.name.split('.').pop();
+      const filePath = `avatars/${user.id}.${fileExt}`;
       
-      // Create the path where we'll store the avatar
-      const filePath = `${user.id}/${Date.now()}_${file.name}`;
-      
-      // Upload the file to the avatars bucket
-      const { error: uploadError, data } = await supabase.storage
-        .from('avatars')
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: true
-        });
+      const { error: uploadError } = await supabase.storage
+        .from('profiles')
+        .upload(filePath, file, { upsert: true });
         
-      if (uploadError) {
-        console.error("Error uploading avatar:", uploadError);
-        toast({
-          title: "Error",
-          description: "Failed to upload avatar",
-          variant: "destructive",
-        });
-        return null;
-      }
+      if (uploadError) throw uploadError;
       
-      // Get the public URL
       const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
+        .from('profiles')
         .getPublicUrl(filePath);
       
       return publicUrl;
     } catch (error) {
-      console.error("Exception uploading avatar:", error);
+      console.error("Error uploading avatar:", error);
       toast({
         title: "Error",
-        description: "An unexpected error occurred",
+        description: "Failed to upload avatar",
         variant: "destructive",
       });
       return null;
@@ -61,51 +41,32 @@ export const useProfileMedia = (user: User | null) => {
     }
   };
 
-  const uploadCertificate = async (file: File, certName: string): Promise<string | null> => {
-    if (!user?.id) {
-      toast({
-        title: "Error",
-        description: "You must be logged in to upload a certificate",
-        variant: "destructive",
-      });
-      return null;
-    }
+  // Upload certificate function
+  const uploadCertificate = async (file: File, certName = "") => {
+    if (!user) return null;
     
+    setUploadingCertificate(true);
     try {
-      setUploadingCertificate(true);
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}-${certName.replace(/\s+/g, '-').toLowerCase()}.${fileExt}`;
+      const filePath = `certificates/${user.id}/${fileName}`;
       
-      // Create the path where we'll store the certificate
-      const filePath = `${user.id}/${Date.now()}_${file.name}`;
-      
-      // Upload the file to the certificates bucket
-      const { error: uploadError, data } = await supabase.storage
-        .from('certificates')
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: true
-        });
+      const { error: uploadError } = await supabase.storage
+        .from('profiles')
+        .upload(filePath, file, { upsert: true });
         
-      if (uploadError) {
-        console.error("Error uploading certificate:", uploadError);
-        toast({
-          title: "Error",
-          description: "Failed to upload certificate",
-          variant: "destructive",
-        });
-        return null;
-      }
+      if (uploadError) throw uploadError;
       
-      // Get the public URL
       const { data: { publicUrl } } = supabase.storage
-        .from('certificates')
+        .from('profiles')
         .getPublicUrl(filePath);
       
       return publicUrl;
     } catch (error) {
-      console.error("Exception uploading certificate:", error);
+      console.error("Error uploading certificate:", error);
       toast({
         title: "Error",
-        description: "An unexpected error occurred",
+        description: "Failed to upload certificate",
         variant: "destructive",
       });
       return null;
@@ -115,9 +76,9 @@ export const useProfileMedia = (user: User | null) => {
   };
 
   return {
-    uploadingAvatar,
-    uploadingCertificate,
     uploadAvatar,
-    uploadCertificate
+    uploadCertificate,
+    uploadingAvatar,
+    uploadingCertificate
   };
 };

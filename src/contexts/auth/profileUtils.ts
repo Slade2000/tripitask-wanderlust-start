@@ -45,7 +45,7 @@ export const fetchUserProfile = async (userId: string): Promise<Profile | null> 
     console.log('Profile data received:', data);
     
     // Create profile with computed properties instead of getters
-    const profileData = {
+    const profileData: Profile = {
       ...data,
       // Convert JSON certifications to properly typed Certificate array
       certifications: certificationsFromJson(data.certifications),
@@ -55,7 +55,7 @@ export const fetchUserProfile = async (userId: string): Promise<Profile | null> 
       last_name: data.full_name && data.full_name.includes(' ')
         ? data.full_name.split(' ').slice(1).join(' ')
         : null
-    } as Profile;
+    };
     
     // Update cache
     profileCache[userId] = {
@@ -131,7 +131,7 @@ export const createInitialProfile = async (userId: string): Promise<Profile | nu
     console.log('Initial profile created successfully:', data);
     
     // Create profile with computed properties
-    const profileData = {
+    const profileData: Profile = {
       ...data,
       // Convert JSON certifications to properly typed Certificate array
       certifications: certificationsFromJson(data.certifications),
@@ -141,7 +141,7 @@ export const createInitialProfile = async (userId: string): Promise<Profile | nu
       last_name: data.full_name && data.full_name.includes(' ')
         ? data.full_name.split(' ').slice(1).join(' ')
         : null
-    } as Profile;
+    };
     
     // Update cache
     profileCache[userId] = {

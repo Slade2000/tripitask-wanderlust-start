@@ -42,11 +42,17 @@ export const certificationsFromJson = (json: Json | null): Certificate[] | null 
   try {
     // Ensure json is an array before mapping
     if (Array.isArray(json)) {
-      return json.map(cert => ({
-        name: cert?.name as string || '',
-        verified: cert?.verified as boolean || false,
-        file_url: cert?.file_url as string || undefined
-      }));
+      return json.map(cert => {
+        // Ensure cert is an object with name and verified properties
+        if (cert && typeof cert === 'object') {
+          return {
+            name: (cert as any).name || '',
+            verified: Boolean((cert as any).verified) || false,
+            file_url: (cert as any).file_url || undefined
+          };
+        }
+        return { name: '', verified: false };
+      });
     }
     return [];
   } catch (e) {
@@ -57,6 +63,7 @@ export const certificationsFromJson = (json: Json | null): Certificate[] | null 
 
 export const certificationsToJson = (certs: Certificate[] | null): Json => {
   if (!certs) return [];
+  // Convert Certificate array to a format compatible with Json
   return certs as unknown as Json;
 };
 

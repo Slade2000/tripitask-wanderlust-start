@@ -3,7 +3,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback, Rea
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/auth';
-import { Profile, certificationsFromJson, certificationsToJson } from '@/contexts/auth/types';
+import { Profile, Certificate, certificationsFromJson, certificationsToJson } from '@/contexts/auth/types';
 import { fetchUserProfile } from '@/contexts/auth/profileUtils';
 
 // Define the context type
@@ -127,7 +127,7 @@ export const ProfileProvider: React.FC<ProfileProviderProps> = ({ children }) =>
       }
       
       // Create profile with computed properties
-      const updatedProfile = {
+      const updatedProfile: Profile = {
         ...data,
         // Convert JSON certifications to properly typed Certificate array
         certifications: certificationsFromJson(data.certifications),
@@ -137,7 +137,7 @@ export const ProfileProvider: React.FC<ProfileProviderProps> = ({ children }) =>
         last_name: data.full_name && data.full_name.includes(' ')
           ? data.full_name.split(' ').slice(1).join(' ')
           : null
-      } as Profile;
+      };
       
       // Add the updateProfile method to the profile object
       updatedProfile.updateProfile = async (newProfileData) => {
