@@ -35,7 +35,7 @@ export const NetworkStatusProvider: React.FC<NetworkStatusProviderProps> = ({
       toast.error('You are offline. Some features may be unavailable.');
     };
 
-    // Check connection speed periodically
+    // Check connection speed periodically but don't show toast notification
     const checkConnectionSpeed = async () => {
       try {
         const startTime = Date.now();
@@ -51,9 +51,7 @@ export const NetworkStatusProvider: React.FC<NetworkStatusProviderProps> = ({
           
           if (isSlow !== isConnectionSlow) {
             setIsConnectionSlow(isSlow);
-            if (isSlow) {
-              toast.warning('Network connection is slow. Performance may be affected.');
-            }
+            // Removed the toast notification for slow connection
           }
         }
       } catch (error) {
