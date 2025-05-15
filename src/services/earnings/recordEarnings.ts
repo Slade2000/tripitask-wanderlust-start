@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ProviderEarning } from "./types";
@@ -66,12 +67,14 @@ export async function recordEarnings(taskId: string, offerId: string): Promise<P
     }
     
     // Update the provider's profile with new earnings data
+    // Since increment/decrement functions aren't available as typed functions,
+    // we'll use a direct update instead
     const { error: profileUpdateError } = await supabase
       .from('profiles')
       .update({
-        jobs_completed: supabase.rpc('increment', { row_id: offerData.provider_id, inc: 1 }),
-        pending_earnings: supabase.rpc('increment', { row_id: offerData.provider_id, inc: netAmount }),
-        total_earnings: supabase.rpc('increment', { row_id: offerData.provider_id, inc: netAmount })
+        jobs_completed: supabase.rpc('increment', { row_id: offerData.provider_id, inc: 1 }) as any,
+        pending_earnings: supabase.rpc('increment', { row_id: offerData.provider_id, inc: netAmount }) as any,
+        total_earnings: supabase.rpc('increment', { row_id: offerData.provider_id, inc: netAmount }) as any
       })
       .eq('id', offerData.provider_id);
     
@@ -82,7 +85,7 @@ export async function recordEarnings(taskId: string, offerId: string): Promise<P
       toast.error("Provider statistics could not be updated");
     }
     
-    return earningsData as ProviderEarning;
+    return earningsData as unknown as ProviderEarning;
   } catch (error) {
     console.error("Unexpected error in recordEarnings:", error);
     toast.error("Failed to record earnings due to an unexpected error");

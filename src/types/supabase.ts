@@ -1,4 +1,3 @@
-
 export type Json =
   | string
   | number
@@ -23,6 +22,12 @@ export interface Database {
           rating: number | null
           jobs_completed: number | null
           updated_at: string | null
+          total_earnings: number | null
+          available_balance: number | null
+          pending_earnings: number | null
+          total_withdrawn: number | null
+          trade_registry_number: string | null
+          certifications: Json | null
         }
         Insert: {
           id: string
@@ -36,6 +41,12 @@ export interface Database {
           rating?: number | null
           jobs_completed?: number | null
           updated_at?: string | null
+          total_earnings?: number | null
+          available_balance?: number | null
+          pending_earnings?: number | null
+          total_withdrawn?: number | null
+          trade_registry_number?: string | null
+          certifications?: Json | null
         }
         Update: {
           id?: string
@@ -49,6 +60,12 @@ export interface Database {
           rating?: number | null
           jobs_completed?: number | null
           updated_at?: string | null
+          total_earnings?: number | null
+          available_balance?: number | null
+          pending_earnings?: number | null
+          total_withdrawn?: number | null
+          trade_registry_number?: string | null
+          certifications?: Json | null
         }
         Relationships: [
           {
@@ -149,6 +166,111 @@ export interface Database {
           }
         ]
       }
+      provider_earnings: {
+        Row: {
+          id: string
+          provider_id: string
+          task_id: string
+          offer_id: string
+          amount: number
+          commission_amount: number
+          net_amount: number
+          status: string
+          created_at: string
+          available_at: string | null
+          withdrawn_at: string | null
+        }
+        Insert: {
+          id?: string
+          provider_id: string
+          task_id: string
+          offer_id: string
+          amount: number
+          commission_amount: number
+          net_amount: number
+          status?: string
+          created_at?: string
+          available_at?: string | null
+          withdrawn_at?: string | null
+        }
+        Update: {
+          id?: string
+          provider_id?: string
+          task_id?: string
+          offer_id?: string
+          amount?: number
+          commission_amount?: number
+          net_amount?: number
+          status?: string
+          created_at?: string
+          available_at?: string | null
+          withdrawn_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "provider_earnings_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "provider_earnings_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "provider_earnings_offer_id_fkey"
+            columns: ["offer_id"]
+            isOneToOne: false
+            referencedRelation: "offers"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      wallet_transactions: {
+        Row: {
+          id: string
+          provider_id: string
+          amount: number
+          transaction_type: string
+          status: string
+          reference: string | null
+          created_at: string | null
+          completed_at: string | null
+        }
+        Insert: {
+          id?: string
+          provider_id: string
+          amount: number
+          transaction_type: string
+          status: string
+          reference?: string | null
+          created_at?: string | null
+          completed_at?: string | null
+        }
+        Update: {
+          id?: string
+          provider_id?: string
+          amount?: number
+          transaction_type?: string
+          status?: string
+          reference?: string | null
+          created_at?: string | null
+          completed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wallet_transactions_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       offers: {
         Row: {
           id: string
@@ -159,6 +281,7 @@ export interface Database {
           message: string | null
           status: string
           created_at: string
+          net_amount: number | null
         }
         Insert: {
           id?: string
@@ -169,6 +292,7 @@ export interface Database {
           message?: string | null
           status?: string
           created_at?: string
+          net_amount?: number | null
         }
         Update: {
           id?: string
@@ -179,6 +303,7 @@ export interface Database {
           message?: string | null
           status?: string
           created_at?: string
+          net_amount?: number | null
         }
         Relationships: [
           {
@@ -473,6 +598,20 @@ export interface Database {
             name?: string;
           };
         }[]
+      }
+      increment: {
+        Args: {
+          row_id: string;
+          inc: number;
+        }
+        Returns: void
+      }
+      decrement: {
+        Args: {
+          row_id: string;
+          dec: number;
+        }
+        Returns: void
       }
       update_task_status_for_provider: {
         Args: {
