@@ -2,11 +2,11 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/auth";
 import { useProfile } from "@/contexts/profile";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { getTaskReviews } from "@/services/task/reviews";
 import { SubmitReviewForm } from "@/components/reviews/SubmitReviewForm";
-import { Separator } from "@/components/ui/separator";
+import { ReviewItem } from "@/components/reviews/ReviewItem";
 import { Review } from "@/services/task/reviews/getTaskReviews";
 
 interface TaskReviewSectionProps {
@@ -173,50 +173,5 @@ export default function TaskReviewSection({
         </Card>
       )}
     </div>
-  );
-}
-
-function ReviewItem({ review }: { review: Review }) {
-  return (
-    <Card>
-      <CardHeader>
-        <div className="flex justify-between items-center">
-          <CardTitle className="text-sm font-medium">
-            {review.reviewer?.full_name || 'Anonymous'}
-          </CardTitle>
-          <div className="flex">
-            {[...Array(5)].map((_, i) => (
-              <Star 
-                key={i} 
-                filled={i < review.rating} 
-              />
-            ))}
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent>
-        {review.feedback ? (
-          <p className="text-sm">{review.feedback}</p>
-        ) : (
-          <p className="text-sm text-gray-500 italic">No written feedback provided.</p>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
-
-function Star({ filled }: { filled: boolean }) {
-  return (
-    <svg 
-      width="16" 
-      height="16" 
-      viewBox="0 0 24 24" 
-      fill={filled ? "rgb(250 204 21)" : "none"}
-      stroke={filled ? "rgb(250 204 21)" : "currentColor"}
-      strokeWidth="2"
-      className="h-4 w-4"
-    >
-      <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"></path>
-    </svg>
   );
 }
