@@ -12,71 +12,144 @@ export async function syncProfileEarnings(providerId: string): Promise<boolean> 
   try {
     console.log(`Syncing profile earnings for provider: ${providerId}`);
     
-    // Get total of all earnings by status
+    // Get total of all earnings by status using SQL query instead of group
     const { data: earningsSummary, error: summaryError } = await supabase
       .from('provider_earnings')
       .select('status, sum(net_amount)')
       .eq('provider_id', providerId)
-      .group('status');
+      .then(result => {
+        if (result.error) throw result.error;
+        
+        // Execute a second query to get the data grouped by status
+        return supabase.rpc('sum_earnings_by_status', { provider_id_param: providerId });
+      });
     
     if (summaryError) {
       console.error("Error fetching earnings summary:", summaryError);
       return false;
     }
     
-    // Calculate totals by status
-    let pendingTotal = 0;
-    let availableTotal = 0;
-    let totalEarnings = 0;
-    
-    earningsSummary.forEach(row => {
-      const amount = parseFloat(row.sum);
-      if (row.status === 'pending') {
-        pendingTotal += amount;
-      } else if (row.status === 'available') {
-        availableTotal += amount;
+    // If the RPC call fails or isn't available, let's use a manual approach
+    if (!earningsSummary || earningsSummary.length === 0) {
+      // Fetch all earnings for this provider and calculate totals manually
+      const { data: allEarnings, error: allEarningsError } = await supabase
+        .from('provider_earnings')
+        .select('status, net_amount')
+        .eq('provider_id', providerId);
+      
+      if (allEarningsError) {
+        console.error("Error fetching all earnings:", allEarningsError);
+        return false;
       }
       
-      // Total earnings includes all statuses
-      totalEarnings += amount;
-    });
+      // Calculate totals by status
+      let pendingTotal = 0;
+      let availableTotal = 0;
+      let totalEarnings = 0;
+      
+      allEarnings.forEach(row => {
+        const amount = parseFloat(row.net_amount.toString());
+        if (row.status === 'pending') {
+          pendingTotal += amount;
+        } else if (row.status === 'available') {
+          availableTotal += amount;
+        }
+        
+        // Total earnings includes all statuses
+        totalEarnings += amount;
+      });
+      
+      // Get count of completed jobs (offers with 'completed' status)
+      const { count: jobsCompleted, error: countError } = await supabase
+        .from('offers')
+        .select('id', { count: 'exact', head: true })
+        .eq('provider_id', providerId)
+        .eq('status', 'completed');
+      
+      if (countError) {
+        console.error("Error counting completed jobs:", countError);
+        return false;
+      }
+      
+      // Update the profile with the correct totals
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({
+          pending_earnings: pendingTotal,
+          available_balance: availableTotal,
+          total_earnings: totalEarnings,
+          jobs_completed: jobsCompleted || 0
+        })
+        .eq('id', providerId);
+      
+      if (updateError) {
+        console.error("Error updating profile earnings totals:", updateError);
+        return false;
+      }
+      
+      console.log(`Successfully synced profile earnings for provider ${providerId}`, {
+        pendingTotal,
+        availableTotal,
+        totalEarnings,
+        jobsCompleted
+      });
+      
+      return true;
+    } 
     
-    // Get count of completed jobs (offers with 'completed' status)
-    const { count: jobsCompleted, error: countError } = await supabase
-      .from('offers')
-      .select('id', { count: 'exact', head: true })
-      .eq('provider_id', providerId)
-      .eq('status', 'completed');
-    
-    if (countError) {
-      console.error("Error counting completed jobs:", countError);
-      return false;
+    // If we got data from the RPC, use it
+    else {
+      // Extract values from the RPC result
+      let pendingTotal = 0;
+      let availableTotal = 0;
+      let totalEarnings = 0;
+      
+      earningsSummary.forEach((row: any) => {
+        if (row.status === 'pending') {
+          pendingTotal = parseFloat(row.sum || '0');
+        } else if (row.status === 'available') {
+          availableTotal = parseFloat(row.sum || '0');
+        }
+        totalEarnings += parseFloat(row.sum || '0');
+      });
+      
+      // Get count of completed jobs (offers with 'completed' status)
+      const { count: jobsCompleted, error: countError } = await supabase
+        .from('offers')
+        .select('id', { count: 'exact', head: true })
+        .eq('provider_id', providerId)
+        .eq('status', 'completed');
+      
+      if (countError) {
+        console.error("Error counting completed jobs:", countError);
+        return false;
+      }
+      
+      // Update the profile with the correct totals
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({
+          pending_earnings: pendingTotal,
+          available_balance: availableTotal,
+          total_earnings: totalEarnings,
+          jobs_completed: jobsCompleted || 0
+        })
+        .eq('id', providerId);
+      
+      if (updateError) {
+        console.error("Error updating profile earnings totals:", updateError);
+        return false;
+      }
+      
+      console.log(`Successfully synced profile earnings for provider ${providerId}`, {
+        pendingTotal,
+        availableTotal,
+        totalEarnings,
+        jobsCompleted
+      });
+      
+      return true;
     }
-    
-    // Update the profile with the correct totals
-    const { error: updateError } = await supabase
-      .from('profiles')
-      .update({
-        pending_earnings: pendingTotal,
-        available_balance: availableTotal,
-        total_earnings: totalEarnings,
-        jobs_completed: jobsCompleted || 0
-      })
-      .eq('id', providerId);
-    
-    if (updateError) {
-      console.error("Error updating profile earnings totals:", updateError);
-      return false;
-    }
-    
-    console.log(`Successfully synced profile earnings for provider ${providerId}`, {
-      pendingTotal,
-      availableTotal,
-      totalEarnings,
-      jobsCompleted
-    });
-    
-    return true;
   } catch (error) {
     console.error("Error syncing profile earnings:", error);
     return false;
