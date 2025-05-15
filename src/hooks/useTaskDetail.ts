@@ -8,11 +8,12 @@ import { User } from "@/types/user";
 import { Offer } from "@/types/offer";
 import { toast } from "@/hooks/use-toast";
 import { fetchProfileById } from "@/integrations/supabase/client";
+import { TaskData } from "@/services/task/types";
 
 export function useTaskDetail(taskId: string | undefined, user: User | null) {
   const navigate = useNavigate();
   
-  const [task, setTask] = useState<any>(null);
+  const [task, setTask] = useState<TaskData | null>(null);
   const [offers, setOffers] = useState<Offer[]>([]);
   const [loading, setLoading] = useState(true);
   const [offersLoading, setOffersLoading] = useState(true);
@@ -44,23 +45,30 @@ export function useTaskDetail(taskId: string | undefined, user: User | null) {
               if (profile) {
                 setPosterProfile(profile);
                 
-                // Enhance task data with poster profile information
-                taskData.poster_name = profile.full_name || "Unknown User";
-                taskData.poster_avatar = profile.avatar_url;
-                taskData.poster_rating = profile.rating || 0;
-                taskData.poster_member_since = profile.created_at 
-                  ? new Date(profile.created_at).toLocaleDateString()
-                  : undefined;
-                taskData.poster_location = profile.location;
+                // Create a new taskData object with all existing properties plus the enhanced poster fields
+                const enhancedTaskData: TaskData = {
+                  ...taskData,
+                  poster_name: profile.full_name || "Unknown User",
+                  poster_avatar: profile.avatar_url,
+                  poster_rating: profile.rating || 0,
+                  poster_member_since: profile.created_at 
+                    ? new Date(profile.created_at).toLocaleDateString()
+                    : undefined,
+                  poster_location: profile.location
+                };
+                
+                setTask(enhancedTaskData);
               } else {
                 console.warn("Could not fetch poster profile for user ID:", taskData.user_id);
+                setTask(taskData);
               }
             } catch (profileError) {
               console.error("Error fetching task poster profile:", profileError);
+              setTask(taskData);
             }
+          } else {
+            setTask(taskData);
           }
-          
-          setTask(taskData);
           
           // Check if the current user is the task poster
           setIsTaskPoster(user?.id === taskData.user_id);

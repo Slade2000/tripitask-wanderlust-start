@@ -15,6 +15,13 @@ export interface TaskData {
   latitude?: number | null;
   longitude?: number | null;
   created_at?: string;
+  
+  // Profile information for the task poster
+  poster_name?: string;
+  poster_avatar?: string;
+  poster_rating?: number;
+  poster_member_since?: string;
+  poster_location?: string;
 }
 
 export interface TaskFilterParams {

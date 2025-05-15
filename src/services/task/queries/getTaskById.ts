@@ -1,7 +1,8 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { TaskData } from "@/services/task/types";
 
-export async function getTaskById(taskId: string) {
+export async function getTaskById(taskId: string): Promise<TaskData | null> {
   try {
     const { data, error } = await supabase
       .from('tasks')
@@ -20,7 +21,7 @@ export async function getTaskById(taskId: string) {
     // Log the task status to debug
     console.log("Task status from database:", data?.status);
     
-    return data;
+    return data as TaskData;
   } catch (error) {
     console.error("Error fetching task details:", error);
     return null;
