@@ -1,86 +1,63 @@
 
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
-import { Profile } from '@/contexts/auth/types';
-import { certificationsToJson, certificationsFromJson } from '@/contexts/auth/types';
+import { supabase } from "@/integrations/supabase/client";
+import { getUserRatingStats } from "@/services/task/reviews/getAggregateRatings";
+import type { Profile } from "./types";
 
 /**
- * Updates a user's profile in the database
+ * Update a user's profile information
  */
-export const updateUserProfile = async (
+export const updateProfile = async (
   userId: string,
-  profileData: Partial<Profile>
-): Promise<Profile | null> => {
+  updates: Partial<Profile>
+): Promise<{ success: boolean; error: any }> => {
   try {
-    // Create a data object for the update
-    const dataToUpdate: Record<string, any> = {
-      ...profileData,
-      updated_at: new Date().toISOString(),
-    };
-    
-    // Convert certificates array to JSON if present
-    if (profileData.certifications !== undefined) {
-      dataToUpdate.certifications = certificationsToJson(profileData.certifications);
-    }
-    
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from("profiles")
-      .update(dataToUpdate)
-      .eq("id", userId)
-      .select()
-      .single();
-      
+      .update(updates)
+      .eq("id", userId);
+
     if (error) {
       console.error("Error updating profile:", error);
-      toast.error("Failed to update profile");
-      throw error;
+      return { success: false, error };
     }
-    
-    // Create profile with computed properties
-    const updatedProfile: Profile = {
-      ...data,
-      // Convert JSON certifications to properly typed Certificate array
-      certifications: certificationsFromJson(data.certifications),
-      first_name: data.full_name && data.full_name.includes(' ') 
-        ? data.full_name.split(' ')[0] 
-        : data.full_name,
-      last_name: data.full_name && data.full_name.includes(' ')
-        ? data.full_name.split(' ').slice(1).join(' ')
-        : null
-    };
-    
-    toast.success("Profile updated successfully");
-    return updatedProfile;
+
+    return { success: true, error: null };
   } catch (err) {
     console.error("Exception updating profile:", err);
-    toast.error("An unexpected error occurred");
-    return null;
+    return { success: false, error: err };
   }
 };
 
 /**
- * Sets up a real-time subscription for profile updates
+ * Fetch a user's profile with their current rating stats
  */
-export const subscribeToProfileChanges = (
-  userId: string, 
-  onProfileChange: () => void
-) => {
-  const subscription = supabase
-    .channel(`profile:${userId}`)
-    .on(
-      'postgres_changes',
-      {
-        event: '*', 
-        schema: 'public',
-        table: 'profiles',
-        filter: `id=eq.${userId}`
-      },
-      async () => {
-        console.log('Profile changed, refreshing...');
-        onProfileChange();
-      }
-    )
-    .subscribe();
-  
-  return subscription;
+export const fetchProfileWithRatings = async (
+  userId: string
+): Promise<Profile | null> => {
+  try {
+    // Get the base profile
+    const { data: profile, error } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", userId)
+      .single();
+
+    if (error) {
+      console.error("Error fetching profile:", error);
+      return null;
+    }
+
+    // Get updated rating stats from the reviews table
+    const ratingStats = await getUserRatingStats(userId);
+    
+    // Merge the profile with rating stats
+    return {
+      ...profile,
+      rating: ratingStats.average_rating,
+      // Include other stats as needed
+    };
+  } catch (err) {
+    console.error("Exception fetching profile:", err);
+    return null;
+  }
 };
