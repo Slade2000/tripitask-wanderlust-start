@@ -48,6 +48,20 @@ const TaskDetailView = ({
   const acceptedOffer = offers?.find(offer => offer.status === 'accepted' || offer.status === 'completed');
   const providerDetails = acceptedOffer?.provider_details || null;
   
+  // Log provider details to help with debugging
+  console.log("TaskDetailView - Provider Details:", providerDetails ? {
+    id: providerDetails.id,
+    name: providerDetails.full_name,
+    hasDetails: Boolean(providerDetails)
+  } : "No provider details available");
+  
+  console.log("TaskDetailView - Task Status:", task.status);
+  console.log("TaskDetailView - Current User:", {
+    isTaskPoster,
+    isCurrentUserProvider,
+    userId: user?.id
+  });
+  
   // Make an async function to refresh offers - to fix the Promise return type error
   const handleRefreshOffers = async () => {
     return Promise.resolve(onRefreshOffers());
@@ -145,7 +159,7 @@ const TaskDetailView = ({
               offers={offers}
               isTaskPoster={isTaskPoster}
               onTaskUpdated={onTaskUpdated}
-              onRefreshOffers={handleRefreshOffers}  // Changed to use the async function
+              onRefreshOffers={handleRefreshOffers}
               userId={user.id}
               taskStatus={task.status}
             />
@@ -158,7 +172,7 @@ const TaskDetailView = ({
             <MessageModal
               isOpen={isMessageModalOpen}
               onClose={onCloseMessageModal}
-              receiverId={isTaskPoster ? providerDetails?.id : task.user_id}  // Use receiverId instead of recipientId
+              receiverId={isTaskPoster ? providerDetails?.id : task.user_id}
               taskId={task.id}
               taskTitle={task.title}
             />

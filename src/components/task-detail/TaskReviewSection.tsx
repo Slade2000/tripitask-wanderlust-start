@@ -30,6 +30,10 @@ export default function TaskReviewSection({
   const isProvider = !isTaskPoster && providerDetails?.id === user?.id;
   const hasTaskCompleted = task.status === 'completed';
 
+  // Provider and client IDs
+  const clientId = task.user_id;
+  const providerId = providerDetails?.id;
+
   useEffect(() => {
     const loadReviews = async () => {
       if (!task.id) return;
@@ -67,21 +71,6 @@ export default function TaskReviewSection({
   // Check if both parties have submitted reviews
   const bothPartiesReviewed = reviews.length >= 2;
   
-  // Provider and client IDs
-  const clientId = task.user_id;
-  const providerId = providerDetails?.id;
-  
-  console.log("Review section details:", {
-    isTaskPoster,
-    isProvider,
-    clientId,
-    providerId,
-    currentUserId: user?.id,
-    reviewCount: reviews.length,
-    taskStatus: task.status,
-    providerDetails: providerDetails ? {id: providerDetails.id, name: providerDetails.full_name} : "Missing provider details"
-  });
-  
   // Get the other person's name (who the current user would be reviewing)
   const revieweeName = isTaskPoster 
     ? (providerDetails?.full_name || 'Service Provider') 
@@ -90,16 +79,25 @@ export default function TaskReviewSection({
   // Determine who the current user should review
   const revieweeId = isTaskPoster ? providerId : clientId;
   
-  // Verify revieweeId is valid
-  if (!revieweeId) {
-    console.error("Missing reviewee ID:", {
-      isTaskPoster, 
-      providerId, 
-      clientId,
-      task: { id: task.id, status: task.status, user_id: task.user_id },
-      providerDetails: providerDetails ? {id: providerDetails.id} : null
-    });
-  }
+  // Enhanced logging to debug review information
+  console.log("Review section details:", {
+    isTaskPoster,
+    isProvider,
+    clientId,
+    providerId,
+    currentUserId: user?.id,
+    reviewCount: reviews.length,
+    taskStatus: task.status,
+    revieweeId,
+    providerDetails: providerDetails ? 
+      {id: providerDetails.id, name: providerDetails.full_name} : 
+      "Missing provider details",
+    task: {
+      id: task.id, 
+      user_id: task.user_id,
+      poster_name: task.poster_name
+    }
+  });
   
   // Determine current user's ID for the review
   const currentUserId = user?.id || '';
@@ -139,6 +137,9 @@ export default function TaskReviewSection({
             <CardContent className="p-4 text-center">
               <p className="text-amber-700">
                 Cannot submit review: missing recipient information.
+                {isTaskPoster ? 
+                  " Provider details could not be loaded." : 
+                  " Task poster details could not be loaded."}
               </p>
             </CardContent>
           </Card>

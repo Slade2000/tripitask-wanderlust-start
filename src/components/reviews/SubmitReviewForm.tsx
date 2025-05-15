@@ -31,7 +31,7 @@ export function SubmitReviewForm({
   const [feedback, setFeedback] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  // Log props for debugging
+  // Enhanced logging for debugging
   useEffect(() => {
     console.log("SubmitReviewForm props:", { 
       taskId, 
@@ -39,19 +39,23 @@ export function SubmitReviewForm({
       revieweeId,
       isProviderReview,
       taskTitle,
-      revieweeName 
+      revieweeName,
+      valid: Boolean(revieweeId && reviewerId)
     });
   }, [taskId, reviewerId, revieweeId, isProviderReview, taskTitle, revieweeName]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Improved validation with better messaging
     if (!revieweeId) {
+      console.error("Missing reviewee ID in review submission");
       toast.error("Cannot submit review: missing recipient information");
       return;
     }
     
     if (!reviewerId) {
+      console.error("Missing reviewer ID in review submission");
       toast.error("Cannot submit review: you must be logged in");
       return;
     }
