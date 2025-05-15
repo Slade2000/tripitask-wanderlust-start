@@ -20,11 +20,22 @@ export const applyMigration = async (filePath: string): Promise<void> => {
     
     for (const statement of statements) {
       if (statement.trim()) {
-        const { error } = await supabase.rpc('execute_sql', { query: statement });
+        // Execute SQL using fetch instead of RPC
+        const res = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/`, {
+          method: 'POST',
+          headers: {
+            'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
+            'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=minimal'
+          },
+          body: JSON.stringify({ query: statement })
+        });
         
-        if (error) {
+        if (!res.ok) {
+          const error = await res.text();
           console.error('Error applying migration statement:', error);
-          throw error;
+          throw new Error(error);
         }
       }
     }

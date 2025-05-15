@@ -1,10 +1,10 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { getUserRatingStats } from "@/services/task/reviews/getAggregateRatings";
-import { Profile } from "./types";
+import { Profile, certificationsToJson } from "@/contexts/auth/types";
 
 // Re-export Profile type
-export type { Profile } from "./types";
+export type { Profile } from "@/contexts/auth/types";
 
 /**
  * Update a user's profile information
@@ -14,9 +14,17 @@ export const updateProfile = async (
   updates: Partial<Profile>
 ): Promise<{ success: boolean; error: any }> => {
   try {
+    // Convert Profile.certifications (Certificate[]) to Json for database storage
+    const dbUpdates: any = { ...updates };
+    
+    // Convert certifications array to JSON format if present
+    if (updates.certifications) {
+      dbUpdates.certifications = certificationsToJson(updates.certifications);
+    }
+
     const { error } = await supabase
       .from("profiles")
-      .update(updates)
+      .update(dbUpdates)
       .eq("id", userId);
 
     if (error) {
@@ -67,12 +75,22 @@ export const fetchProfileWithRatings = async (
     // Get updated rating stats from the reviews table
     const ratingStats = await getUserRatingStats(userId);
     
-    // Merge the profile with rating stats
-    return {
+    // Create profile with computed properties
+    const profileData: Profile = {
       ...profile,
+      // Convert JSON certifications to properly typed Certificate array
+      certifications: profile.certifications,
+      first_name: profile.full_name && profile.full_name.includes(' ') 
+        ? profile.full_name.split(' ')[0] 
+        : profile.full_name,
+      last_name: profile.full_name && profile.full_name.includes(' ')
+        ? profile.full_name.split(' ').slice(1).join(' ')
+        : null,
       rating: ratingStats.average_rating,
       // Include other stats as needed
     };
+    
+    return profileData;
   } catch (err) {
     console.error("Exception fetching profile:", err);
     return null;
