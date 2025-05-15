@@ -3,10 +3,9 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
   getProviderEarnings, 
-  getProviderEarningsStatistics, 
-  ProviderEarning,
-  ProviderEarningsStatistics
+  getProviderEarningsStatistics 
 } from "@/services/earnings";
+import { ProviderEarning, ProviderEarningsStatistics } from "@/services/earnings/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DollarSign, Clock, Calendar } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
