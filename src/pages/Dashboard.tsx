@@ -1,24 +1,19 @@
 
 import { useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { getUserTasks } from "@/services/taskService";
 import { getProviderOffers } from "@/services/task/offers/queries/getProviderOffers";
-import { Card, CardContent } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
 import BottomNav from "@/components/BottomNav";
 import { DashboardLoadingState } from "@/components/dashboard/LoadingState";
+import { DashboardError } from "@/components/dashboard/DashboardError";
 import { StatCards } from "@/components/dashboard/StatCards";
-import { TasksTabContent } from "@/components/dashboard/TasksTabContent";
-import { JobsTabContent } from "@/components/dashboard/JobsTabContent";
-import { ReviewCard } from "@/components/dashboard/ReviewCard";
 import { EarningsPanel } from "@/components/dashboard/EarningsPanel";
-import { AlertCircle } from "lucide-react";
+import { PostedTasksSection } from "@/components/dashboard/PostedTasksSection";
+import { WorkingOnSection } from "@/components/dashboard/WorkingOnSection";
+import { ReviewsSection } from "@/components/dashboard/ReviewsSection";
 
 const Dashboard = () => {
-  const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
 
@@ -54,9 +49,6 @@ const Dashboard = () => {
   // Get all pending offers made by the user
   const pendingOffers = offers?.filter(offer => offer.status === 'pending') || [];
   
-  // Get accepted offers where the user is the service provider
-  const acceptedOffers = offers?.filter(offer => offer.status === 'accepted') || [];
-
   // Mock data for earnings (replace with real data once available)
   const totalEarnings = 3250;
 
@@ -84,23 +76,7 @@ const Dashboard = () => {
       <div className="min-h-screen bg-cream p-4 pb-20">
         <div className="max-w-4xl mx-auto">
           <h1 className="text-3xl font-bold text-teal mb-6 text-center">Dashboard</h1>
-          <Card className="bg-white p-6 text-center mb-6">
-            <CardContent className="p-0">
-              <div className="flex flex-col items-center justify-center text-center">
-                <AlertCircle className="h-12 w-12 text-red-500 mb-2" />
-                <h3 className="text-xl font-semibold mb-2">Error Loading Dashboard</h3>
-                <p className="text-gray-600 mb-4">
-                  We encountered an issue while loading your dashboard data.
-                </p>
-                <Button 
-                  onClick={() => window.location.reload()} 
-                  className="bg-teal hover:bg-teal-dark text-white"
-                >
-                  Try Again
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          <DashboardError tasksError={tasksError} offersError={offersError} />
         </div>
         <BottomNav currentPath={location.pathname} />
       </div>
@@ -133,68 +109,17 @@ const Dashboard = () => {
           totalEarnings={totalEarnings} 
         />
 
-        {/* Earnings Panel - New Section */}
+        {/* Earnings Panel Section */}
         {user && <EarningsPanel userId={user.id} />}
         
-        {/* Posted Tasks Section with Tabs */}
-        <h2 className="text-xl font-semibold text-teal-dark mb-3">My Posted Tasks</h2>
-        <Tabs defaultValue="all" className="mb-6">
-          <TabsList className="bg-white mb-4">
-            <TabsTrigger value="all">All</TabsTrigger>
-            <TabsTrigger value="open">Open</TabsTrigger>
-            <TabsTrigger value="in-progress">In Progress</TabsTrigger>
-            <TabsTrigger value="completed">Completed</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="all" className="mt-0">
-            <TasksTabContent tasks={tasks || []} type="all" navigate={navigate} />
-          </TabsContent>
-          
-          <TabsContent value="open" className="mt-0">
-            <TasksTabContent tasks={tasks || []} type="open" navigate={navigate} />
-          </TabsContent>
-          
-          <TabsContent value="in-progress" className="mt-0">
-            <TasksTabContent tasks={tasks || []} type="in-progress" navigate={navigate} />
-          </TabsContent>
-          
-          <TabsContent value="completed" className="mt-0">
-            <TasksTabContent tasks={tasks || []} type="completed" navigate={navigate} />
-          </TabsContent>
-        </Tabs>
+        {/* Posted Tasks Section */}
+        <PostedTasksSection tasks={tasks || []} />
         
-        {/* I Am Working On Section with Tabs */}
-        <h2 className="text-xl font-semibold text-teal-dark mb-3">I Am Working On</h2>
-        <Tabs defaultValue="active-jobs" className="mb-6">
-          <TabsList className="bg-white mb-4">
-            <TabsTrigger value="active-jobs">Active Jobs</TabsTrigger>
-            <TabsTrigger value="offers-made">Offers Made</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="active-jobs" className="mt-0">
-            <JobsTabContent offers={offers} type="active-jobs" />
-          </TabsContent>
-          
-          <TabsContent value="offers-made" className="mt-0">
-            <JobsTabContent offers={offers} type="offers-made" />
-          </TabsContent>
-        </Tabs>
+        {/* I Am Working On Section */}
+        <WorkingOnSection offers={offers} />
         
         {/* Recent Reviews Section */}
-        <h2 className="text-xl font-semibold text-teal-dark mb-3">Recent Reviews</h2>
-        {recentReviews.length > 0 ? (
-          <div className="mb-6 grid gap-3 grid-cols-1 md:grid-cols-2">
-            {recentReviews.map(review => (
-              <ReviewCard key={review.id} review={review} />
-            ))}
-          </div>
-        ) : (
-          <Card className="mb-6">
-            <CardContent className="p-4 text-center">
-              <p className="text-gray-600">No reviews yet. Complete jobs to get reviews!</p>
-            </CardContent>
-          </Card>
-        )}
+        <ReviewsSection reviews={recentReviews} />
       </div>
       
       <BottomNav currentPath={location.pathname} />
