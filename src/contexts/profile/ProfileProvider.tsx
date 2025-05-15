@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -109,7 +108,9 @@ export const ProfileProvider: React.FC<ProfileProviderProps> = ({ children }) =>
       
       // Convert certificates array to JSON if present
       if (profileData.certifications !== undefined) {
-        dataToUpdate.certifications = certificationsToJson(profileData.certifications);
+        // Use the conversion utility to properly format certifications for the database
+        const jsonCertifications = certificationsToJson(profileData.certifications);
+        dataToUpdate.certifications = jsonCertifications;
       }
       
       const { data, error } = await supabase

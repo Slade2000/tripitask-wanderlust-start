@@ -1,7 +1,6 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/auth";
-import { Profile, Certificate, certificationsToJson } from "@/contexts/auth/types";
+import { Profile, Certificate, certificationsToJson, certificationsFromJson } from "@/contexts/auth/types";
 import { supabase } from "@/integrations/supabase/client";
 import { getUserReviews } from "@/services/task/reviews";
 import { toast } from "@/components/ui/use-toast";
@@ -185,8 +184,10 @@ export const useProfileData = () => {
     if (!user?.id) return null;
     
     try {
-      // Convert certifications to JSON format if present
+      // Create a copy of the data to avoid mutating the original
       const updateData = { ...data };
+      
+      // Convert certifications to JSON format if present
       if (updateData.certifications !== undefined) {
         updateData.certifications = certificationsToJson(updateData.certifications);
       }
