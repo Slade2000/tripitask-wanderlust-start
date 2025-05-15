@@ -15,6 +15,8 @@ export async function submitReview(reviewData: ReviewData) {
   try {
     const { taskId, reviewerId, revieweeId, rating, feedback, isProviderReview } = reviewData;
     
+    console.log("Submitting review with data:", reviewData);
+    
     const { data, error } = await supabase
       .from('reviews')
       .insert({

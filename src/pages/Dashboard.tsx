@@ -61,9 +61,10 @@ const Dashboard = () => {
     enabled: !!user?.id
   });
 
-  // Log the offers data to debug task status issues
+  // Log the offers data and earnings stats to debug
   console.log("Dashboard offers data:", offers);
   console.log("Dashboard earnings stats:", earningsStats);
+  console.log("Total earnings value:", earningsStats?.total_earnings);
 
   // Calculate statistics - all tasks posted by the user
   const activeTasks = tasks?.filter(task => task.status === 'open' || task.status === 'assigned' || task.status === 'in_progress') || [];

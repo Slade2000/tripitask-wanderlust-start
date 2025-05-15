@@ -1,6 +1,7 @@
 
 import { Briefcase, Clock, Award, DollarSign } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { formatCurrency } from "@/lib/utils";
 
 interface StatCardsProps {
   activeTasks: any[];
@@ -15,6 +16,8 @@ export const StatCards = ({
   completedTasks, 
   totalEarnings 
 }: StatCardsProps) => {
+  console.log("StatCards rendering with total earnings:", totalEarnings);
+  
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
       <Card className="bg-white shadow hover:shadow-md transition-shadow">
@@ -45,7 +48,7 @@ export const StatCards = ({
         <CardContent className="p-4 flex flex-col items-center">
           <DollarSign className="h-6 w-6 text-teal mb-2" />
           <p className="text-sm text-gray-600 mb-1">Earnings to Date</p>
-          <p className="text-xl font-bold text-teal-dark">${totalEarnings} AUD</p>
+          <p className="text-xl font-bold text-teal-dark">{formatCurrency(totalEarnings)}</p>
         </CardContent>
       </Card>
     </div>

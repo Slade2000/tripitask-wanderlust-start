@@ -23,14 +23,19 @@ export function EarningsPanel({ userId }: EarningsPanelProps) {
     const loadEarningsData = async () => {
       setLoading(true);
       try {
+        console.log("Loading earnings data for user:", userId);
+        
         // Load earnings statistics
         const stats = await getProviderEarningsStatistics(userId);
+        console.log("Earnings statistics:", stats);
+        
         if (stats) {
           setStatistics(stats);
         }
 
         // Load recent earnings (limit to 5)
         const recentEarnings = await getProviderEarnings(userId);
+        console.log("Recent earnings:", recentEarnings);
         setEarnings(recentEarnings.slice(0, 5));
       } catch (error) {
         console.error("Error loading earnings data:", error);
@@ -63,6 +68,10 @@ export function EarningsPanel({ userId }: EarningsPanelProps) {
       </Card>
     );
   }
+
+  // Debug logs for earnings stats
+  console.log("Rendering earnings panel with stats:", statistics);
+  console.log("Total earnings:", statistics?.total_earnings);
 
   return (
     <Card className="mb-6">

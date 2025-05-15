@@ -1,77 +1,56 @@
 
-import { MapPin, Calendar, Tag, DollarSign } from "lucide-react";
-import { format } from "date-fns";
+import { CalendarIcon, MapPinIcon, TagIcon, BanknotesIcon } from "lucide-react";
 
-interface TaskBasicInfoProps {
-  budget: string;
+export interface TaskBasicInfoProps {
+  category?: string | { name: string, description?: string };
+  date: string;
   location: string;
-  date: string; // renamed from dueDate for consistency
-  category?: string; // Added category prop
-  categoryName?: string; // Keep for backward compatibility
+  budget: number | string;
 }
 
 export default function TaskBasicInfo({ 
-  budget, 
+  category, 
+  date, 
   location, 
-  date, // renamed from dueDate
-  category,
-  categoryName
+  budget 
 }: TaskBasicInfoProps) {
-  // Use either category or categoryName, prioritizing categoryName
-  const categoryToDisplay = categoryName || category;
+  // Handle category which might be a string or an object
+  const categoryName = typeof category === 'object' ? category?.name : category;
   
-  const formatDate = (dateString: string) => {
-    try {
-      return format(new Date(dateString), "PPP");
-    } catch (error) {
-      console.error("Error formatting date:", error);
-      return "Invalid Date";
-    }
-  };
-
   return (
-    <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-      <h2 className="text-xl font-semibold mb-4">Task Details</h2>
-      <div className="space-y-3">
+    <div className="grid grid-cols-2 gap-3 mb-4">
+      {categoryName && (
         <div className="flex items-start">
-          <DollarSign className="h-5 w-5 text-teal mr-2 mt-0.5" />
+          <TagIcon className="h-5 w-5 mr-2 text-gray-500 mt-0.5" />
           <div>
-            <p className="font-medium">Budget</p>
-            <p className="text-gray-700">${budget}</p>
+            <p className="text-sm text-gray-500">Category</p>
+            <p className="font-medium">{categoryName}</p>
           </div>
         </div>
-        
-        <div className="flex items-start">
-          <MapPin className="h-5 w-5 text-teal mr-2 mt-0.5" />
-          <div>
-            <p className="font-medium">Location</p>
-            <p className="text-gray-700">{location}</p>
-          </div>
+      )}
+      
+      <div className="flex items-start">
+        <CalendarIcon className="h-5 w-5 mr-2 text-gray-500 mt-0.5" />
+        <div>
+          <p className="text-sm text-gray-500">Date</p>
+          <p className="font-medium">{date}</p>
         </div>
-        
-        <div className="flex items-start">
-          <Calendar className="h-5 w-5 text-teal mr-2 mt-0.5" />
-          <div>
-            <p className="font-medium">Due Date</p>
-            <p className="text-gray-700">
-              {new Date(date).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-              })}
-            </p>
-          </div>
+      </div>
+      
+      <div className="flex items-start">
+        <MapPinIcon className="h-5 w-5 mr-2 text-gray-500 mt-0.5" />
+        <div>
+          <p className="text-sm text-gray-500">Location</p>
+          <p className="font-medium">{location}</p>
         </div>
-        
-        {categoryToDisplay && (
-          <div className="flex items-start">
-            <Tag className="h-5 w-5 text-teal mr-2 mt-0.5" />
-            <div>
-              <p className="font-medium">Category</p>
-              <p className="text-gray-700">{categoryToDisplay}</p>
-            </div>
-          </div>
-        )}
+      </div>
+      
+      <div className="flex items-start">
+        <BanknotesIcon className="h-5 w-5 mr-2 text-gray-500 mt-0.5" />
+        <div>
+          <p className="text-sm text-gray-500">Budget</p>
+          <p className="font-medium">${budget} AUD</p>
+        </div>
       </div>
     </div>
   );

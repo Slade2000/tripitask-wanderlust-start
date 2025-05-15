@@ -5,7 +5,7 @@ import TaskStatusBadge from "./TaskStatusBadge";
 interface TaskDetailHeaderProps {
   title: string;
   status: string;
-  budget: string;
+  budget: number | string;
   date: string;
   location: string;
 }
@@ -21,10 +21,8 @@ export default function TaskDetailHeader({ title, status, budget, date, location
       >
         &larr; Back
       </button>
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-teal">{title}</h1>
-        <TaskStatusBadge status={status} />
-      </div>
+      <h1 className="text-3xl font-bold text-teal mb-2">{title}</h1>
+      <TaskStatusBadge status={status} />
     </div>
   );
 }
