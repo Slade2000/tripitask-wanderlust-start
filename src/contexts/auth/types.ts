@@ -45,10 +45,11 @@ export const certificationsFromJson = (json: Json | null): Certificate[] | null 
       return json.map(cert => {
         // Ensure cert is an object with name and verified properties
         if (cert && typeof cert === 'object' && cert !== null) {
+          const certObj = cert as Record<string, any>;
           return {
-            name: cert.name as string || '',
-            verified: Boolean(cert.verified) || false,
-            file_url: cert.file_url as string || undefined
+            name: certObj.name as string || '',
+            verified: Boolean(certObj.verified) || false,
+            file_url: certObj.file_url as string || undefined
           };
         }
         return { name: '', verified: false };
