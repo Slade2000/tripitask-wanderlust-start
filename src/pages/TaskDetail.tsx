@@ -27,7 +27,8 @@ const TaskDetail = () => {
     handleCloseMessageModal,
     handleTaskUpdated,
     refreshOffers,
-    posterProfile
+    posterProfile,
+    providerProfile
   } = useTaskDetail(taskId, user);
 
   useEffect(() => {
@@ -48,8 +49,9 @@ const TaskDetail = () => {
       });
       console.log("Current user is task poster:", isTaskPoster);
       console.log("Current user is service provider:", isCurrentUserProvider);
+      console.log("Provider profile:", providerProfile);
     }
-  }, [task, isTaskPoster, isCurrentUserProvider]);
+  }, [task, isTaskPoster, isCurrentUserProvider, providerProfile]);
 
   if (loading) {
     return (
@@ -69,11 +71,21 @@ const TaskDetail = () => {
     );
   }
 
+  // Find the accepted offer
+  const acceptedOffer = offers?.find(offer => 
+    offer.status === 'accepted' || 
+    offer.status === 'work_completed' || 
+    offer.status === 'completed'
+  );
+  
+  // Enhance provider details
+  const enhancedProviderDetails = acceptedOffer?.provider_details || providerProfile;
+  
   return (
     <>
       <TaskDetailView
         task={task}
-        offers={offers} // Pass all offers, regardless of user type
+        offers={offers}
         isTaskPoster={isTaskPoster}
         hasAcceptedOffer={hasAcceptedOffer}
         isCurrentUserProvider={isCurrentUserProvider}
@@ -82,6 +94,7 @@ const TaskDetail = () => {
         onCloseMessageModal={handleCloseMessageModal}
         onTaskUpdated={handleTaskUpdated}
         onRefreshOffers={refreshOffers}
+        providerDetails={enhancedProviderDetails}
       />
       <BottomNav currentPath={location.pathname} />
     </>

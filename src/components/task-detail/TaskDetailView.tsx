@@ -18,6 +18,7 @@ interface TaskDetailViewProps {
   onCloseMessageModal: () => void;
   onTaskUpdated: (task: any) => void;
   onRefreshOffers: () => void;
+  providerDetails?: any;
 }
 
 const TaskDetailView = ({
@@ -30,20 +31,27 @@ const TaskDetailView = ({
   onOpenMessageModal,
   onCloseMessageModal,
   onTaskUpdated,
-  onRefreshOffers
+  onRefreshOffers,
+  providerDetails
 }: TaskDetailViewProps) => {
   const { user } = useAuth();
   const messageModalRef = useRef<HTMLDivElement>(null);
 
-  // Find accepted offer and provider details if available
-  const acceptedOffer = offers?.find(offer => offer.status === 'accepted' || offer.status === 'completed');
-  const providerDetails = acceptedOffer?.provider_details || null;
+  // Find accepted offer if provider details weren't passed directly
+  const acceptedOffer = offers?.find(offer => 
+    offer.status === 'accepted' || 
+    offer.status === 'work_completed' || 
+    offer.status === 'completed'
+  );
+  
+  // Use passed provider details or fall back to the one from the accepted offer
+  const finalProviderDetails = providerDetails || acceptedOffer?.provider_details || null;
   
   // Log provider details to help with debugging
-  console.log("TaskDetailView - Provider Details:", providerDetails ? {
-    id: providerDetails.id,
-    name: providerDetails.full_name,
-    hasDetails: Boolean(providerDetails)
+  console.log("TaskDetailView - Provider Details:", finalProviderDetails ? {
+    id: finalProviderDetails.id,
+    name: finalProviderDetails.full_name,
+    hasDetails: Boolean(finalProviderDetails)
   } : "No provider details available");
   
   console.log("TaskDetailView - Task Status:", task.status);
@@ -74,7 +82,7 @@ const TaskDetailView = ({
           <TaskDetailMain
             task={task}
             isTaskPoster={isTaskPoster}
-            providerDetails={providerDetails}
+            providerDetails={finalProviderDetails}
           />
 
           {/* Sidebar */}
@@ -109,7 +117,7 @@ const TaskDetailView = ({
             <MessageModal
               isOpen={isMessageModalOpen}
               onClose={onCloseMessageModal}
-              receiverId={isTaskPoster ? providerDetails?.id : task.user_id}
+              receiverId={isTaskPoster ? finalProviderDetails?.id : task.user_id}
               taskId={task.id}
               taskTitle={task.title}
             />

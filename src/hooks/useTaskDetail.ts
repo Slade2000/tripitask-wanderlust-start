@@ -23,6 +23,7 @@ export function useTaskDetail(taskId: string | undefined, user: User | null) {
   const [hasAcceptedOffer, setHasAcceptedOffer] = useState(false);
   const [isCurrentUserProvider, setIsCurrentUserProvider] = useState(false);
   const [posterProfile, setPosterProfile] = useState<any>(null);
+  const [providerProfile, setProviderProfile] = useState<any>(null);
 
   useEffect(() => {
     const fetchTask = async () => {
@@ -116,12 +117,45 @@ export function useTaskDetail(taskId: string | undefined, user: User | null) {
         setOffers(offersData || []);
         
         // Check if there's any accepted offer
-        const acceptedOffer = offersData?.find((offer: any) => offer.status === 'accepted');
+        const acceptedOffer = offersData?.find((offer: any) => 
+          offer.status === 'accepted' || 
+          offer.status === 'work_completed' || 
+          offer.status === 'completed'
+        );
+        
         setHasAcceptedOffer(!!acceptedOffer || (task?.status === 'inprogress' || task?.status === 'in_progress' || task?.status === 'assigned' || task?.status === 'completed'));
         
         // Check if current user is the provider of an accepted offer
         if (user?.id && acceptedOffer) {
           setIsCurrentUserProvider(acceptedOffer.provider_id === user.id);
+          
+          // Fetch provider profile for the accepted offer
+          if (acceptedOffer.provider_id) {
+            try {
+              console.log("Fetching provider profile:", acceptedOffer.provider_id);
+              const providerProfileData = await fetchProfileById(acceptedOffer.provider_id);
+              console.log("Provider profile loaded:", providerProfileData);
+              
+              if (providerProfileData) {
+                setProviderProfile(providerProfileData);
+                
+                // Enhance the accepted offer with provider details
+                const enhancedOffers = offersData.map((offer: any) => {
+                  if (offer.id === acceptedOffer.id) {
+                    return {
+                      ...offer,
+                      provider_details: providerProfileData
+                    };
+                  }
+                  return offer;
+                });
+                
+                setOffers(enhancedOffers);
+              }
+            } catch (error) {
+              console.error("Error fetching provider profile:", error);
+            }
+          }
         }
       } catch (err) {
         console.error("Error fetching offers:", err);
@@ -151,10 +185,53 @@ export function useTaskDetail(taskId: string | undefined, user: User | null) {
     
     try {
       const offersData = await getTaskOffers(taskId);
+      
+      // Check if there's any accepted offer
+      const acceptedOffer = offersData?.find((offer: any) => 
+        offer.status === 'accepted' || 
+        offer.status === 'work_completed' || 
+        offer.status === 'completed'
+      );
+      
+      // If we have an accepted offer, fetch the provider profile
+      if (acceptedOffer?.provider_id) {
+        try {
+          const providerProfileData = await fetchProfileById(acceptedOffer.provider_id);
+          console.log("Provider profile loaded during refresh:", providerProfileData);
+          
+          if (providerProfileData) {
+            setProviderProfile(providerProfileData);
+            
+            // Enhance the accepted offer with provider details
+            const enhancedOffers = offersData.map((offer: any) => {
+              if (offer.id === acceptedOffer.id) {
+                return {
+                  ...offer,
+                  provider_details: providerProfileData
+                };
+              }
+              return offer;
+            });
+            
+            setOffers(enhancedOffers);
+            
+            // Update states related to the offer
+            setHasAcceptedOffer(true);
+            if (user?.id) {
+              setIsCurrentUserProvider(acceptedOffer.provider_id === user.id);
+            }
+            
+            return;
+          }
+        } catch (error) {
+          console.error("Error fetching provider profile during refresh:", error);
+        }
+      }
+      
+      // If we couldn't enhance the offers with provider details, just set them as is
       setOffers(offersData || []);
       
       // Update the hasAcceptedOffer state
-      const acceptedOffer = offersData?.find((offer: any) => offer.status === 'accepted');
       setHasAcceptedOffer(!!acceptedOffer || (task?.status === 'inprogress' || task?.status === 'in_progress' || task?.status === 'assigned' || task?.status === 'completed'));
       
       // Check if current user is the provider of an accepted offer
@@ -194,6 +271,7 @@ export function useTaskDetail(taskId: string | undefined, user: User | null) {
     handleCloseMessageModal,
     handleTaskUpdated,
     refreshOffers,
-    posterProfile
+    posterProfile,
+    providerProfile
   };
 }
