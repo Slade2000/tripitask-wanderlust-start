@@ -17,6 +17,19 @@ export async function submitReview(reviewData: ReviewData) {
     
     console.log("Submitting review with data:", reviewData);
     
+    if (!reviewerId || !revieweeId) {
+      console.error("Missing required reviewer or reviewee ID", { reviewerId, revieweeId });
+      toast.error("Cannot submit review: missing user information");
+      return null;
+    }
+    
+    // Validate the rating
+    if (rating < 1 || rating > 5) {
+      console.error("Invalid rating value:", rating);
+      toast.error("Rating must be between 1 and 5 stars");
+      return null;
+    }
+    
     const { data, error } = await supabase
       .from('reviews')
       .insert({
@@ -31,10 +44,11 @@ export async function submitReview(reviewData: ReviewData) {
       
     if (error) {
       console.error("Error submitting review:", error);
-      toast.error("Failed to submit review");
+      toast.error(`Failed to submit review: ${error.message}`);
       return null;
     }
     
+    console.log("Review submitted successfully:", data[0]);
     toast.success("Review submitted successfully!");
     return data[0];
   } catch (err) {

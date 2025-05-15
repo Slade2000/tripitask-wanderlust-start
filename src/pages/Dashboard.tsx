@@ -13,6 +13,7 @@ import { EarningsPanel } from "@/components/dashboard/EarningsPanel";
 import { PostedTasksSection } from "@/components/dashboard/PostedTasksSection";
 import { WorkingOnSection } from "@/components/dashboard/WorkingOnSection";
 import { ReviewsSection } from "@/components/dashboard/ReviewsSection";
+import { CompletedTasksSection } from "@/components/dashboard/CompletedTasksSection";
 import { getUserReviews } from "@/services/task/reviews";
 
 const Dashboard = () => {
@@ -65,6 +66,7 @@ const Dashboard = () => {
   console.log("Dashboard offers data:", offers);
   console.log("Dashboard earnings stats:", earningsStats);
   console.log("Total earnings value:", earningsStats?.total_earnings);
+  console.log("Total earnings type:", typeof earningsStats?.total_earnings);
 
   // Calculate statistics - all tasks posted by the user
   const activeTasks = tasks?.filter(task => task.status === 'open' || task.status === 'assigned' || task.status === 'in_progress') || [];
@@ -74,7 +76,7 @@ const Dashboard = () => {
   const pendingOffers = offers?.filter(offer => offer.status === 'pending') || [];
   
   // Use actual earnings data if available, otherwise default to 0
-  const totalEarnings = earningsStats?.total_earnings || 0;
+  const totalEarnings = Number(earningsStats?.total_earnings) || 0;
 
   // Format reviews for display
   const formattedReviews = (reviews || []).map(review => ({
@@ -126,6 +128,9 @@ const Dashboard = () => {
 
         {/* Earnings Panel Section */}
         {user && <EarningsPanel userId={user.id} />}
+        
+        {/* Completed Tasks Section - For providers to access completed tasks for reviews */}
+        {offers && offers.length > 0 && <CompletedTasksSection offers={offers} />}
         
         {/* Posted Tasks Section */}
         <PostedTasksSection tasks={tasks || []} />

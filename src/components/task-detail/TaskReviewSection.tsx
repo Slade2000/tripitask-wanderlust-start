@@ -33,11 +33,14 @@ export default function TaskReviewSection({
       if (!task.id) return;
       
       try {
+        console.log("Loading reviews for task:", task.id);
         const reviewsData = await getTaskReviews(task.id);
+        console.log("Task reviews loaded:", reviewsData);
         setReviews(reviewsData);
         
         // Check if current user has already submitted a review
         const userReview = reviewsData.find(review => review.reviewer_id === user?.id);
+        console.log("Current user has submitted review:", !!userReview, "User ID:", user?.id);
         setShowReviewForm(!userReview && hasTaskCompleted);
       } catch (error) {
         console.error("Error loading reviews:", error);
@@ -66,13 +69,25 @@ export default function TaskReviewSection({
   const clientId = task.user_id;
   const providerId = providerDetails?.id;
   
+  console.log("Review section details:", {
+    isTaskPoster,
+    clientId,
+    providerId,
+    currentUserId: user?.id,
+    reviewCount: reviews.length,
+  });
+  
   // Get the other person's name (who the current user would be reviewing)
   const revieweeName = isTaskPoster 
     ? (providerDetails?.full_name || 'Service Provider') 
     : (task.poster_name || 'Client');
   
+  // Determine who the current user should review
+  const revieweeId = isTaskPoster ? providerId : clientId;
+  
   const handleReviewSubmitted = () => {
     setShowReviewForm(false);
+    toast.success("Your review was submitted successfully!");
     // Refresh reviews list
     getTaskReviews(task.id).then(newReviews => {
       setReviews(newReviews);
@@ -93,7 +108,7 @@ export default function TaskReviewSection({
         <SubmitReviewForm
           taskId={task.id}
           reviewerId={user?.id || ''}
-          revieweeId={isTaskPoster ? providerId : clientId}
+          revieweeId={revieweeId}
           isProviderReview={isProvider}
           taskTitle={task.title}
           revieweeName={revieweeName}

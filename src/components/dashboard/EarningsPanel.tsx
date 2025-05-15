@@ -27,7 +27,7 @@ export function EarningsPanel({ userId }: EarningsPanelProps) {
         
         // Load earnings statistics
         const stats = await getProviderEarningsStatistics(userId);
-        console.log("Earnings statistics:", stats);
+        console.log("Earnings statistics loaded:", stats);
         
         if (stats) {
           setStatistics(stats);
@@ -35,7 +35,7 @@ export function EarningsPanel({ userId }: EarningsPanelProps) {
 
         // Load recent earnings (limit to 5)
         const recentEarnings = await getProviderEarnings(userId);
-        console.log("Recent earnings:", recentEarnings);
+        console.log("Recent earnings loaded:", recentEarnings);
         setEarnings(recentEarnings.slice(0, 5));
       } catch (error) {
         console.error("Error loading earnings data:", error);
@@ -49,29 +49,10 @@ export function EarningsPanel({ userId }: EarningsPanelProps) {
     }
   }, [userId]);
 
-  if (loading) {
-    return (
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>Your Earnings</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              <Skeleton className="h-24 rounded-md" />
-              <Skeleton className="h-24 rounded-md" />
-              <Skeleton className="h-24 rounded-md hidden md:block" />
-            </div>
-            <Skeleton className="h-64 rounded-md" />
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
   // Debug logs for earnings stats
   console.log("Rendering earnings panel with stats:", statistics);
-  console.log("Total earnings:", statistics?.total_earnings);
+  console.log("Total earnings value:", statistics?.total_earnings);
+  console.log("Total earnings type:", typeof statistics?.total_earnings);
 
   return (
     <Card className="mb-6">
@@ -82,17 +63,17 @@ export function EarningsPanel({ userId }: EarningsPanelProps) {
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
           <StatCard 
             title="Available Balance" 
-            value={formatCurrency(statistics?.available_balance || 0)}
+            value={formatCurrency(Number(statistics?.available_balance || 0))}
             icon={<DollarSign className="h-6 w-6 text-emerald-500" />}
           />
           <StatCard 
             title="Pending Earnings" 
-            value={formatCurrency(statistics?.pending_earnings || 0)}
+            value={formatCurrency(Number(statistics?.pending_earnings || 0))}
             icon={<Clock className="h-6 w-6 text-amber-500" />}
           />
           <StatCard 
             title="Total Earnings" 
-            value={formatCurrency(statistics?.total_earnings || 0)}
+            value={formatCurrency(Number(statistics?.total_earnings || 0))}
             icon={<Calendar className="h-6 w-6 text-blue-500" />}
           />
         </div>
