@@ -11,6 +11,7 @@ export async function getUserReviews(userId: string): Promise<Review[]> {
       return [];
     }
     
+    // Using explicit join syntax instead of relying on foreign key relationships
     const { data: reviews, error } = await supabase
       .from('reviews')
       .select(`
