@@ -14,7 +14,7 @@ interface MessageModalProps {
   isOpen: boolean;
   onClose: () => void;
   taskId: string;
-  receiverId: string;
+  receiverId: string; // This is the prop that we need to use
   taskTitle?: string;
 }
 
@@ -22,7 +22,7 @@ export default function MessageModal({
   isOpen, 
   onClose, 
   taskId, 
-  receiverId,
+  receiverId, // Use this prop
   taskTitle = "this task"
 }: MessageModalProps) {
   const [messages, setMessages] = useState<Message[]>([]);

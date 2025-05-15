@@ -1,19 +1,25 @@
+
 import { MapPin, Calendar, Tag, DollarSign } from "lucide-react";
 import { format } from "date-fns";
 
 interface TaskBasicInfoProps {
   budget: string;
   location: string;
-  dueDate: string;
-  categoryName?: string;
+  date: string; // renamed from dueDate for consistency
+  category?: string; // Added category prop
+  categoryName?: string; // Keep for backward compatibility
 }
 
 export default function TaskBasicInfo({ 
   budget, 
   location, 
-  dueDate,
+  date, // renamed from dueDate
+  category,
   categoryName
 }: TaskBasicInfoProps) {
+  // Use either category or categoryName, prioritizing categoryName
+  const categoryToDisplay = categoryName || category;
+  
   const formatDate = (dateString: string) => {
     try {
       return format(new Date(dateString), "PPP");
@@ -48,7 +54,7 @@ export default function TaskBasicInfo({
           <div>
             <p className="font-medium">Due Date</p>
             <p className="text-gray-700">
-              {new Date(dueDate).toLocaleDateString('en-US', {
+              {new Date(date).toLocaleDateString('en-US', {
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric'
@@ -57,12 +63,12 @@ export default function TaskBasicInfo({
           </div>
         </div>
         
-        {categoryName && (
+        {categoryToDisplay && (
           <div className="flex items-start">
             <Tag className="h-5 w-5 text-teal mr-2 mt-0.5" />
             <div>
               <p className="font-medium">Category</p>
-              <p className="text-gray-700">{categoryName}</p>
+              <p className="text-gray-700">{categoryToDisplay}</p>
             </div>
           </div>
         )}

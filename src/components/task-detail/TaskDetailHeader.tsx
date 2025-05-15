@@ -5,9 +5,12 @@ import TaskStatusBadge from "./TaskStatusBadge";
 interface TaskDetailHeaderProps {
   title: string;
   status: string;
+  budget: string;
+  date: string;
+  location: string;
 }
 
-export default function TaskDetailHeader({ title, status }: TaskDetailHeaderProps) {
+export default function TaskDetailHeader({ title, status, budget, date, location }: TaskDetailHeaderProps) {
   const navigate = useNavigate();
 
   return (

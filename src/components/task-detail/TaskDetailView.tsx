@@ -47,6 +47,11 @@ const TaskDetailView = ({
   // Find accepted offer and provider details if available
   const acceptedOffer = offers?.find(offer => offer.status === 'accepted' || offer.status === 'completed');
   const providerDetails = acceptedOffer?.provider_details || null;
+  
+  // Make an async function to refresh offers - to fix the Promise return type error
+  const handleRefreshOffers = async () => {
+    return Promise.resolve(onRefreshOffers());
+  };
 
   return (
     <div className="bg-cream min-h-screen pb-20">
@@ -108,6 +113,8 @@ const TaskDetailView = ({
           <div className="space-y-6">
             {/* Task Poster Info */}
             <TaskPosterInfo
+              userId={task.user_id}
+              taskId={task.id}
               name={task.poster_name}
               rating={task.poster_rating}
               memberSince={task.poster_member_since}
@@ -138,7 +145,7 @@ const TaskDetailView = ({
               offers={offers}
               isTaskPoster={isTaskPoster}
               onTaskUpdated={onTaskUpdated}
-              onRefreshOffers={onRefreshOffers}
+              onRefreshOffers={handleRefreshOffers}  // Changed to use the async function
               userId={user.id}
               taskStatus={task.status}
             />
@@ -151,7 +158,7 @@ const TaskDetailView = ({
             <MessageModal
               isOpen={isMessageModalOpen}
               onClose={onCloseMessageModal}
-              recipientId={isTaskPoster ? providerDetails?.id : task.user_id}
+              receiverId={isTaskPoster ? providerDetails?.id : task.user_id}  // Use receiverId instead of recipientId
               taskId={task.id}
               taskTitle={task.title}
             />
