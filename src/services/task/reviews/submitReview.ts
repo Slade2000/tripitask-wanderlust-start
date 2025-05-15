@@ -93,20 +93,26 @@ export async function submitReview(reviewData: ReviewData) {
 
 async function updateUserRatingInProfile(userId: string) {
   try {
-    // Get the latest rating stats
-    const { data, error } = await supabase
-      .rpc('get_user_rating_stats', { user_id: userId });
+    // Get all reviews for this user
+    const { data: reviews, error: reviewsError } = await supabase
+      .from('reviews')
+      .select('rating')
+      .eq('reviewee_id', userId);
       
-    if (error || !data) {
-      console.error("Error getting updated rating stats:", error);
+    if (reviewsError || !reviews) {
+      console.error("Error getting user reviews:", reviewsError);
       return;
     }
     
-    // Update the profile with the new rating and increment jobs_completed
+    // Calculate new average rating
+    const sum = reviews.reduce((acc, review) => acc + review.rating, 0);
+    const averageRating = reviews.length > 0 ? Number((sum / reviews.length).toFixed(1)) : 0;
+    
+    // Update the profile with the new rating
     const { error: updateError } = await supabase
       .from('profiles')
       .update({
-        rating: data.average_rating || 0,
+        rating: averageRating,
         // Don't update jobs_completed here, as that's handled by task completion
       })
       .eq('id', userId);
@@ -114,7 +120,7 @@ async function updateUserRatingInProfile(userId: string) {
     if (updateError) {
       console.error("Error updating profile with new rating:", updateError);
     } else {
-      console.log("Updated user profile with new rating:", data.average_rating);
+      console.log("Updated user profile with new rating:", averageRating);
     }
   } catch (err) {
     console.error("Error updating profile rating:", err);

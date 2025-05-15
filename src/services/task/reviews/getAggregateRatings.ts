@@ -20,8 +20,11 @@ export async function getUserAggregateRating(userId: string): Promise<RatingStat
     
     console.log("Fetching aggregate rating for user:", userId);
     
+    // Instead of using RPC, directly query the reviews table to calculate statistics
     const { data, error } = await supabase
-      .rpc('get_user_rating_stats', { user_id: userId });
+      .from('reviews')
+      .select('rating')
+      .eq('reviewee_id', userId);
       
     if (error) {
       console.error("Error fetching aggregate rating:", error);
@@ -29,15 +32,19 @@ export async function getUserAggregateRating(userId: string): Promise<RatingStat
     }
     
     // If no reviews yet, return default values
-    if (!data) {
+    if (!data || data.length === 0) {
       return { average_rating: 0, review_count: 0 };
     }
     
     console.log("Aggregate rating data for user", userId, ":", data);
     
+    // Calculate the average rating manually
+    const sum = data.reduce((acc, review) => acc + review.rating, 0);
+    const average = data.length > 0 ? sum / data.length : 0;
+    
     return {
-      average_rating: data.average_rating || 0, 
-      review_count: data.review_count || 0
+      average_rating: Number(average.toFixed(1)), 
+      review_count: data.length
     };
   } catch (err) {
     console.error("Exception in getUserAggregateRating:", err);
