@@ -1,4 +1,5 @@
 
+
 import { supabase } from "@/integrations/supabase/client";
 
 /**
@@ -13,32 +14,20 @@ export async function getWalletTransactionDetails(providerId: string): Promise<a
     // Use a direct query with any() to bypass TypeScript issues
     // by using a raw query approach
     const { data, error } = await supabase
-      .rpc('get_wallet_transaction_details_for_provider', { 
-        provider_id: providerId 
-      });
+      .from('wallet_transactions')
+      .select(`
+        id,
+        amount,
+        transaction_type,
+        status
+      `)
+      .eq('provider_id', providerId)
+      .eq('transaction_type', 'payment')
+      .eq('status', 'completed');
     
     if (error) {
       console.error("Error in getWalletTransactionDetails:", error);
-      
-      // Try a direct SQL query as fallback
-      const { data: fallbackData, error: fallbackError } = await supabase
-        .from('wallet_transactions')
-        .select(`
-          id,
-          amount,
-          transaction_type,
-          status
-        `)
-        .eq('provider_id', providerId)
-        .eq('transaction_type', 'payment')
-        .eq('status', 'completed');
-      
-      if (fallbackError) {
-        console.error("Fallback query also failed:", fallbackError);
-        return [];
-      }
-      
-      return fallbackData || [];
+      return [];
     }
     
     return data || [];

@@ -55,34 +55,18 @@ export async function getProviderEarningsStatistics(providerId: string): Promise
     }
     
     // Step 4: Get data from wallet_transaction_details
-    // Use a raw query to access the wallet_transaction_details table
+    // Use a direct query approach instead of RPC
     const { data: walletTransDetails, error: walletTransDetailsError } = await supabase
-      .rpc('get_wallet_transaction_details', { 
-        p_provider_id: providerId,
-        p_transaction_type: 'payment',
-        p_status: 'completed'
-      });
+      .from('wallet_transactions')
+      .select('amount')
+      .eq('provider_id', providerId)
+      .eq('transaction_type', 'payment')
+      .eq('status', 'completed');
     
     if (walletTransDetailsError) {
       console.error("Error fetching wallet transaction details:", walletTransDetailsError);
-      
-      // Fallback to try a direct query with any() - this will need the SQL function to exist
-      console.log("Attempting fallback query for wallet transaction details...");
-      const { data: fallbackDetails, error: fallbackError } = await supabase
-        .from('wallet_transactions')
-        .select('amount')
-        .eq('provider_id', providerId)
-        .eq('transaction_type', 'payment')
-        .eq('status', 'completed');
-        
-      if (fallbackError) {
-        console.error("Fallback query also failed:", fallbackError);
-      } else {
-        console.log("Fallback query succeeded:", fallbackDetails);
-        walletTransDetails = fallbackDetails;
-      }
     } else {
-      console.log("Wallet transaction details RPC succeeded:", walletTransDetails);
+      console.log("Wallet transaction details query succeeded:", walletTransDetails);
     }
     
     // Get jobs completed count
@@ -104,7 +88,7 @@ export async function getProviderEarningsStatistics(providerId: string): Promise
         sum + parseFloat(item.net_amount.toString()), 0);
     }
     
-    // Add earnings from wallet_transaction_details, if we have data
+    // Add earnings from wallet_transactions, if we have data
     if (walletTransDetails && walletTransDetails.length > 0) {
       // Handle potential differences in data structure
       let walletEarnings = 0;
