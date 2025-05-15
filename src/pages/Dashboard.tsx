@@ -131,7 +131,7 @@ const Dashboard = () => {
         {user && <EarningsPanel userId={user.id} />}
         
         {/* Completed Tasks Section - For providers to access completed tasks for reviews */}
-        {offers && offers.length > 0 && <CompletedTasksSection offers={offers as Offer[]} />}
+        {offers && offers.length > 0 && <CompletedTasksSection offers={offers} />}
         
         {/* Posted Tasks Section */}
         <PostedTasksSection tasks={tasks || []} />

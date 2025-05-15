@@ -19,7 +19,7 @@ export interface Offer {
   };
   task?: {
     title: string;
-    description: string;
+    description?: string; // Making description optional
     budget: string;
     due_date: string;
     status: string;

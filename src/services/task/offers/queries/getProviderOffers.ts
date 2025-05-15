@@ -1,7 +1,8 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { Offer } from "@/types/offer";
 
-export async function getProviderOffers(providerId: string) {
+export async function getProviderOffers(providerId: string): Promise<Offer[]> {
   try {
     console.log("Fetching offers for provider:", providerId);
     
@@ -15,7 +16,7 @@ export async function getProviderOffers(providerId: string) {
       .from('offers')
       .select(`
         *,
-        task:tasks(id, title, budget, due_date, status)
+        task:tasks(id, title, description, budget, due_date, status)
       `)
       .eq('provider_id', providerId)
       .order('created_at', { ascending: false });
