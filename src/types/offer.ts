@@ -9,7 +9,7 @@ export interface Offer {
   message?: string;
   status: 'pending' | 'accepted' | 'rejected' | 'work_completed' | 'completed';
   created_at: string;
-  completed_at?: string; // Adding this property
+  completed_at?: string;
   provider?: {
     id: string;
     name?: string;
@@ -17,9 +17,10 @@ export interface Offer {
     rating?: number;
     success_rate?: string;
   };
+  provider_details?: any; // Adding this property to fix the TypeScript error
   task?: {
     title: string;
-    description?: string; // Making description optional
+    description?: string;
     budget: string;
     due_date: string;
     status: string;
