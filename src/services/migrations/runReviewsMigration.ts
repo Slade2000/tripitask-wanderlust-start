@@ -1,55 +1,59 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from "sonner";
+import path from 'path';
+import fs from 'fs';
 
 /**
- * Execute a SQL command directly through the Supabase client
- * @param sql SQL command to execute
+ * Execute migration SQL directly
  */
-export const executeSQL = async (sql: string): Promise<boolean> => {
+export const applyReviewsMigration = async (): Promise<boolean> => {
   try {
-    // This approach requires administrative privileges
-    // Only use for migrations with proper authentication
-    const response = await fetch(`${process.env.SUPABASE_URL}/rest/v1/`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_KEY}`,
-        'apikey': `${process.env.SUPABASE_ANON_KEY}`
-      },
-      body: JSON.stringify({
-        query: sql
-      })
-    });
-
-    if (!response.ok) {
-      console.error('Failed to execute SQL:', await response.text());
-      return false;
+    toast.info("Applying reviews foreign key migration...");
+    
+    // Read the migration file
+    const migrationPath = path.join(process.cwd(), 'src/services/migrations/add_reviews_foreign_keys.sql');
+    const sql = fs.existsSync(migrationPath) 
+      ? fs.readFileSync(migrationPath, 'utf8')
+      : `
+        -- Add foreign key constraints to reviews table
+        ALTER TABLE public.reviews
+        ADD CONSTRAINT fk_reviewer
+        FOREIGN KEY (reviewer_id) REFERENCES public.profiles (id);
+        
+        ALTER TABLE public.reviews
+        ADD CONSTRAINT fk_reviewee
+        FOREIGN KEY (reviewee_id) REFERENCES public.profiles (id);
+        
+        -- Add additional constraint to link reviews to tasks
+        ALTER TABLE public.reviews
+        ADD CONSTRAINT fk_review_task
+        FOREIGN KEY (task_id) REFERENCES public.tasks (id);
+      `;
+      
+    // Execute statements one by one for better error handling
+    const statements = sql.split(';')
+      .map(stmt => stmt.trim())
+      .filter(stmt => stmt.length > 0);
+      
+    for (const statement of statements) {
+      // Use REST API directly since RPC is limited
+      const { error } = await supabase.postgrest.rpc('execute_sql', { 
+        query: statement 
+      });
+      
+      if (error) {
+        console.error('Error applying migration statement:', error);
+        toast.error(`Migration error: ${error.message}`);
+        return false;
+      }
     }
     
+    toast.success("Reviews foreign key migration applied successfully!");
     return true;
-  } catch (err) {
-    console.error('Error executing SQL:', err);
+  } catch (err: any) {
+    console.error("Failed to apply reviews migration:", err);
+    toast.error(`Migration failed: ${err.message || 'Unknown error'}`);
     return false;
-  }
-};
-
-/**
- * Apply the reviews foreign keys migration using the Supabase Dashboard
- * as recommended in the documentation
- */
-export const applyReviewsMigration = async (): Promise<void> => {
-  try {
-    toast.info(
-      "Please apply the reviews migration using the Supabase Dashboard. Check the docs/applying_foreign_key_migrations.md file for instructions.",
-      {
-        duration: 10000,
-      }
-    );
-    
-    console.log("Please follow the instructions in docs/applying_foreign_key_migrations.md to apply the migration");
-  } catch (err) {
-    console.error("Failed to notify about reviews migration:", err);
-    toast.error("Error processing reviews migration request");
   }
 };

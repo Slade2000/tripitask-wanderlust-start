@@ -17,19 +17,28 @@ export async function getUserRatingStats(userId: string): Promise<RatingStats> {
       return { average_rating: 0, review_count: 0 };
     }
     
-    // Call the database function we created in SQL
-    const { data, error } = await supabase
-      .rpc('get_user_rating_stats', { user_id: userId });
+    // Instead of using RPC, query the reviews table directly
+    const { data: reviews, error } = await supabase
+      .from('reviews')
+      .select('rating')
+      .eq('reviewee_id', userId);
       
     if (error) {
       console.error("Error fetching user rating stats:", error);
       return { average_rating: 0, review_count: 0 };
     }
     
-    // Function returns a single record with average_rating and review_count
+    if (!reviews || reviews.length === 0) {
+      return { average_rating: 0, review_count: 0 };
+    }
+    
+    // Calculate average rating manually
+    const total = reviews.reduce((sum, review) => sum + (review.rating || 0), 0);
+    const average = total / reviews.length;
+    
     return {
-      average_rating: data?.[0]?.average_rating || 0,
-      review_count: data?.[0]?.review_count || 0
+      average_rating: Number(average.toFixed(1)),
+      review_count: reviews.length
     };
   } catch (err) {
     console.error("Error in getUserRatingStats:", err);

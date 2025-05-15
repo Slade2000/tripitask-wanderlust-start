@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { getUserRatingStats } from "@/services/task/reviews/getAggregateRatings";
-import type { Profile } from "./types";
+import { Profile } from "./types";
 
 /**
  * Update a user's profile information
@@ -26,6 +26,20 @@ export const updateProfile = async (
     console.error("Exception updating profile:", err);
     return { success: false, error: err };
   }
+};
+
+/**
+ * Function to update a user's profile (alias for updateProfile for compatibility)
+ */
+export const updateUserProfile = async (
+  userId: string,
+  updates: Partial<Profile>
+): Promise<Profile | null> => {
+  const result = await updateProfile(userId, updates);
+  if (result.success) {
+    return await fetchProfileWithRatings(userId);
+  }
+  return null;
 };
 
 /**
@@ -60,4 +74,26 @@ export const fetchProfileWithRatings = async (
     console.error("Exception fetching profile:", err);
     return null;
   }
+};
+
+/**
+ * Subscribe to changes in the user's profile
+ */
+export const subscribeToProfileChanges = (userId: string, onUpdate: () => Promise<any>) => {
+  return supabase
+    .channel('profile-changes')
+    .on(
+      'postgres_changes',
+      {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'profiles',
+        filter: `id=eq.${userId}`
+      },
+      (payload) => {
+        console.log('Profile updated:', payload);
+        onUpdate();
+      }
+    )
+    .subscribe();
 };
