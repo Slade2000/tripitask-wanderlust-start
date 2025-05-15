@@ -1,7 +1,9 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ProviderEarning } from "./types";
 import { createWalletTransaction } from "./createWalletTransaction";
+import { syncProfileEarnings } from "./syncProfileEarnings";
 
 /**
  * Records earnings for a provider when a task is completed

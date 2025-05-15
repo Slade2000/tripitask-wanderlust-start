@@ -61,15 +61,14 @@ export async function getProviderEarningsStatistics(providerId: string): Promise
  */
 export async function refreshProviderEarnings(providerId: string): Promise<ProviderEarningsStatistics | null> {
   try {
-    // Call the sync function to recalculate and sync all values
-    const { data, error } = await supabase
-      .functions
-      .invoke('sync-provider-earnings', {
-        body: { providerId }
-      });
+    // Import dynamically to avoid circular dependency
+    const { syncProfileEarnings } = await import('./syncProfileEarnings');
     
-    if (error) {
-      console.error("Error refreshing provider earnings:", error);
+    // Call the sync function to recalculate and sync all values
+    const success = await syncProfileEarnings(providerId);
+    
+    if (!success) {
+      console.error("Failed to sync provider earnings");
       return null;
     }
 
