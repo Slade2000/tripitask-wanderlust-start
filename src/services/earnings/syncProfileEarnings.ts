@@ -17,19 +17,14 @@ export async function syncProfileEarnings(providerId: string): Promise<boolean> 
       .from('provider_earnings')
       .select('status, sum(net_amount)')
       .eq('provider_id', providerId)
-      .then(result => {
-        if (result.error) throw result.error;
-        
-        // Execute a second query to get the data grouped by status
-        return supabase.rpc('sum_earnings_by_status', { provider_id_param: providerId });
-      });
+      .groupBy('status');
     
     if (summaryError) {
       console.error("Error fetching earnings summary:", summaryError);
       return false;
     }
     
-    // If the RPC call fails or isn't available, let's use a manual approach
+    // If the query fails or returns empty, let's use a manual approach
     if (!earningsSummary || earningsSummary.length === 0) {
       // Fetch all earnings for this provider and calculate totals manually
       const { data: allEarnings, error: allEarningsError } = await supabase
@@ -97,9 +92,9 @@ export async function syncProfileEarnings(providerId: string): Promise<boolean> 
       return true;
     } 
     
-    // If we got data from the RPC, use it
+    // If we got data from the query, use it
     else {
-      // Extract values from the RPC result
+      // Extract values from the query result
       let pendingTotal = 0;
       let availableTotal = 0;
       let totalEarnings = 0;
