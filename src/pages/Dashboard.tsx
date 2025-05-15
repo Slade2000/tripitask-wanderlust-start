@@ -1,4 +1,3 @@
-
 import { useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/auth";
@@ -131,13 +130,13 @@ const Dashboard = () => {
         {user && <EarningsPanel userId={user.id} />}
         
         {/* Completed Tasks Section - For providers to access completed tasks for reviews */}
-        {offers && offers.length > 0 && <CompletedTasksSection offers={offers} />}
+        {offers && offers.length > 0 && <CompletedTasksSection offers={offers as any} />}
         
         {/* Posted Tasks Section */}
         <PostedTasksSection tasks={tasks || []} />
         
         {/* I Am Working On Section */}
-        <WorkingOnSection offers={offers} />
+        <WorkingOnSection offers={offers as any} />
         
         {/* Recent Reviews Section */}
         <ReviewsSection reviews={formattedReviews} />

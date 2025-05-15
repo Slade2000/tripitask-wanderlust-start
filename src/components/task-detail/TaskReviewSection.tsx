@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/auth";
+import { useProfile } from "@/contexts/profile";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { getTaskReviews } from "@/services/task/reviews";
@@ -20,6 +21,7 @@ export default function TaskReviewSection({
   providerDetails,
 }: TaskReviewSectionProps) {
   const { user } = useAuth();
+  const { profile } = useProfile();
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [showReviewForm, setShowReviewForm] = useState(false);
@@ -85,6 +87,9 @@ export default function TaskReviewSection({
   // Determine who the current user should review
   const revieweeId = isTaskPoster ? providerId : clientId;
   
+  // Determine current user's ID for the review
+  const currentUserId = user?.id || '';
+  
   const handleReviewSubmitted = () => {
     setShowReviewForm(false);
     toast.success("Your review was submitted successfully!");
@@ -107,7 +112,7 @@ export default function TaskReviewSection({
       ) : showReviewForm ? (
         <SubmitReviewForm
           taskId={task.id}
-          reviewerId={user?.id || ''}
+          reviewerId={currentUserId}
           revieweeId={revieweeId}
           isProviderReview={isProvider}
           taskTitle={task.title}
@@ -126,7 +131,7 @@ export default function TaskReviewSection({
                 <p className="text-gray-600">
                   Reviews will be visible once both parties have submitted their feedback.
                 </p>
-                {reviews.find(review => review.reviewer_id === user?.id) && (
+                {reviews.find(review => review.reviewer_id === currentUserId) && (
                   <p className="text-sm text-green-600 mt-2">
                     You've submitted your review. Waiting for the other party to complete theirs.
                   </p>

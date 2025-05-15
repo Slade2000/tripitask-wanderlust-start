@@ -1,17 +1,16 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import { ReviewCard } from "./ReviewCard";
-
-interface Review {
-  id: string;
-  customerName: string;
-  taskTitle: string;
-  rating: number;
-  comment: string;
-}
+import { Review } from "@/services/task/reviews/getTaskReviews";
 
 interface ReviewsSectionProps {
-  reviews: Review[];
+  reviews: {
+    id: string;
+    customerName: string;
+    taskTitle: string;
+    rating: number;
+    comment: string;
+  }[];
 }
 
 export const ReviewsSection = ({ reviews }: ReviewsSectionProps) => {
