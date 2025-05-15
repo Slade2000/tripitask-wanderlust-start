@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/auth";
-import { Profile, Certificate } from "@/contexts/auth/types";
+import { Profile, Certificate, certificationsToJson } from "@/contexts/auth/types";
 import { supabase } from "@/integrations/supabase/client";
 import { getUserReviews } from "@/services/task/reviews";
 import { toast } from "@/components/ui/use-toast";
@@ -185,9 +185,15 @@ export const useProfileData = () => {
     if (!user?.id) return null;
     
     try {
+      // Convert certifications to JSON format if present
+      const updateData = { ...data };
+      if (updateData.certifications !== undefined) {
+        updateData.certifications = certificationsToJson(updateData.certifications);
+      }
+      
       const { data: updatedProfile, error } = await supabase
         .from('profiles')
-        .update(data)
+        .update(updateData)
         .eq('id', user.id)
         .select()
         .single();

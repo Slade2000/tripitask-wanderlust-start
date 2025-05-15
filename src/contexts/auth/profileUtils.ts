@@ -1,6 +1,6 @@
 
 import { supabase } from '../../integrations/supabase/client';
-import { Profile } from './types';
+import { Profile, certificationsFromJson, certificationsToJson } from './types';
 
 // Set up a local cache for profile data
 const profileCache: { [userId: string]: { profile: Profile, timestamp: number } } = {};
@@ -47,6 +47,8 @@ export const fetchUserProfile = async (userId: string): Promise<Profile | null> 
     // Create profile with computed properties instead of getters
     const profileData = {
       ...data,
+      // Convert JSON certifications to properly typed Certificate array
+      certifications: certificationsFromJson(data.certifications),
       first_name: data.full_name && data.full_name.includes(' ') 
         ? data.full_name.split(' ')[0] 
         : data.full_name,
@@ -107,7 +109,8 @@ export const createInitialProfile = async (userId: string): Promise<Profile | nu
       location: '',
       business_name: '',
       rating: 0,
-      jobs_completed: 0
+      jobs_completed: 0,
+      certifications: [] // Empty array for certifications
     };
     
     console.log('Attempting to create profile with data:', initialData);
@@ -130,6 +133,8 @@ export const createInitialProfile = async (userId: string): Promise<Profile | nu
     // Create profile with computed properties
     const profileData = {
       ...data,
+      // Convert JSON certifications to properly typed Certificate array
+      certifications: certificationsFromJson(data.certifications),
       first_name: data.full_name && data.full_name.includes(' ') 
         ? data.full_name.split(' ')[0] 
         : data.full_name,

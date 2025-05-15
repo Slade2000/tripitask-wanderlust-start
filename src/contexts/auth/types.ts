@@ -1,6 +1,7 @@
 
 import { User as SupabaseUser } from '@supabase/supabase-js';
 import { User } from '../../types/user';
+import { Json } from '@/integrations/supabase/types';
 
 // Define certificate interface
 export interface Certificate {
@@ -24,12 +25,40 @@ export interface Profile {
   updated_at?: string | null;
   certifications?: Certificate[] | null;
   trade_registry_number?: string | null;
+  total_earnings?: number | null;
+  available_balance?: number | null;
+  pending_earnings?: number | null;
+  total_withdrawn?: number | null;
   // Computed properties
   first_name: string | null;
   last_name: string | null;
   // Add the updateProfile method to the interface
   updateProfile?: (profileData: Partial<Profile>) => Promise<Profile | null>;
 }
+
+// Utils for converting between Certificate and Json types
+export const certificationsFromJson = (json: Json | null): Certificate[] | null => {
+  if (!json) return null;
+  try {
+    // Ensure json is an array before mapping
+    if (Array.isArray(json)) {
+      return json.map(cert => ({
+        name: cert?.name as string || '',
+        verified: cert?.verified as boolean || false,
+        file_url: cert?.file_url as string || undefined
+      }));
+    }
+    return [];
+  } catch (e) {
+    console.error("Error parsing certifications from JSON:", e);
+    return [];
+  }
+};
+
+export const certificationsToJson = (certs: Certificate[] | null): Json => {
+  if (!certs) return [];
+  return certs as unknown as Json;
+};
 
 // Auth context interface
 export interface AuthContextType {

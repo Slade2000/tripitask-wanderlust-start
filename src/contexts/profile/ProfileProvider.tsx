@@ -3,7 +3,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback, Rea
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/auth';
-import { Profile } from '@/contexts/auth/types';
+import { Profile, certificationsFromJson, certificationsToJson } from '@/contexts/auth/types';
 import { fetchUserProfile } from '@/contexts/auth/profileUtils';
 
 // Define the context type
@@ -101,12 +101,20 @@ export const ProfileProvider: React.FC<ProfileProviderProps> = ({ children }) =>
     setLoading(true);
     
     try {
+      // Convert the certifications array to JSON format for database storage
+      const dataToUpdate = {
+        ...profileData,
+        updated_at: new Date().toISOString(),
+      };
+      
+      // Convert certificates array to JSON if present
+      if (profileData.certifications !== undefined) {
+        dataToUpdate.certifications = certificationsToJson(profileData.certifications);
+      }
+      
       const { data, error } = await supabase
         .from("profiles")
-        .update({
-          ...profileData,
-          updated_at: new Date().toISOString(),
-        })
+        .update(dataToUpdate)
         .eq("id", user.id)
         .select()
         .single();
@@ -121,6 +129,8 @@ export const ProfileProvider: React.FC<ProfileProviderProps> = ({ children }) =>
       // Create profile with computed properties
       const updatedProfile = {
         ...data,
+        // Convert JSON certifications to properly typed Certificate array
+        certifications: certificationsFromJson(data.certifications),
         first_name: data.full_name && data.full_name.includes(' ') 
           ? data.full_name.split(' ')[0] 
           : data.full_name,
