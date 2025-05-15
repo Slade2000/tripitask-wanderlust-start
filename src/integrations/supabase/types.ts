@@ -702,6 +702,53 @@ export type Database = {
           },
         ]
       }
+      wallet_transaction_details: {
+        Row: {
+          amount: number | null
+          completed_at: string | null
+          created_at: string | null
+          id: string | null
+          provider_id: string | null
+          reference: string | null
+          related_task_id: string | null
+          status: string | null
+          task_title: string | null
+          transaction_type: string | null
+        }
+        Insert: {
+          amount?: number | null
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string | null
+          provider_id?: string | null
+          reference?: string | null
+          related_task_id?: never
+          status?: string | null
+          task_title?: never
+          transaction_type?: string | null
+        }
+        Update: {
+          amount?: number | null
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string | null
+          provider_id?: string | null
+          reference?: string | null
+          related_task_id?: never
+          status?: string | null
+          task_title?: never
+          transaction_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wallet_transactions_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       _postgis_deprecate: {
@@ -927,6 +974,10 @@ export type Database = {
       equals: {
         Args: { geom1: unknown; geom2: unknown }
         Returns: boolean
+      }
+      format_transaction_reference: {
+        Args: { ref_type: string; ref_id: string }
+        Returns: string
       }
       geography: {
         Args: { "": string } | { "": unknown }
