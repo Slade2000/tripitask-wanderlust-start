@@ -14,10 +14,17 @@ export async function getUserReviews(userId: string): Promise<Review[]> {
     const { data: reviews, error } = await supabase
       .from('reviews')
       .select(`
-        *,
-        reviewer:reviewer_id(id, full_name, avatar_url),
-        reviewee:reviewee_id(id, full_name, avatar_url),
-        task:task_id(id, title)
+        id,
+        task_id,
+        reviewer_id,
+        reviewee_id,
+        rating,
+        feedback,
+        created_at,
+        is_provider_review,
+        reviewer:profiles!reviewer_id(id, full_name, avatar_url),
+        reviewee:profiles!reviewee_id(id, full_name, avatar_url),
+        task:tasks!task_id(id, title)
       `)
       .eq('reviewee_id', userId)
       .order('created_at', { ascending: false });
@@ -27,10 +34,11 @@ export async function getUserReviews(userId: string): Promise<Review[]> {
       return [];
     }
     
-    console.log(`Found ${reviews.length} reviews for user ${userId}:`, reviews);
-    return reviews as unknown as Review[];
+    console.log(`Found ${reviews?.length || 0} reviews for user ${userId}:`, reviews);
+    return reviews as unknown as Review[] || [];
   } catch (err) {
     console.error("Error fetching user reviews:", err);
     return [];
   }
 }
+

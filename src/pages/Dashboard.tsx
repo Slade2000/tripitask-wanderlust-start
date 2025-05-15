@@ -1,3 +1,4 @@
+
 import { useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/auth";
@@ -59,8 +60,13 @@ const Dashboard = () => {
   } = useQuery({
     queryKey: ['userReviews', user?.id],
     queryFn: () => getUserReviews(user?.id || ''),
-    enabled: !!user?.id
+    enabled: !!user?.id,
+    staleTime: 60000 // Set stale time to 1 minute to avoid excessive refetching
   });
+
+  // Debug logs for reviews data
+  console.log("Dashboard reviews data:", reviews);
+  console.log("Reviews count:", reviews?.length || 0);
 
   // Log the offers data and earnings stats to debug
   console.log("Dashboard offers data:", offers);
@@ -101,7 +107,7 @@ const Dashboard = () => {
   }
 
   // Loading state
-  if (tasksLoading || offersLoading || earningsStatsLoading) {
+  if (tasksLoading || offersLoading || earningsStatsLoading || reviewsLoading) {
     return (
       <div className="min-h-screen bg-cream p-4 pb-20">
         <div className="max-w-4xl mx-auto">
