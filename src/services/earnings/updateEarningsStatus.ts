@@ -1,7 +1,5 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { ProviderEarning } from "./types";
-import { syncProfileEarnings } from "./syncProfileEarnings";
 
 /**
  * Updates the status of provider earnings
@@ -53,9 +51,6 @@ export async function updateEarningsStatus(
       return null;
     }
     
-    // Sync the profile earnings to ensure all values are correct
-    await syncProfileEarnings(earningData.provider_id);
-    
     return updatedEarning as unknown as ProviderEarning;
   } catch (error) {
     console.error("Unexpected error in updateEarningsStatus:", error);
@@ -86,14 +81,11 @@ export async function processAvailableEarnings(): Promise<number> {
       return 0;
     }
     
-    // Update each earning
+    // Update each earning to available status
     let updatedCount = 0;
     for (const earning of earningsToUpdate) {
       const updated = await updateEarningsStatus(earning.id, 'available');
       if (updated) updatedCount++;
-      
-      // Sync profile earnings after each update to ensure accuracy
-      await syncProfileEarnings(earning.provider_id);
     }
     
     return updatedCount;

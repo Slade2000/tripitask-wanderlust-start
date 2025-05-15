@@ -1,9 +1,7 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ProviderEarning } from "./types";
 import { createWalletTransaction } from "./createWalletTransaction";
-import { syncProfileEarnings } from "./syncProfileEarnings";
 
 /**
  * Records earnings for a provider when a task is completed
@@ -89,22 +87,6 @@ export async function recordEarnings(taskId: string, offerId: string): Promise<P
       console.error("Error updating offer status:", offerUpdateError);
       toast.error("Offer status could not be updated");
     }
-    
-    // Get current profile values before update
-    const { data: currentProfile, error: profileFetchError } = await supabase
-      .from('profiles')
-      .select('pending_earnings, total_earnings, jobs_completed')
-      .eq('id', offerData.provider_id)
-      .single();
-      
-    if (profileFetchError) {
-      console.error("Error fetching current profile data:", profileFetchError);
-    } else {
-      console.log("Current profile values before update:", currentProfile);
-    }
-    
-    // Call the sync function to properly update all earnings
-    await syncProfileEarnings(offerData.provider_id);
 
     // Create a wallet transaction record for this deposit
     const reference = `earnings:${earningsData.id}`;

@@ -1,4 +1,3 @@
-
 // Export all earnings-related functions for easy import
 
 export * from './getProviderEarnings';
@@ -8,5 +7,4 @@ export * from './getWalletTransactions';
 export * from './recordEarnings';
 export * from './updateEarningsStatus';
 export * from './createWalletTransaction';
-// Export the sync function directly to avoid circular dependencies
-export * from './syncProfileEarnings';
+export * from './types';

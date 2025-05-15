@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { ProviderEarningsStatistics } from "./types";
 
@@ -107,27 +106,42 @@ export async function getProviderEarningsStatistics(providerId: string): Promise
 }
 
 /**
- * Refreshes the earnings data for a provider by
- * recalculating all values from the database
+ * Refreshes the earnings data by directly recalculating
+ * all values from the database
  * 
  * @param providerId The provider ID
  * @returns Updated provider earnings statistics
  */
 export async function refreshProviderEarnings(providerId: string): Promise<ProviderEarningsStatistics | null> {
   try {
-    // Import dynamically to avoid circular dependency
-    const { syncProfileEarnings } = await import('./syncProfileEarnings');
+    // Process any pending earnings that should now be available
+    const now = new Date().toISOString();
+    const { data: earningsToUpdate, error: fetchError } = await supabase
+      .from('provider_earnings')
+      .select('id')
+      .eq('provider_id', providerId)
+      .eq('status', 'pending')
+      .lt('available_at', now);
     
-    // Call the sync function to recalculate and sync all values
-    const success = await syncProfileEarnings(providerId);
-    
-    if (!success) {
-      console.error("Failed to sync provider earnings");
-      return null;
+    if (fetchError) {
+      console.error("Error fetching earnings to update:", fetchError);
+    } else if (earningsToUpdate && earningsToUpdate.length > 0) {
+      // Update each earning to available status
+      for (const earning of earningsToUpdate) {
+        await supabase
+          .from('provider_earnings')
+          .update({ 
+            status: 'available',
+            available_at: now
+          })
+          .eq('id', earning.id);
+      }
+      
+      console.log(`Updated ${earningsToUpdate.length} earnings to available status`);
     }
 
-    // Fetch the updated earnings statistics directly from calculation
-    return await getProviderEarningsStatistics(providerId);
+    // Return freshly calculated statistics
+    return getProviderEarningsStatistics(providerId);
   } catch (error) {
     console.error("Error refreshing provider earnings:", error);
     return null;
