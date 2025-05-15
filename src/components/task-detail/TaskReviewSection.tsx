@@ -73,10 +73,13 @@ export default function TaskReviewSection({
   
   console.log("Review section details:", {
     isTaskPoster,
+    isProvider,
     clientId,
     providerId,
     currentUserId: user?.id,
     reviewCount: reviews.length,
+    taskStatus: task.status,
+    providerDetails: providerDetails ? {id: providerDetails.id, name: providerDetails.full_name} : "Missing provider details"
   });
   
   // Get the other person's name (who the current user would be reviewing)
@@ -86,6 +89,17 @@ export default function TaskReviewSection({
   
   // Determine who the current user should review
   const revieweeId = isTaskPoster ? providerId : clientId;
+  
+  // Verify revieweeId is valid
+  if (!revieweeId) {
+    console.error("Missing reviewee ID:", {
+      isTaskPoster, 
+      providerId, 
+      clientId,
+      task: { id: task.id, status: task.status, user_id: task.user_id },
+      providerDetails: providerDetails ? {id: providerDetails.id} : null
+    });
+  }
   
   // Determine current user's ID for the review
   const currentUserId = user?.id || '';
@@ -110,15 +124,25 @@ export default function TaskReviewSection({
           </CardContent>
         </Card>
       ) : showReviewForm ? (
-        <SubmitReviewForm
-          taskId={task.id}
-          reviewerId={currentUserId}
-          revieweeId={revieweeId}
-          isProviderReview={isProvider}
-          taskTitle={task.title}
-          revieweeName={revieweeName}
-          onReviewSubmitted={handleReviewSubmitted}
-        />
+        revieweeId ? (
+          <SubmitReviewForm
+            taskId={task.id}
+            reviewerId={currentUserId}
+            revieweeId={revieweeId}
+            isProviderReview={isProvider}
+            taskTitle={task.title}
+            revieweeName={revieweeName}
+            onReviewSubmitted={handleReviewSubmitted}
+          />
+        ) : (
+          <Card>
+            <CardContent className="p-4 text-center">
+              <p className="text-amber-700">
+                Cannot submit review: missing recipient information.
+              </p>
+            </CardContent>
+          </Card>
+        )
       ) : reviews.length > 0 ? (
         <div className="space-y-4">
           {bothPartiesReviewed ? (

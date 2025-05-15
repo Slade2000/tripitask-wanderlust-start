@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -30,9 +30,31 @@ export function SubmitReviewForm({
   const [hoverRating, setHoverRating] = useState(0);
   const [feedback, setFeedback] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Log props for debugging
+  useEffect(() => {
+    console.log("SubmitReviewForm props:", { 
+      taskId, 
+      reviewerId, 
+      revieweeId,
+      isProviderReview,
+      taskTitle,
+      revieweeName 
+    });
+  }, [taskId, reviewerId, revieweeId, isProviderReview, taskTitle, revieweeName]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!revieweeId) {
+      toast.error("Cannot submit review: missing recipient information");
+      return;
+    }
+    
+    if (!reviewerId) {
+      toast.error("Cannot submit review: you must be logged in");
+      return;
+    }
     
     if (rating === 0) {
       toast.error("Please select a rating");
@@ -42,6 +64,15 @@ export function SubmitReviewForm({
     setIsSubmitting(true);
     
     try {
+      console.log("Submitting review with data:", {
+        taskId,
+        reviewerId,
+        revieweeId,
+        rating,
+        feedback: feedback ? `${feedback.substring(0, 20)}...` : "(empty)",
+        isProviderReview
+      });
+      
       const result = await submitReview({
         taskId,
         reviewerId,
@@ -52,9 +83,11 @@ export function SubmitReviewForm({
       });
       
       if (result) {
+        console.log("Review submitted successfully:", result);
         toast.success("Review submitted successfully");
         onReviewSubmitted();
       } else {
+        console.error("Failed to submit review, no result returned");
         toast.error("Failed to submit review");
       }
     } catch (error) {
@@ -117,10 +150,16 @@ export function SubmitReviewForm({
           <Button 
             type="submit" 
             className="w-full"
-            disabled={isSubmitting || rating === 0}
+            disabled={isSubmitting || rating === 0 || !revieweeId || !reviewerId}
           >
             {isSubmitting ? "Submitting..." : "Submit Review"}
           </Button>
+          
+          {!revieweeId && (
+            <p className="text-sm text-red-500 text-center">
+              Cannot submit review: missing recipient information
+            </p>
+          )}
         </form>
       </CardContent>
     </Card>

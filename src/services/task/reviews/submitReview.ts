@@ -93,6 +93,8 @@ export async function submitReview(reviewData: ReviewData) {
 
 async function updateUserRatingInProfile(userId: string) {
   try {
+    console.log("Updating user rating profile for:", userId);
+    
     // Get all reviews for this user
     const { data: reviews, error: reviewsError } = await supabase
       .from('reviews')
@@ -107,6 +109,8 @@ async function updateUserRatingInProfile(userId: string) {
     // Calculate new average rating
     const sum = reviews.reduce((acc, review) => acc + review.rating, 0);
     const averageRating = reviews.length > 0 ? Number((sum / reviews.length).toFixed(1)) : 0;
+    
+    console.log(`Calculated new rating for user ${userId}: ${averageRating} from ${reviews.length} reviews`);
     
     // Update the profile with the new rating
     const { error: updateError } = await supabase
