@@ -30,7 +30,16 @@ export function EarningsPanel({ userId }: EarningsPanelProps) {
         console.log("Earnings statistics loaded:", stats);
         
         if (stats) {
+          console.log("Setting earnings statistics state:", {
+            total_earnings: stats.total_earnings,
+            available_balance: stats.available_balance,
+            pending_earnings: stats.pending_earnings,
+            total_withdrawn: stats.total_withdrawn,
+            jobs_completed: stats.jobs_completed
+          });
           setStatistics(stats);
+        } else {
+          console.warn("No earnings statistics returned for user", userId);
         }
 
         // Load recent earnings (limit to 5)
@@ -46,6 +55,8 @@ export function EarningsPanel({ userId }: EarningsPanelProps) {
 
     if (userId) {
       loadEarningsData();
+    } else {
+      console.warn("EarningsPanel: No userId provided");
     }
   }, [userId]);
 

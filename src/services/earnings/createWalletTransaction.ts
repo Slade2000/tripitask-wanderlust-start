@@ -19,10 +19,10 @@ export async function createWalletTransaction(
   reference: string | null = null
 ): Promise<WalletTransaction | null> {
   try {
-    console.log(`Creating ${transactionType} wallet transaction for provider ${providerId} of amount ${amount}`);
+    console.log(`Creating ${transactionType} wallet transaction for provider ${providerId} of amount ${amount} with reference ${reference}`);
     
     if (!providerId || !amount) {
-      console.error("Missing required information for wallet transaction");
+      console.error("Missing required information for wallet transaction", { providerId, amount });
       return null;
     }
 
@@ -50,6 +50,20 @@ export async function createWalletTransaction(
     }
     
     console.log(`Successfully created ${transactionType} wallet transaction:`, data);
+    
+    // Check if the trigger function updated the profile balance
+    const { data: profileData, error: profileError } = await supabase
+      .from('profiles')
+      .select('available_balance, pending_earnings')
+      .eq('id', providerId)
+      .single();
+      
+    if (profileError) {
+      console.error("Error fetching updated profile data:", profileError);
+    } else {
+      console.log("Updated profile balances after transaction:", profileData);
+    }
+    
     return data as WalletTransaction;
   } catch (err) {
     console.error("Unexpected error creating wallet transaction:", err);

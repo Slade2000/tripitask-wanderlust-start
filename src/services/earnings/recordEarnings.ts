@@ -34,12 +34,21 @@ export async function recordEarnings(taskId: string, offerId: string): Promise<P
       return null;
     }
     
+    console.log("Offer data retrieved:", offerData);
+    
     // Calculate commission - use the net_amount stored in the offer if available, 
     // otherwise calculate based on fixed percentage
     const commissionRate = 0.10; // 10% commission
     const grossAmount = offerData.amount;
     const netAmount = offerData.net_amount || grossAmount * (1 - commissionRate);
     const commissionAmount = grossAmount - netAmount;
+    
+    console.log("Earnings calculation:", {
+      grossAmount,
+      netAmount,
+      commissionAmount,
+      commissionRate
+    });
     
     // Set the date when earnings will be available (7 days from now, as an example)
     const availableDate = new Date();
@@ -67,33 +76,55 @@ export async function recordEarnings(taskId: string, offerId: string): Promise<P
       return null;
     }
     
+    console.log("Provider earnings recorded successfully:", earningsData);
+    
+    // Get current profile values before update for debugging
+    const { data: currentProfile, error: profileFetchError } = await supabase
+      .from('profiles')
+      .select('pending_earnings, total_earnings, jobs_completed')
+      .eq('id', offerData.provider_id)
+      .single();
+      
+    if (profileFetchError) {
+      console.error("Error fetching current profile data:", profileFetchError);
+    } else {
+      console.log("Current profile values before update:", currentProfile);
+    }
+    
     // Update the provider's profile with new earnings data
-    // Since increment/decrement functions aren't available as typed functions,
-    // we'll use a direct update instead
-    const { error: profileUpdateError } = await supabase
+    const { error: profileUpdateError, data: profileUpdateData } = await supabase
       .from('profiles')
       .update({
         jobs_completed: supabase.rpc('increment', { row_id: offerData.provider_id, inc: 1 }) as any,
         pending_earnings: supabase.rpc('increment', { row_id: offerData.provider_id, inc: netAmount }) as any,
         total_earnings: supabase.rpc('increment', { row_id: offerData.provider_id, inc: netAmount }) as any
       })
-      .eq('id', offerData.provider_id);
+      .eq('id', offerData.provider_id)
+      .select();
     
     if (profileUpdateError) {
       console.error("Error updating provider profile:", profileUpdateError);
       // We don't fail the whole operation if this part fails,
       // as earnings are recorded but profile stats are just additional info
       toast.error("Provider statistics could not be updated");
+    } else {
+      console.log("Provider profile updated successfully:", profileUpdateData);
     }
 
     // Create a wallet transaction record for this deposit
     const reference = `earnings:${earningsData.id}`;
-    await createWalletTransaction(
+    const walletTransaction = await createWalletTransaction(
       offerData.provider_id,
       netAmount,
       'deposit',
       reference
     );
+    
+    if (walletTransaction) {
+      console.log("Wallet transaction created successfully:", walletTransaction);
+    } else {
+      console.error("Failed to create wallet transaction");
+    }
     
     return earningsData as unknown as ProviderEarning;
   } catch (error) {

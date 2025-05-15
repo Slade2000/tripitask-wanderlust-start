@@ -52,6 +52,8 @@ export async function getProviderEarningsStatistics(
   providerId: string
 ): Promise<ProviderEarningsStatistics | null> {
   try {
+    console.log(`Fetching earnings statistics for provider: ${providerId}`);
+    
     const { data, error } = await supabase
       .from('profiles')
       .select(`
@@ -69,7 +71,25 @@ export async function getProviderEarningsStatistics(
       return null;
     }
     
-    return data as ProviderEarningsStatistics;
+    console.log("Raw earnings statistics data:", data);
+    console.log("Data types:", {
+      total_earnings: typeof data.total_earnings,
+      available_balance: typeof data.available_balance,
+      pending_earnings: typeof data.pending_earnings,
+      total_withdrawn: typeof data.total_withdrawn
+    });
+    
+    // Ensure all values are numbers
+    const statistics: ProviderEarningsStatistics = {
+      total_earnings: Number(data.total_earnings) || 0,
+      available_balance: Number(data.available_balance) || 0,
+      pending_earnings: Number(data.pending_earnings) || 0,
+      total_withdrawn: Number(data.total_withdrawn) || 0,
+      jobs_completed: data.jobs_completed || 0
+    };
+    
+    console.log("Normalized earnings statistics:", statistics);
+    return statistics;
   } catch (error) {
     console.error("Unexpected error in getProviderEarningsStatistics:", error);
     return null;
