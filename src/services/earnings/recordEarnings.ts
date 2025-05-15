@@ -2,6 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ProviderEarning } from "./types";
+import { createWalletTransaction } from "./createWalletTransaction";
 
 /**
  * Records earnings for a provider when a task is completed
@@ -84,6 +85,15 @@ export async function recordEarnings(taskId: string, offerId: string): Promise<P
       // as earnings are recorded but profile stats are just additional info
       toast.error("Provider statistics could not be updated");
     }
+
+    // Create a wallet transaction record for this deposit
+    const reference = `earnings:${earningsData.id}`;
+    await createWalletTransaction(
+      offerData.provider_id,
+      netAmount,
+      'deposit',
+      reference
+    );
     
     return earningsData as unknown as ProviderEarning;
   } catch (error) {
