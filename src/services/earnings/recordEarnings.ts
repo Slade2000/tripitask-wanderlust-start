@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ProviderEarning } from "./types";
@@ -91,24 +90,22 @@ export async function recordEarnings(taskId: string, offerId: string): Promise<P
       console.log("Current profile values before update:", currentProfile);
     }
     
-    // Update the provider's profile with new earnings data
-    const { error: profileUpdateError, data: profileUpdateData } = await supabase
+    // Direct update to the provider's profile with new earnings data
+    // This is better than using the RPC functions which might not be working correctly
+    const { error: profileUpdateError } = await supabase
       .from('profiles')
       .update({
-        jobs_completed: supabase.rpc('increment', { row_id: offerData.provider_id, inc: 1 }) as any,
-        pending_earnings: supabase.rpc('increment', { row_id: offerData.provider_id, inc: netAmount }) as any,
-        total_earnings: supabase.rpc('increment', { row_id: offerData.provider_id, inc: netAmount }) as any
+        jobs_completed: (currentProfile?.jobs_completed || 0) + 1,
+        pending_earnings: (currentProfile?.pending_earnings || 0) + netAmount,
+        total_earnings: (currentProfile?.total_earnings || 0) + netAmount
       })
-      .eq('id', offerData.provider_id)
-      .select();
+      .eq('id', offerData.provider_id);
     
     if (profileUpdateError) {
       console.error("Error updating provider profile:", profileUpdateError);
-      // We don't fail the whole operation if this part fails,
-      // as earnings are recorded but profile stats are just additional info
       toast.error("Provider statistics could not be updated");
     } else {
-      console.log("Provider profile updated successfully:", profileUpdateData);
+      console.log("Provider profile updated successfully with new earnings");
     }
 
     // Create a wallet transaction record for this deposit

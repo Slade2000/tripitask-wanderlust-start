@@ -1,78 +1,126 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 import { ProviderEarning } from "./types";
 
 /**
- * Updates the status of an earnings record
+ * Updates the status of provider earnings
  * 
- * @param earningId The ID of the earnings record
- * @param newStatus The new status
- * @returns The updated earnings record or null if it failed
+ * @param earningId The ID of the earning to update
+ * @param newStatus The new status for the earning
+ * @returns The updated earning record or null if it failed
  */
 export async function updateEarningsStatus(
-  earningId: string,
+  earningId: string, 
   newStatus: 'pending' | 'available' | 'withdrawn'
 ): Promise<ProviderEarning | null> {
   try {
-    // First get the current earnings record
-    const { data: currentEarning, error: fetchError } = await supabase
+    console.log(`Updating earnings status: ${earningId} to ${newStatus}`);
+    
+    // First, get the current earning details
+    const { data: earningData, error: fetchError } = await supabase
       .from('provider_earnings')
       .select('*')
       .eq('id', earningId)
       .single();
     
-    if (fetchError || !currentEarning) {
-      console.error("Could not fetch earnings record:", fetchError);
-      toast.error("Failed to update earnings status: record not found");
+    if (fetchError || !earningData) {
+      console.error("Error fetching earning data:", fetchError);
       return null;
     }
     
-    const updates: Record<string, any> = {
-      status: newStatus
-    };
-    
-    // Add appropriate timestamps based on status change
-    if (newStatus === 'available' && !currentEarning.available_at) {
-      updates.available_at = new Date().toISOString();
-    } else if (newStatus === 'withdrawn' && !currentEarning.withdrawn_at) {
-      updates.withdrawn_at = new Date().toISOString();
+    // Don't update if status is already the same
+    if (earningData.status === newStatus) {
+      return earningData as unknown as ProviderEarning;
     }
     
-    // Update the earnings record
+    // Update the earning status
     const { data: updatedEarning, error: updateError } = await supabase
       .from('provider_earnings')
-      .update(updates)
+      .update({ 
+        status: newStatus,
+        // If being marked as available, set available_at to now
+        ...(newStatus === 'available' ? { available_at: new Date().toISOString() } : {}),
+        // If being withdrawn, set withdrawn_at to now
+        ...(newStatus === 'withdrawn' ? { withdrawn_at: new Date().toISOString() } : {})
+      })
       .eq('id', earningId)
       .select()
       .single();
     
     if (updateError) {
-      console.error("Error updating earnings status:", updateError);
-      toast.error("Failed to update earnings status");
+      console.error("Error updating earning status:", updateError);
       return null;
     }
     
-    // If this is moving from pending to available, update the provider's balances
-    if (currentEarning.status === 'pending' && newStatus === 'available') {
+    // Get the provider's current profile data
+    const { data: profileData, error: profileError } = await supabase
+      .from('profiles')
+      .select('pending_earnings, available_balance')
+      .eq('id', earningData.provider_id)
+      .single();
+    
+    if (profileError) {
+      console.error("Error fetching profile data:", profileError);
+      return updatedEarning as unknown as ProviderEarning;
+    }
+    
+    // If moving from pending to available, update the profile balance
+    if (earningData.status === 'pending' && newStatus === 'available') {
       const { error: profileUpdateError } = await supabase
         .from('profiles')
         .update({
-          pending_earnings: supabase.rpc('decrement', { row_id: currentEarning.provider_id, dec: currentEarning.net_amount }) as any,
-          available_balance: supabase.rpc('increment', { row_id: currentEarning.provider_id, inc: currentEarning.net_amount }) as any
+          pending_earnings: (profileData.pending_earnings || 0) - earningData.net_amount,
+          available_balance: (profileData.available_balance || 0) + earningData.net_amount
         })
-        .eq('id', currentEarning.provider_id);
+        .eq('id', earningData.provider_id);
       
       if (profileUpdateError) {
-        console.error("Error updating provider balances:", profileUpdateError);
-        toast.error("Provider balances could not be updated");
+        console.error("Error updating profile balances:", profileUpdateError);
+      } else {
+        console.log("Updated profile balances: moved amount from pending to available");
       }
     }
     
     return updatedEarning as unknown as ProviderEarning;
   } catch (error) {
     console.error("Unexpected error in updateEarningsStatus:", error);
-    toast.error("Failed to update earnings status due to an unexpected error");
     return null;
+  }
+}
+
+/**
+ * Checks for and updates any earnings that are past their available_at date
+ * This would typically be run by a cron job
+ */
+export async function processAvailableEarnings(): Promise<number> {
+  try {
+    // Find earnings that should now be available
+    const now = new Date().toISOString();
+    const { data: earningsToUpdate, error: fetchError } = await supabase
+      .from('provider_earnings')
+      .select('id')
+      .eq('status', 'pending')
+      .lt('available_at', now);
+    
+    if (fetchError) {
+      console.error("Error fetching earnings to update:", fetchError);
+      return 0;
+    }
+    
+    if (!earningsToUpdate || earningsToUpdate.length === 0) {
+      return 0;
+    }
+    
+    // Update each earning
+    let updatedCount = 0;
+    for (const earning of earningsToUpdate) {
+      const updated = await updateEarningsStatus(earning.id, 'available');
+      if (updated) updatedCount++;
+    }
+    
+    return updatedCount;
+  } catch (error) {
+    console.error("Error processing available earnings:", error);
+    return 0;
   }
 }

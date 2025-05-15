@@ -3,12 +3,15 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
   getProviderEarnings, 
-  getProviderEarningsStatistics 
+  getProviderEarningsStatistics,
+  refreshProviderEarnings 
 } from "@/services/earnings";
 import { ProviderEarning, ProviderEarningsStatistics } from "@/services/earnings/types";
 import { Skeleton } from "@/components/ui/skeleton";
-import { DollarSign, Clock, Calendar } from "lucide-react";
+import { DollarSign, Clock, Calendar, RefreshCcw } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 interface EarningsPanelProps {
   userId: string;
@@ -18,6 +21,7 @@ export function EarningsPanel({ userId }: EarningsPanelProps) {
   const [earnings, setEarnings] = useState<ProviderEarning[]>([]);
   const [statistics, setStatistics] = useState<ProviderEarningsStatistics | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     const loadEarningsData = async () => {
@@ -65,10 +69,48 @@ export function EarningsPanel({ userId }: EarningsPanelProps) {
   console.log("Total earnings value:", statistics?.total_earnings);
   console.log("Total earnings type:", typeof statistics?.total_earnings);
 
+  const handleRefreshEarnings = async () => {
+    if (!userId || refreshing) return;
+    
+    setRefreshing(true);
+    try {
+      toast.info("Refreshing earnings data...");
+      
+      // Call the refresh function to sync earnings data
+      const updatedStats = await refreshProviderEarnings(userId);
+      
+      if (updatedStats) {
+        setStatistics(updatedStats);
+        toast.success("Earnings data refreshed successfully");
+        
+        // Also refresh the earnings list
+        const recentEarnings = await getProviderEarnings(userId);
+        setEarnings(recentEarnings.slice(0, 5));
+      } else {
+        toast.error("Failed to refresh earnings data");
+      }
+    } catch (error) {
+      console.error("Error refreshing earnings:", error);
+      toast.error("An error occurred while refreshing earnings data");
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   return (
     <Card className="mb-6">
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Your Earnings</CardTitle>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={handleRefreshEarnings}
+          disabled={refreshing}
+          className="flex items-center gap-1"
+        >
+          <RefreshCcw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+          <span>{refreshing ? 'Refreshing...' : 'Refresh'}</span>
+        </Button>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
@@ -76,21 +118,41 @@ export function EarningsPanel({ userId }: EarningsPanelProps) {
             title="Available Balance" 
             value={formatCurrency(Number(statistics?.available_balance || 0))}
             icon={<DollarSign className="h-6 w-6 text-emerald-500" />}
+            loading={loading}
           />
           <StatCard 
             title="Pending Earnings" 
             value={formatCurrency(Number(statistics?.pending_earnings || 0))}
             icon={<Clock className="h-6 w-6 text-amber-500" />}
+            loading={loading}
           />
           <StatCard 
             title="Total Earnings" 
             value={formatCurrency(Number(statistics?.total_earnings || 0))}
             icon={<Calendar className="h-6 w-6 text-blue-500" />}
+            loading={loading}
           />
         </div>
 
         <h3 className="text-lg font-medium mb-2">Recent Earnings</h3>
-        {earnings.length > 0 ? (
+        {loading ? (
+          <div className="space-y-3">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="bg-white p-3 rounded-md border border-gray-100">
+                <div className="flex justify-between">
+                  <div>
+                    <Skeleton className="h-5 w-40 mb-2" />
+                    <Skeleton className="h-4 w-32" />
+                  </div>
+                  <div className="text-right">
+                    <Skeleton className="h-5 w-20 mb-2" />
+                    <Skeleton className="h-4 w-16" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : earnings.length > 0 ? (
           <div className="space-y-3">
             {earnings.map((earning) => (
               <RecentEarningItem key={earning.id} earning={earning} />
@@ -111,16 +173,21 @@ interface StatCardProps {
   title: string;
   value: string;
   icon: React.ReactNode;
+  loading?: boolean;
 }
 
-function StatCard({ title, value, icon }: StatCardProps) {
+function StatCard({ title, value, icon, loading = false }: StatCardProps) {
   return (
     <div className="bg-white p-4 rounded-md shadow-sm border border-gray-100">
       <div className="flex justify-between items-center mb-2">
         <p className="text-gray-600 text-sm">{title}</p>
         {icon}
       </div>
-      <p className="text-xl font-semibold">{value}</p>
+      {loading ? (
+        <Skeleton className="h-6 w-20" />
+      ) : (
+        <p className="text-xl font-semibold">{value}</p>
+      )}
     </div>
   );
 }

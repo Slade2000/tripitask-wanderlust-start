@@ -35,7 +35,15 @@ export async function getProviderEarnings(
       return [];
     }
     
-    return data as unknown as ProviderEarning[];
+    // Ensure numeric values are converted properly
+    const earnings = data.map(earning => ({
+      ...earning,
+      amount: Number(earning.amount),
+      commission_amount: Number(earning.commission_amount),
+      net_amount: Number(earning.net_amount)
+    }));
+    
+    return earnings as unknown as ProviderEarning[];
   } catch (error) {
     console.error("Unexpected error in getProviderEarnings:", error);
     return [];
@@ -72,26 +80,46 @@ export async function getProviderEarningsStatistics(
     }
     
     console.log("Raw earnings statistics data:", data);
-    console.log("Data types:", {
-      total_earnings: typeof data.total_earnings,
-      available_balance: typeof data.available_balance,
-      pending_earnings: typeof data.pending_earnings,
-      total_withdrawn: typeof data.total_withdrawn
-    });
     
-    // Ensure all values are numbers
+    // Ensure all values are properly converted to numbers
     const statistics: ProviderEarningsStatistics = {
-      total_earnings: Number(data.total_earnings) || 0,
-      available_balance: Number(data.available_balance) || 0,
-      pending_earnings: Number(data.pending_earnings) || 0,
-      total_withdrawn: Number(data.total_withdrawn) || 0,
-      jobs_completed: data.jobs_completed || 0
+      total_earnings: Number(data.total_earnings || 0),
+      available_balance: Number(data.available_balance || 0),
+      pending_earnings: Number(data.pending_earnings || 0),
+      total_withdrawn: Number(data.total_withdrawn || 0),
+      jobs_completed: Number(data.jobs_completed || 0)
     };
     
     console.log("Normalized earnings statistics:", statistics);
     return statistics;
   } catch (error) {
     console.error("Unexpected error in getProviderEarningsStatistics:", error);
+    return null;
+  }
+}
+
+/**
+ * Runs a manual sync for the provider's earnings if they seem out of sync
+ * 
+ * @param providerId The provider ID
+ * @returns Updated statistics or null if sync failed
+ */
+export async function refreshProviderEarnings(providerId: string): Promise<ProviderEarningsStatistics | null> {
+  try {
+    // Import here to avoid circular dependency
+    const { syncProfileEarnings } = await import('./syncProfileEarnings');
+    
+    // Sync the profile data with actual earnings
+    const success = await syncProfileEarnings(providerId);
+    
+    if (success) {
+      // Get and return the updated statistics
+      return await getProviderEarningsStatistics(providerId);
+    }
+    
+    return null;
+  } catch (error) {
+    console.error("Error refreshing provider earnings:", error);
     return null;
   }
 }
