@@ -1,6 +1,5 @@
 
-// Export all review-related services
+export * from './getAggregateRatings';
 export * from './getTaskReviews';
 export * from './getUserReviews';
 export * from './submitReview';
-export * from './getAggregateRatings';

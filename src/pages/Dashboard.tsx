@@ -1,4 +1,3 @@
-
 import { useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/auth";
@@ -53,20 +52,31 @@ const Dashboard = () => {
     enabled: !!user?.id
   });
 
-  // Fetch user's reviews
+  // Fetch user's reviews with enhanced error handling
   const {
     data: reviews,
-    isLoading: reviewsLoading
+    isLoading: reviewsLoading,
+    error: reviewsError
   } = useQuery({
     queryKey: ['userReviews', user?.id],
-    queryFn: () => getUserReviews(user?.id || ''),
+    queryFn: async () => {
+      if (!user?.id) {
+        console.error("Cannot fetch reviews: user ID is undefined");
+        return [];
+      }
+      const result = await getUserReviews(user.id);
+      console.log("Reviews fetched for dashboard:", result);
+      return result;
+    },
     enabled: !!user?.id,
-    staleTime: 60000 // Set stale time to 1 minute to avoid excessive refetching
+    staleTime: 60000 // 1 minute stale time
   });
 
-  // Debug logs for reviews data
+  // Enhanced debug logs for reviews data
   console.log("Dashboard reviews data:", reviews);
   console.log("Reviews count:", reviews?.length || 0);
+  console.log("Reviews loading state:", reviewsLoading);
+  console.log("Reviews error:", reviewsError);
 
   // Log the offers data and earnings stats to debug
   console.log("Dashboard offers data:", offers);
@@ -84,7 +94,7 @@ const Dashboard = () => {
   // Use actual earnings data if available, otherwise default to 0
   const totalEarnings = Number(earningsStats?.total_earnings) || 0;
 
-  // Format reviews for display
+  // Format reviews for display with more robust handling
   const formattedReviews = (reviews || []).map(review => ({
     id: review.id,
     customerName: review.reviewer?.full_name || 'Anonymous',
@@ -92,6 +102,8 @@ const Dashboard = () => {
     rating: review.rating,
     comment: review.feedback || 'No comment provided'
   }));
+
+  console.log("Formatted reviews for display:", formattedReviews);
 
   // Show error state if both data fetching operations failed
   if ((tasksError || offersError) && !tasksLoading && !offersLoading) {
@@ -144,8 +156,12 @@ const Dashboard = () => {
         {/* I Am Working On Section */}
         <WorkingOnSection offers={offers as any} />
         
-        {/* Recent Reviews Section */}
-        <ReviewsSection reviews={formattedReviews} />
+        {/* Recent Reviews Section - Enhanced with loading state */}
+        <ReviewsSection 
+          reviews={formattedReviews} 
+          isLoading={reviewsLoading}
+          error={reviewsError}
+        />
       </div>
       
       <BottomNav currentPath={location.pathname} />
