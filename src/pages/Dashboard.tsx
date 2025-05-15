@@ -7,6 +7,7 @@ import { getUserTasks } from "@/services/taskService";
 import { getProviderOffers } from "@/services/task/offers/queries/getProviderOffers";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import BottomNav from "@/components/BottomNav";
 import { DashboardLoadingState } from "@/components/dashboard/LoadingState";
 import { StatCards } from "@/components/dashboard/StatCards";
