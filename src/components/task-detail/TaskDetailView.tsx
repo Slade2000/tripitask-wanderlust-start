@@ -1,15 +1,19 @@
 
+import { useRef } from "react";
+import { useAuth } from "@/contexts/auth";
 import { Button } from "@/components/ui/button";
-import TaskBasicInfo from "@/components/task-detail/TaskBasicInfo";
-import TaskDescription from "@/components/task-detail/TaskDescription";
-import TaskImageGallery from "@/components/task-detail/TaskImageGallery";
-import TaskPosterInfo from "@/components/task-detail/TaskPosterInfo";
-import MessageModal from "@/components/messages/MessageModal";
-import TaskDetailHeader from "@/components/task-detail/TaskDetailHeader";
-import TaskInterestSection from "./TaskInterestSection";
-import TaskOffersSection from "./TaskOffersSection";
+import { ArrowLeft } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import TaskDetailHeader from "./TaskDetailHeader";
+import TaskBasicInfo from "./TaskBasicInfo";
+import TaskDescription from "./TaskDescription";
+import TaskImageGallery from "./TaskImageGallery";
+import TaskPosterInfo from "./TaskPosterInfo";
+import TaskStatusBadge from "./TaskStatusBadge";
 import TaskActionSection from "./TaskActionSection";
-import { Offer } from "@/types/offer";
+import TaskOffersSection from "./TaskOffersSection";
+import MessageModal from "../messages/MessageModal";
+import TaskReviewSection from "./TaskReviewSection";
 
 interface TaskDetailViewProps {
   task: any;
@@ -20,14 +24,14 @@ interface TaskDetailViewProps {
   isMessageModalOpen: boolean;
   onOpenMessageModal: () => void;
   onCloseMessageModal: () => void;
-  onTaskUpdated: (updatedTask: any) => void;
-  onRefreshOffers: () => Promise<void>;
+  onTaskUpdated: (task: any) => void;
+  onRefreshOffers: () => void;
 }
 
-export default function TaskDetailView({ 
-  task, 
-  offers, 
-  isTaskPoster, 
+const TaskDetailView = ({
+  task,
+  offers,
+  isTaskPoster,
   hasAcceptedOffer,
   isCurrentUserProvider,
   isMessageModalOpen,
@@ -35,81 +39,127 @@ export default function TaskDetailView({
   onCloseMessageModal,
   onTaskUpdated,
   onRefreshOffers
-}: TaskDetailViewProps) {
+}: TaskDetailViewProps) => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const messageModalRef = useRef<HTMLDivElement>(null);
+
+  // Find accepted offer and provider details if available
+  const acceptedOffer = offers?.find(offer => offer.status === 'accepted' || offer.status === 'completed');
+  const providerDetails = acceptedOffer?.provider_details || null;
+
   return (
-    <div className="min-h-screen bg-cream p-4 pb-24">
-      <div className="max-w-4xl mx-auto">
-        <TaskDetailHeader title={task.title} status={task.status} />
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div className="bg-cream min-h-screen pb-20">
+      <div className="container mx-auto max-w-4xl p-4">
+        {/* Back button */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate(-1)}
+          className="flex items-center mb-4"
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" /> Back
+        </Button>
+
+        {/* Task Header */}
+        <TaskDetailHeader
+          title={task.title}
+          status={task.status}
+          budget={task.budget}
+          date={task.date}
+          location={task.location}
+        />
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+          {/* Main content */}
           <div className="md:col-span-2 space-y-6">
-            {task.task_photos && task.task_photos.length > 0 && (
-              <TaskImageGallery photos={task.task_photos.map((p: any) => p.photo_url)} />
-            )}
-            
-            <TaskBasicInfo
-              budget={task.budget}
-              location={task.location}
-              dueDate={task.due_date}
-              categoryName={task.categories?.name}
-            />
-            
-            <TaskDescription description={task.description} />
-            
-            {/* Action section for task posters and service providers */}
-            <TaskActionSection
-              task={task}
-              offers={offers}
-              isTaskPoster={isTaskPoster}
-              hasAcceptedOffer={hasAcceptedOffer}
-              isCurrentUserProvider={isCurrentUserProvider}
-              onOpenMessageModal={onOpenMessageModal}
-              onTaskUpdated={onTaskUpdated}
-            />
-            
-            {/* Interest section for non-task-posters */}
-            {!isTaskPoster && !isCurrentUserProvider && (
-              <TaskInterestSection 
-                taskId={task.id}
-                isTaskPoster={isTaskPoster}
-                hasAcceptedOffer={hasAcceptedOffer}
-                status={task.status}
-                onOpenMessageModal={onOpenMessageModal}
+            {/* Basic Info */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-medium">Task Details</h3>
+                <TaskStatusBadge status={task.status} />
+              </div>
+
+              <TaskBasicInfo
+                category={task.category}
+                date={task.date}
+                location={task.location}
+                budget={task.budget}
               />
-            )}
-            
-            {/* Show offers section only for task posters */}
-            {isTaskPoster && offers.length > 0 && (
-              <TaskOffersSection 
-                taskId={task.id || ''}
+              
+              <TaskDescription description={task.description} />
+
+              {task.photos && task.photos.length > 0 && (
+                <TaskImageGallery photos={task.photos} />
+              )}
+            </div>
+
+            {/* Review Section (only visible after task is completed) */}
+            {task.status === 'completed' && (
+              <TaskReviewSection 
+                task={task}
                 isTaskPoster={isTaskPoster}
-                offers={offers}
-                onRefreshOffers={onRefreshOffers}
+                providerDetails={providerDetails}
               />
             )}
           </div>
-          
+
+          {/* Sidebar */}
           <div className="space-y-6">
-            {/* Only show TaskPosterInfo if the current user is not the task poster */}
-            {!isTaskPoster && (
-              <TaskPosterInfo
-                userId={task.user_id}
-                taskId={task.id}
+            {/* Task Poster Info */}
+            <TaskPosterInfo
+              name={task.poster_name}
+              rating={task.poster_rating}
+              memberSince={task.poster_member_since}
+              location={task.poster_location}
+              avatar={task.poster_avatar}
+            />
+
+            {/* Task Actions */}
+            {user && (
+              <TaskActionSection
+                task={task}
+                offers={offers}
+                isTaskPoster={isTaskPoster}
+                onOpenMessageModal={onOpenMessageModal}
+                onTaskUpdated={onTaskUpdated}
+                hasAcceptedOffer={hasAcceptedOffer}
+                isCurrentUserProvider={isCurrentUserProvider}
               />
             )}
           </div>
         </div>
+
+        {/* Offers Section (only visible to task poster or if user has made an offer) */}
+        {user && (isTaskPoster || offers?.some(offer => offer.provider_id === user.id)) && (
+          <div className="mt-6">
+            <TaskOffersSection 
+              taskId={task.id}
+              offers={offers}
+              isTaskPoster={isTaskPoster}
+              onTaskUpdated={onTaskUpdated}
+              onRefreshOffers={onRefreshOffers}
+              userId={user.id}
+              taskStatus={task.status}
+            />
+          </div>
+        )}
+
+        {/* Message Modal */}
+        {isMessageModalOpen && (
+          <div ref={messageModalRef}>
+            <MessageModal
+              isOpen={isMessageModalOpen}
+              onClose={onCloseMessageModal}
+              recipientId={isTaskPoster ? providerDetails?.id : task.user_id}
+              taskId={task.id}
+              taskTitle={task.title}
+            />
+          </div>
+        )}
       </div>
-      
-      {isMessageModalOpen && (
-        <MessageModal
-          isOpen={isMessageModalOpen}
-          onClose={onCloseMessageModal}
-          taskId={task.id}
-          receiverId={task.user_id}
-          taskTitle={task.title}
-        />
-      )}
     </div>
   );
-}
+};
+
+export default TaskDetailView;

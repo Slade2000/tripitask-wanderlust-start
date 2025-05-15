@@ -1,9 +1,10 @@
 
 import { useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth";
 import { getUserTasks } from "@/services/taskService";
 import { getProviderOffers } from "@/services/task/offers/queries/getProviderOffers";
+import { getProviderEarningsStatistics } from "@/services/earnings";
 import BottomNav from "@/components/BottomNav";
 import { DashboardLoadingState } from "@/components/dashboard/LoadingState";
 import { DashboardError } from "@/components/dashboard/DashboardError";
@@ -12,6 +13,7 @@ import { EarningsPanel } from "@/components/dashboard/EarningsPanel";
 import { PostedTasksSection } from "@/components/dashboard/PostedTasksSection";
 import { WorkingOnSection } from "@/components/dashboard/WorkingOnSection";
 import { ReviewsSection } from "@/components/dashboard/ReviewsSection";
+import { getUserReviews } from "@/services/task/reviews";
 
 const Dashboard = () => {
   const location = useLocation();
@@ -39,8 +41,29 @@ const Dashboard = () => {
     enabled: !!user?.id
   });
 
+  // Fetch user's earnings statistics
+  const {
+    data: earningsStats,
+    isLoading: earningsStatsLoading
+  } = useQuery({
+    queryKey: ['providerEarningsStats', user?.id],
+    queryFn: () => getProviderEarningsStatistics(user?.id || ''),
+    enabled: !!user?.id
+  });
+
+  // Fetch user's reviews
+  const {
+    data: reviews,
+    isLoading: reviewsLoading
+  } = useQuery({
+    queryKey: ['userReviews', user?.id],
+    queryFn: () => getUserReviews(user?.id || ''),
+    enabled: !!user?.id
+  });
+
   // Log the offers data to debug task status issues
   console.log("Dashboard offers data:", offers);
+  console.log("Dashboard earnings stats:", earningsStats);
 
   // Calculate statistics - all tasks posted by the user
   const activeTasks = tasks?.filter(task => task.status === 'open' || task.status === 'assigned' || task.status === 'in_progress') || [];
@@ -49,26 +72,17 @@ const Dashboard = () => {
   // Get all pending offers made by the user
   const pendingOffers = offers?.filter(offer => offer.status === 'pending') || [];
   
-  // Mock data for earnings (replace with real data once available)
-  const totalEarnings = 3250;
+  // Use actual earnings data if available, otherwise default to 0
+  const totalEarnings = earningsStats?.total_earnings || 0;
 
-  // Mock data for reviews (replace with real data once available)
-  const recentReviews = [
-    {
-      id: '1',
-      customerName: 'John Smith',
-      taskTitle: 'Moving Furniture',
-      rating: 5,
-      comment: 'Great work! Very professional and on time.'
-    },
-    {
-      id: '2',
-      customerName: 'Sarah Johnson',
-      taskTitle: 'House Cleaning',
-      rating: 4,
-      comment: 'Did a thorough job, would hire again for sure.'
-    }
-  ];
+  // Format reviews for display
+  const formattedReviews = (reviews || []).map(review => ({
+    id: review.id,
+    customerName: review.reviewer?.full_name || 'Anonymous',
+    taskTitle: review.task?.title || 'Task',
+    rating: review.rating,
+    comment: review.feedback || 'No comment provided'
+  }));
 
   // Show error state if both data fetching operations failed
   if ((tasksError || offersError) && !tasksLoading && !offersLoading) {
@@ -84,7 +98,7 @@ const Dashboard = () => {
   }
 
   // Loading state
-  if (tasksLoading || offersLoading) {
+  if (tasksLoading || offersLoading || earningsStatsLoading) {
     return (
       <div className="min-h-screen bg-cream p-4 pb-20">
         <div className="max-w-4xl mx-auto">
@@ -119,7 +133,7 @@ const Dashboard = () => {
         <WorkingOnSection offers={offers} />
         
         {/* Recent Reviews Section */}
-        <ReviewsSection reviews={recentReviews} />
+        <ReviewsSection reviews={formattedReviews} />
       </div>
       
       <BottomNav currentPath={location.pathname} />
