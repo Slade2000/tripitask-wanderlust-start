@@ -13,6 +13,7 @@ import { StatCards } from "@/components/dashboard/StatCards";
 import { TasksTabContent } from "@/components/dashboard/TasksTabContent";
 import { JobsTabContent } from "@/components/dashboard/JobsTabContent";
 import { ReviewCard } from "@/components/dashboard/ReviewCard";
+import { EarningsPanel } from "@/components/dashboard/EarningsPanel";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -98,6 +99,9 @@ const Dashboard = () => {
           completedTasks={completedTasks} 
           totalEarnings={totalEarnings} 
         />
+
+        {/* Earnings Panel - New Section */}
+        {user && <EarningsPanel userId={user.id} />}
         
         {/* Posted Tasks Section with Tabs */}
         <h2 className="text-xl font-semibold text-teal-dark mb-3">My Posted Tasks</h2>

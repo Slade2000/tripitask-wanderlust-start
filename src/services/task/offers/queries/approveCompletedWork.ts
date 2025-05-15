@@ -2,6 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { getTaskById } from "../../queries/getTaskById";
+import { recordEarnings } from "@/services/earnings/recordEarnings";
 
 /**
  * Marks a task as completed after the task poster approves the service provider's work
@@ -74,6 +75,17 @@ export async function approveCompletedWork(taskId: string, offerId: string) {
     }
     
     console.log("Task updated to completed status");
+    
+    // Record earnings for the provider
+    const earningsRecord = await recordEarnings(taskId, offerId);
+    if (!earningsRecord) {
+      console.warn(`Successfully completed task, but failed to record earnings for provider ${offerData.provider_id}`);
+      // We don't fail the whole operation if earnings recording fails
+      // The task is still marked as completed
+    } else {
+      console.log("Provider earnings recorded successfully:", earningsRecord);
+    }
+    
     toast.success("Work completion approved! Task marked as completed.");
     
     // Refresh task data
