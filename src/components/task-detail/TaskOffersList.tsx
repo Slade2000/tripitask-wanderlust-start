@@ -13,6 +13,9 @@ interface TaskOffersListProps {
   loading: boolean;
   onRefresh: () => Promise<void>;
   isTaskPoster: boolean;
+  onTaskUpdated?: (task: any) => void; // Added this optional prop
+  userId?: string; // Added this optional prop
+  taskStatus?: any; // Added this optional prop
 }
 
 export default function TaskOffersList({ 
@@ -20,7 +23,10 @@ export default function TaskOffersList({
   offers,
   loading,
   onRefresh,
-  isTaskPoster
+  isTaskPoster,
+  onTaskUpdated, // Added this prop
+  userId,
+  taskStatus
 }: TaskOffersListProps) {
   const { toast } = useToast();
   const [updatingOfferId, setUpdatingOfferId] = useState<string | null>(null);
@@ -64,6 +70,11 @@ export default function TaskOffersList({
         // Get the latest task data to ensure we have the updated status
         const updatedTask = await getTaskById(taskId);
         console.log("Task status after accepting offer:", updatedTask?.status);
+        
+        // Call onTaskUpdated if it exists
+        if (onTaskUpdated && updatedTask) {
+          onTaskUpdated(updatedTask);
+        }
         
         // Refresh offers list
         await onRefresh();
@@ -161,6 +172,8 @@ export default function TaskOffersList({
           <p><strong>Task ID:</strong> {taskId}</p>
           <p><strong>Offers count:</strong> {offers.length}</p>
           <p><strong>Has accepted offer:</strong> {hasAcceptedOffer ? 'Yes' : 'No'}</p>
+          <p><strong>User ID:</strong> {userId || 'Not provided'}</p>
+          <p><strong>Task Status:</strong> {taskStatus || 'Not provided'}</p>
           <div>
             <p><strong>Offers:</strong></p>
             <pre>{JSON.stringify(offers, null, 2)}</pre>

@@ -8,13 +8,19 @@ interface TaskOffersSectionProps {
   isTaskPoster: boolean;
   offers: any[];
   onRefreshOffers: () => Promise<void>;
+  onTaskUpdated?: (task: any) => void; // Added this prop
+  userId?: string; // Added this optional prop
+  taskStatus?: any; // Added this optional prop
 }
 
 export default function TaskOffersSection({ 
   taskId,
   isTaskPoster,
   offers,
-  onRefreshOffers
+  onRefreshOffers,
+  onTaskUpdated, // Added this prop
+  userId, // Added this prop
+  taskStatus // Added this prop
 }: TaskOffersSectionProps) {
   const [offersLoading, setOffersLoading] = useState(false);
   
@@ -28,6 +34,9 @@ export default function TaskOffersSection({
         loading={offersLoading}
         onRefresh={onRefreshOffers}
         isTaskPoster={isTaskPoster}
+        userId={userId}
+        taskStatus={taskStatus}
+        onTaskUpdated={onTaskUpdated}
       />
     </div>
   );
