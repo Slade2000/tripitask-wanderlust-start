@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { ProviderEarningsStatistics } from "./types";
+import { getWalletTransactionDetails } from "./getWalletTransactionDetails";
 
 /**
  * Get earnings statistics for a provider
@@ -54,18 +55,10 @@ export async function getProviderEarningsStatistics(providerId: string): Promise
       return null;
     }
     
-    // Step 4: Get data from wallet_transaction_details
-    // Use a direct query approach instead of RPC
-    const { data: walletTransDetails, error: walletTransDetailsError } = await supabase
-      .from('wallet_transactions')
-      .select('amount')
-      .eq('provider_id', providerId)
-      .eq('transaction_type', 'payment')
-      .eq('status', 'completed');
+    // Step 4: Get data from wallet_transactions for payments
+    const walletTransDetails = await getWalletTransactionDetails(providerId);
     
-    if (walletTransDetailsError) {
-      console.error("Error fetching wallet transaction details:", walletTransDetailsError);
-    } else {
+    if (walletTransDetails.length > 0) {
       console.log("Wallet transaction details query succeeded:", walletTransDetails);
     }
     
@@ -94,9 +87,9 @@ export async function getProviderEarningsStatistics(providerId: string): Promise
       let walletEarnings = 0;
       
       walletTransDetails.forEach(item => {
-        // Safely access the amount property, regardless of its nesting level
+        // Safely access the amount property
         const amount = typeof item === 'object' && item !== null 
-          ? (item.amount || (item.data && item.data.amount)) 
+          ? (item.amount || 0) 
           : 0;
           
         if (amount) {
