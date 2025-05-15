@@ -54,6 +54,21 @@ export async function getProviderEarningsStatistics(providerId: string): Promise
       return null;
     }
     
+    // Step 4: Get data from wallet_transaction_details
+    const { data: walletTransDetails, error: walletTransDetailsError } = await supabase
+      .from('wallet_transaction_details')
+      .select('amount')
+      .eq('provider_id', providerId)
+      .eq('transaction_type', 'payment')
+      .eq('status', 'completed');
+    
+    if (walletTransDetailsError) {
+      console.error("Error fetching wallet transaction details:", walletTransDetailsError);
+      return null;
+    }
+    
+    console.log("Wallet transaction details:", walletTransDetails);
+    
     // Get jobs completed count
     const { count: jobsCompleted, error: countError } = await supabase
       .from('offers')
@@ -71,6 +86,15 @@ export async function getProviderEarningsStatistics(providerId: string): Promise
     if (completedEarnings && completedEarnings.length > 0) {
       totalEarnings = completedEarnings.reduce((sum, item) => 
         sum + parseFloat(item.net_amount.toString()), 0);
+    }
+    
+    // Add earnings from wallet_transaction_details
+    if (walletTransDetails && walletTransDetails.length > 0) {
+      const walletEarnings = walletTransDetails.reduce((sum, item) => 
+        sum + parseFloat(item.amount.toString()), 0);
+      
+      console.log("Additional earnings from wallet_transaction_details:", walletEarnings);
+      totalEarnings += walletEarnings;
     }
     
     // Calculate pending earnings - sum of all net_amounts in pending offers
