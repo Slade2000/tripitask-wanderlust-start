@@ -15,64 +15,42 @@ export async function syncProfileEarnings(providerId: string): Promise<boolean> 
     // Get total of all earnings by status using a raw SQL query instead of groupBy
     const { data: earningsSummary, error: summaryError } = await supabase
       .from('provider_earnings')
-      .select(`
-        status,
-        sum:net_amount
-      `)
-      .eq('provider_id', providerId)
-      .then(result => {
-        if (result.error) throw result.error;
-        return {
-          data: result.data.reduce((groups: any[], item) => {
-            const existingGroup = groups.find(g => g.status === item.status);
-            if (existingGroup) {
-              existingGroup.sum += parseFloat(item.net_amount as any);
-            } else {
-              groups.push({ 
-                status: item.status, 
-                sum: parseFloat(item.net_amount as any)
-              });
-            }
-            return groups;
-          }, []),
-          error: null
-        };
-      })
-      .catch(error => ({ data: null, error }));
+      .select('status, net_amount')
+      .eq('provider_id', providerId);
     
     if (summaryError) {
       console.error("Error fetching earnings summary:", summaryError);
       return false;
     }
     
-    // If the query fails or returns empty, let's use a manual approach
-    if (!earningsSummary || earningsSummary.length === 0) {
-      // Fetch all earnings for this provider and calculate totals manually
-      const { data: allEarnings, error: allEarningsError } = await supabase
-        .from('provider_earnings')
-        .select('status, net_amount')
-        .eq('provider_id', providerId);
+    // If the query succeeds, process the results
+    if (earningsSummary && earningsSummary.length > 0) {
+      // Group the earnings by status and sum the amounts
+      const summarizedData = earningsSummary.reduce((acc: {status: string, sum: number}[], item) => {
+        const existingGroup = acc.find(g => g.status === item.status);
+        if (existingGroup) {
+          existingGroup.sum += parseFloat(item.net_amount as any);
+        } else {
+          acc.push({ 
+            status: item.status, 
+            sum: parseFloat(item.net_amount as any)
+          });
+        }
+        return acc;
+      }, []);
       
-      if (allEarningsError) {
-        console.error("Error fetching all earnings:", allEarningsError);
-        return false;
-      }
-      
-      // Calculate totals by status
+      // Extract values from the query result
       let pendingTotal = 0;
       let availableTotal = 0;
       let totalEarnings = 0;
       
-      allEarnings.forEach(row => {
-        const amount = parseFloat(row.net_amount.toString());
+      summarizedData.forEach((row) => {
         if (row.status === 'pending') {
-          pendingTotal += amount;
+          pendingTotal = row.sum;
         } else if (row.status === 'available') {
-          availableTotal += amount;
+          availableTotal = row.sum;
         }
-        
-        // Total earnings includes all statuses
-        totalEarnings += amount;
+        totalEarnings += row.sum;
       });
       
       // Get count of completed jobs (offers with 'completed' status)
@@ -113,20 +91,34 @@ export async function syncProfileEarnings(providerId: string): Promise<boolean> 
       return true;
     } 
     
-    // If we got data from the query, use it
     else {
-      // Extract values from the query result
+      // If the query fails or returns empty, let's use a manual approach
+      // Fetch all earnings for this provider and calculate totals manually
+      const { data: allEarnings, error: allEarningsError } = await supabase
+        .from('provider_earnings')
+        .select('status, net_amount')
+        .eq('provider_id', providerId);
+      
+      if (allEarningsError) {
+        console.error("Error fetching all earnings:", allEarningsError);
+        return false;
+      }
+      
+      // Calculate totals by status
       let pendingTotal = 0;
       let availableTotal = 0;
       let totalEarnings = 0;
       
-      earningsSummary.forEach((row: any) => {
+      allEarnings.forEach(row => {
+        const amount = parseFloat(row.net_amount.toString());
         if (row.status === 'pending') {
-          pendingTotal = parseFloat(row.sum || '0');
+          pendingTotal += amount;
         } else if (row.status === 'available') {
-          availableTotal = parseFloat(row.sum || '0');
+          availableTotal += amount;
         }
-        totalEarnings += parseFloat(row.sum || '0');
+        
+        // Total earnings includes all statuses
+        totalEarnings += amount;
       });
       
       // Get count of completed jobs (offers with 'completed' status)
