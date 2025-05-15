@@ -3,6 +3,8 @@ import { User, Star, Calendar, MapPin, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
+import { useEffect } from "react";
+import { fetchProfileById } from "@/integrations/supabase/client";
 
 export interface TaskPosterInfoProps {
   userId: string;
@@ -25,6 +27,34 @@ export default function TaskPosterInfo({
 }: TaskPosterInfoProps) {
   // Format rating to 1 decimal place if needed
   const formattedRating = rating ? rating.toFixed(1) : "New";
+  
+  // Debug logging to help diagnose issues
+  useEffect(() => {
+    // Log the incoming props to help troubleshoot
+    console.log("TaskPosterInfo received props:", {
+      userId,
+      taskId,
+      name,
+      rating,
+      memberSince,
+      location,
+      avatar
+    });
+    
+    // If we're showing "Unknown User", try to fetch the profile directly
+    if (name === "Unknown User" && userId) {
+      console.log("Attempting to fetch profile directly for userId:", userId);
+      fetchProfileById(userId).then(profile => {
+        if (profile) {
+          console.log("Successfully fetched profile directly:", profile);
+          // We're not setting state here because we don't want to trigger a re-render
+          // This is just for debugging purposes
+        } else {
+          console.warn("Failed to fetch profile directly for userId:", userId);
+        }
+      });
+    }
+  }, [userId, taskId, name]);
 
   return (
     <Card>
@@ -37,7 +67,7 @@ export default function TaskPosterInfo({
             </AvatarFallback>
           </Avatar>
           <div>
-            <h3 className="font-medium">{name}</h3>
+            <h3 className="font-medium">{name || "Unknown User"}</h3>
             <div className="flex items-center text-sm text-gray-600">
               <Star className="h-4 w-4 text-yellow-400 mr-1" />
               <span>{formattedRating}</span>

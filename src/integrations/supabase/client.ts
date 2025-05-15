@@ -1,4 +1,3 @@
-
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '../../types/supabase';
 
@@ -66,7 +65,7 @@ export const getCurrentSession = async () => {
   }
 };
 
-// Add a utility function to fetch user profile by ID
+// Add a utility function to fetch user profile by ID with improved caching and logging
 export const fetchProfileById = async (userId: string) => {
   try {
     if (!userId) {
@@ -74,6 +73,19 @@ export const fetchProfileById = async (userId: string) => {
       return null;
     }
 
+    // Creating in-memory cache for profile fetching to reduce database queries
+    if (!window.__profileCache) {
+      window.__profileCache = {};
+    }
+
+    // Check if we have a cached profile and it's less than 5 minutes old
+    const cachedProfile = window.__profileCache[userId];
+    if (cachedProfile && Date.now() - cachedProfile.timestamp < 5 * 60 * 1000) {
+      console.log(`Using cached profile for user ${userId}`);
+      return cachedProfile.data;
+    }
+
+    console.log(`Fetching profile from database for user ${userId}`);
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
@@ -82,8 +94,46 @@ export const fetchProfileById = async (userId: string) => {
 
     if (error) {
       console.error(`Error fetching profile for user ${userId}:`, error);
+      
+      // If profile doesn't exist, attempt to create a minimal one using auth data
+      if (error.code === 'PGRST116') {
+        console.log(`Profile not found for ${userId}, attempting to fetch auth user data`);
+        
+        const { data: authData, error: authError } = await supabase.auth.admin.getUserById(userId);
+        
+        if (!authError && authData?.user) {
+          console.log(`Got auth data for user ${userId}, creating minimal profile`);
+          
+          // Return minimal profile from auth data
+          const minimalProfile = {
+            id: userId,
+            full_name: authData.user.user_metadata?.full_name || 
+                      authData.user.user_metadata?.name || 
+                      'Unknown User',
+            avatar_url: authData.user.user_metadata?.avatar_url || null,
+            created_at: authData.user.created_at
+          };
+          
+          // Cache the minimal profile
+          window.__profileCache[userId] = {
+            data: minimalProfile,
+            timestamp: Date.now()
+          };
+          
+          return minimalProfile;
+        }
+      }
+      
       return null;
     }
+    
+    console.log(`Successfully fetched profile for user ${userId}:`, data);
+    
+    // Cache the profile
+    window.__profileCache[userId] = {
+      data,
+      timestamp: Date.now()
+    };
     
     return data;
   } catch (error) {
@@ -91,3 +141,15 @@ export const fetchProfileById = async (userId: string) => {
     return null;
   }
 };
+
+// Add the window extension for TypeScript
+declare global {
+  interface Window {
+    __profileCache?: {
+      [userId: string]: {
+        data: any;
+        timestamp: number;
+      }
+    }
+  }
+}

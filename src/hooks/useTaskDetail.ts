@@ -7,6 +7,7 @@ import { syncTaskStatusWithOffers } from "@/services/task/offers/queries/updateO
 import { User } from "@/types/user";
 import { Offer } from "@/types/offer";
 import { toast } from "@/hooks/use-toast";
+import { fetchProfileById } from "@/integrations/supabase/client";
 
 export function useTaskDetail(taskId: string | undefined, user: User | null) {
   const navigate = useNavigate();
@@ -20,6 +21,7 @@ export function useTaskDetail(taskId: string | undefined, user: User | null) {
   const [isTaskPoster, setIsTaskPoster] = useState(false);
   const [hasAcceptedOffer, setHasAcceptedOffer] = useState(false);
   const [isCurrentUserProvider, setIsCurrentUserProvider] = useState(false);
+  const [posterProfile, setPosterProfile] = useState<any>(null);
 
   useEffect(() => {
     const fetchTask = async () => {
@@ -30,7 +32,36 @@ export function useTaskDetail(taskId: string | undefined, user: User | null) {
         const taskData = await getTaskById(taskId);
         
         if (taskData) {
+          console.log("Task data retrieved:", taskData);
+          
+          // Fetch task poster profile information
+          if (taskData.user_id) {
+            console.log("Fetching profile for task poster:", taskData.user_id);
+            try {
+              const profile = await fetchProfileById(taskData.user_id);
+              console.log("Task poster profile retrieved:", profile);
+              
+              if (profile) {
+                setPosterProfile(profile);
+                
+                // Enhance task data with poster profile information
+                taskData.poster_name = profile.full_name || "Unknown User";
+                taskData.poster_avatar = profile.avatar_url;
+                taskData.poster_rating = profile.rating || 0;
+                taskData.poster_member_since = profile.created_at 
+                  ? new Date(profile.created_at).toLocaleDateString()
+                  : undefined;
+                taskData.poster_location = profile.location;
+              } else {
+                console.warn("Could not fetch poster profile for user ID:", taskData.user_id);
+              }
+            } catch (profileError) {
+              console.error("Error fetching task poster profile:", profileError);
+            }
+          }
+          
           setTask(taskData);
+          
           // Check if the current user is the task poster
           setIsTaskPoster(user?.id === taskData.user_id);
           
@@ -154,6 +185,7 @@ export function useTaskDetail(taskId: string | undefined, user: User | null) {
     handleOpenMessageModal,
     handleCloseMessageModal,
     handleTaskUpdated,
-    refreshOffers
+    refreshOffers,
+    posterProfile
   };
 }

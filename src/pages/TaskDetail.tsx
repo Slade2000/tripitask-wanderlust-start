@@ -26,7 +26,8 @@ const TaskDetail = () => {
     handleOpenMessageModal,
     handleCloseMessageModal,
     handleTaskUpdated,
-    refreshOffers
+    refreshOffers,
+    posterProfile
   } = useTaskDetail(taskId, user);
 
   useEffect(() => {
@@ -35,9 +36,16 @@ const TaskDetail = () => {
   }, []);
 
   useEffect(() => {
-    // Debug logging for task status
+    // Debug logging for task status and poster info
     if (task) {
       console.log("TaskDetail received task with status:", task.status);
+      console.log("Task poster info:", {
+        name: task.poster_name,
+        rating: task.poster_rating,
+        memberSince: task.poster_member_since,
+        location: task.poster_location,
+        avatar: task.poster_avatar
+      });
       console.log("Current user is task poster:", isTaskPoster);
       console.log("Current user is service provider:", isCurrentUserProvider);
     }
