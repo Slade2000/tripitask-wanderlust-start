@@ -9,6 +9,7 @@ export interface Offer {
   message?: string;
   status: 'pending' | 'accepted' | 'rejected' | 'work_completed' | 'completed';
   created_at: string;
+  completed_at?: string; // Adding this property
   provider?: {
     id: string;
     name?: string;

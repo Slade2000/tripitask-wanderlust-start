@@ -41,10 +41,12 @@ interface CompletedTaskCardProps {
 }
 
 const CompletedTaskCard = ({ offer, onClick }: CompletedTaskCardProps) => {
-  // Format the completion date if available
+  // Format the completion date if available, otherwise use created_at or "Recently"
   const completionDate = offer.completed_at 
     ? new Date(offer.completed_at).toLocaleDateString() 
-    : 'Recently';
+    : offer.created_at
+      ? new Date(offer.created_at).toLocaleDateString()
+      : 'Recently';
 
   return (
     <Card 

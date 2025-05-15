@@ -15,6 +15,7 @@ import { WorkingOnSection } from "@/components/dashboard/WorkingOnSection";
 import { ReviewsSection } from "@/components/dashboard/ReviewsSection";
 import { CompletedTasksSection } from "@/components/dashboard/CompletedTasksSection";
 import { getUserReviews } from "@/services/task/reviews";
+import { Offer } from "@/types/offer";
 
 const Dashboard = () => {
   const location = useLocation();
@@ -130,7 +131,7 @@ const Dashboard = () => {
         {user && <EarningsPanel userId={user.id} />}
         
         {/* Completed Tasks Section - For providers to access completed tasks for reviews */}
-        {offers && offers.length > 0 && <CompletedTasksSection offers={offers} />}
+        {offers && offers.length > 0 && <CompletedTasksSection offers={offers as Offer[]} />}
         
         {/* Posted Tasks Section */}
         <PostedTasksSection tasks={tasks || []} />
