@@ -12,12 +12,33 @@ export async function syncProfileEarnings(providerId: string): Promise<boolean> 
   try {
     console.log(`Syncing profile earnings for provider: ${providerId}`);
     
-    // Get total of all earnings by status using SQL query instead of group
+    // Get total of all earnings by status using a raw SQL query instead of groupBy
     const { data: earningsSummary, error: summaryError } = await supabase
       .from('provider_earnings')
-      .select('status, sum(net_amount)')
+      .select(`
+        status,
+        sum:net_amount
+      `)
       .eq('provider_id', providerId)
-      .groupBy('status');
+      .then(result => {
+        if (result.error) throw result.error;
+        return {
+          data: result.data.reduce((groups: any[], item) => {
+            const existingGroup = groups.find(g => g.status === item.status);
+            if (existingGroup) {
+              existingGroup.sum += parseFloat(item.net_amount as any);
+            } else {
+              groups.push({ 
+                status: item.status, 
+                sum: parseFloat(item.net_amount as any)
+              });
+            }
+            return groups;
+          }, []),
+          error: null
+        };
+      })
+      .catch(error => ({ data: null, error }));
     
     if (summaryError) {
       console.error("Error fetching earnings summary:", summaryError);
