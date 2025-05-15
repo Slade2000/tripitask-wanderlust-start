@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { getUserRatingStats } from "@/services/task/reviews/getAggregateRatings";
-import { Profile, certificationsToJson } from "@/contexts/auth/types";
+import { Profile, certificationsToJson, certificationsFromJson } from "@/contexts/auth/types";
 
 // Re-export Profile type
 export type { Profile } from "@/contexts/auth/types";
@@ -79,7 +79,7 @@ export const fetchProfileWithRatings = async (
     const profileData: Profile = {
       ...profile,
       // Convert JSON certifications to properly typed Certificate array
-      certifications: profile.certifications,
+      certifications: certificationsFromJson(profile.certifications),
       first_name: profile.full_name && profile.full_name.includes(' ') 
         ? profile.full_name.split(' ')[0] 
         : profile.full_name,
