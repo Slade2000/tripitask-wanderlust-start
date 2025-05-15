@@ -7,7 +7,7 @@ export async function getProviderOffers(providerId: string) {
     
     if (!providerId) {
       console.error("No provider ID provided to getProviderOffers");
-      throw new Error("Provider ID is required to fetch offers");
+      return []; // Return empty array instead of throwing error
     }
 
     // Fetch offers with task details
@@ -22,13 +22,13 @@ export async function getProviderOffers(providerId: string) {
 
     if (error) {
       console.error("Error fetching provider offers:", error);
-      throw new Error(error.message);
+      return []; // Return empty array instead of throwing error
     }
 
     console.log(`Found ${data?.length || 0} offers for provider ${providerId}`);
-    return data || [];
+    return data || []; // Ensure we always return an array
   } catch (error) {
     console.error("Error in getProviderOffers:", error);
-    throw error;
+    return []; // Return empty array on any error
   }
 }

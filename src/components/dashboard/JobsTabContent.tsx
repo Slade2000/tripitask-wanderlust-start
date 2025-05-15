@@ -5,17 +5,20 @@ import { Card, CardContent } from "@/components/ui/card";
 import { OfferCard } from "./OfferCard";
 
 interface JobsTabContentProps {
-  offers: any[];
+  offers: any[] | undefined;
   type: 'active-jobs' | 'offers-made';
 }
 
-export const JobsTabContent = ({ offers, type }: JobsTabContentProps) => {
+export const JobsTabContent = ({ offers = [], type }: JobsTabContentProps) => {
   const navigate = useNavigate();
+  
+  // Safely handle offers that might be undefined
+  const safeOffers = offers || [];
   
   // Filter offers based on tab type
   const filteredOffers = type === 'active-jobs' 
-    ? offers.filter(offer => offer.status === 'accepted')
-    : offers.filter(offer => offer.status === 'pending');
+    ? safeOffers.filter(offer => offer?.status === 'accepted')
+    : safeOffers.filter(offer => offer?.status === 'pending');
   
   if (filteredOffers.length === 0) {
     return (

@@ -14,6 +14,7 @@ import { TasksTabContent } from "@/components/dashboard/TasksTabContent";
 import { JobsTabContent } from "@/components/dashboard/JobsTabContent";
 import { ReviewCard } from "@/components/dashboard/ReviewCard";
 import { EarningsPanel } from "@/components/dashboard/EarningsPanel";
+import { AlertCircle } from "lucide-react";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -23,7 +24,8 @@ const Dashboard = () => {
   // Fetch user's tasks
   const {
     data: tasks,
-    isLoading: tasksLoading
+    isLoading: tasksLoading,
+    error: tasksError
   } = useQuery({
     queryKey: ['userTasks', user?.id],
     queryFn: () => getUserTasks(user?.id || ''),
@@ -33,7 +35,8 @@ const Dashboard = () => {
   // Fetch user's offers with task data included
   const {
     data: offers,
-    isLoading: offersLoading
+    isLoading: offersLoading,
+    error: offersError
   } = useQuery({
     queryKey: ['providerOffers', user?.id],
     queryFn: () => getProviderOffers(user?.id || ''),
@@ -73,6 +76,35 @@ const Dashboard = () => {
       comment: 'Did a thorough job, would hire again for sure.'
     }
   ];
+
+  // Show error state if both data fetching operations failed
+  if ((tasksError || offersError) && !tasksLoading && !offersLoading) {
+    return (
+      <div className="min-h-screen bg-cream p-4 pb-20">
+        <div className="max-w-4xl mx-auto">
+          <h1 className="text-3xl font-bold text-teal mb-6 text-center">Dashboard</h1>
+          <Card className="bg-white p-6 text-center mb-6">
+            <CardContent className="p-0">
+              <div className="flex flex-col items-center justify-center text-center">
+                <AlertCircle className="h-12 w-12 text-red-500 mb-2" />
+                <h3 className="text-xl font-semibold mb-2">Error Loading Dashboard</h3>
+                <p className="text-gray-600 mb-4">
+                  We encountered an issue while loading your dashboard data.
+                </p>
+                <Button 
+                  onClick={() => window.location.reload()} 
+                  className="bg-teal hover:bg-teal-dark text-white"
+                >
+                  Try Again
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+        <BottomNav currentPath={location.pathname} />
+      </div>
+    );
+  }
 
   // Loading state
   if (tasksLoading || offersLoading) {
@@ -114,19 +146,19 @@ const Dashboard = () => {
           </TabsList>
           
           <TabsContent value="all" className="mt-0">
-            <TasksTabContent tasks={tasks} type="all" navigate={navigate} />
+            <TasksTabContent tasks={tasks || []} type="all" navigate={navigate} />
           </TabsContent>
           
           <TabsContent value="open" className="mt-0">
-            <TasksTabContent tasks={tasks} type="open" navigate={navigate} />
+            <TasksTabContent tasks={tasks || []} type="open" navigate={navigate} />
           </TabsContent>
           
           <TabsContent value="in-progress" className="mt-0">
-            <TasksTabContent tasks={tasks} type="in-progress" navigate={navigate} />
+            <TasksTabContent tasks={tasks || []} type="in-progress" navigate={navigate} />
           </TabsContent>
           
           <TabsContent value="completed" className="mt-0">
-            <TasksTabContent tasks={tasks} type="completed" navigate={navigate} />
+            <TasksTabContent tasks={tasks || []} type="completed" navigate={navigate} />
           </TabsContent>
         </Tabs>
         
