@@ -8,5 +8,5 @@ export * from './getWalletTransactions';
 export * from './recordEarnings';
 export * from './updateEarningsStatus';
 export * from './createWalletTransaction';
-export * from './types';
+// Export the sync function directly to avoid circular dependencies
 export * from './syncProfileEarnings';
