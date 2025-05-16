@@ -9,4 +9,5 @@ export * from './getWalletTransactionDetails';
 export * from './recordEarnings';
 export * from './updateEarningsStatus';
 export * from './createWalletTransaction';
+export * from './syncProfileEarnings';
 export * from './types';

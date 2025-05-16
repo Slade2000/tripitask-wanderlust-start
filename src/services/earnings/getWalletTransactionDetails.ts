@@ -10,15 +10,15 @@ import { supabase } from "@/integrations/supabase/client";
  */
 export async function getWalletTransactionDetails(providerId: string): Promise<any[]> {
   try {
-    // Use a direct query with any() to bypass TypeScript issues
-    // by using a raw query approach
+    // Use a direct query to the wallet_transactions table
     const { data, error } = await supabase
       .from('wallet_transactions')
       .select(`
         id,
         amount,
         transaction_type,
-        status
+        status,
+        created_at
       `)
       .eq('provider_id', providerId)
       .eq('transaction_type', 'payment')

@@ -24,7 +24,20 @@ export async function syncProfileEarnings(providerId: string): Promise<boolean> 
       return false;
     }
 
-    // Step 2: Calculate pending earnings from pending offers that are accepted
+    // Step 2: Get wallet transaction earnings (payments)
+    const { data: walletPayments, error: walletError } = await supabase
+      .from('wallet_transactions')
+      .select('amount')
+      .eq('provider_id', providerId)
+      .eq('transaction_type', 'payment')
+      .eq('status', 'completed');
+    
+    if (walletError) {
+      console.error("Error fetching wallet payments:", walletError);
+      return false;
+    }
+
+    // Step 3: Calculate pending earnings from pending offers that are accepted
     const { data: pendingOffers, error: pendingError } = await supabase
       .from('offers')
       .select('net_amount, task_id')
@@ -36,7 +49,7 @@ export async function syncProfileEarnings(providerId: string): Promise<boolean> 
       return false;
     }
     
-    // Step 3: Calculate withdrawn amounts from wallet_transactions
+    // Step 4: Calculate withdrawn amounts from wallet_transactions
     const { data: withdrawals, error: withdrawalsError } = await supabase
       .from('wallet_transactions')
       .select('amount')
@@ -49,12 +62,22 @@ export async function syncProfileEarnings(providerId: string): Promise<boolean> 
       return false;
     }
     
-    // Calculate total earnings - sum of all net_amounts in provider_earnings
-    let totalEarnings = 0;
+    // Calculate total earnings from provider_earnings
+    let totalEarningsFromProviderTable = 0;
     if (completedEarnings && completedEarnings.length > 0) {
-      totalEarnings = completedEarnings.reduce((sum, item) => 
+      totalEarningsFromProviderTable = completedEarnings.reduce((sum, item) => 
         sum + parseFloat(item.net_amount.toString()), 0);
     }
+    
+    // Calculate total earnings from wallet transactions
+    let totalEarningsFromWallet = 0;
+    if (walletPayments && walletPayments.length > 0) {
+      totalEarningsFromWallet = walletPayments.reduce((sum, item) => 
+        sum + parseFloat(item.amount.toString()), 0);
+    }
+    
+    // Combined total earnings
+    const totalEarnings = totalEarningsFromProviderTable + totalEarningsFromWallet;
     
     // Calculate pending earnings - sum of all net_amounts in pending offers
     let pendingEarnings = 0;
@@ -105,7 +128,11 @@ export async function syncProfileEarnings(providerId: string): Promise<boolean> 
     console.log(`Successfully synced profile earnings for provider ${providerId}`, {
       pendingEarnings,
       availableBalance,
-      totalEarnings,
+      totalEarnings: {
+        total: totalEarnings,
+        fromProviderTable: totalEarningsFromProviderTable,
+        fromWallet: totalEarningsFromWallet
+      },
       totalWithdrawn,
       jobsCompleted
     });
