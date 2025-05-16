@@ -2,7 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 
 /**
- * Get transaction details from the wallet_transaction_details table
+ * Get transaction details from the wallet_transactions table
  * This is a separate function to handle any type issues
  * 
  * @param providerId The provider ID
