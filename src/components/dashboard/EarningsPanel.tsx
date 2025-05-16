@@ -1,101 +1,28 @@
 
-import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { 
-  getProviderEarnings, 
-  getProviderEarningsStatistics,
-  refreshProviderEarnings 
-} from "@/services/earnings";
-import { ProviderEarning, ProviderEarningsStatistics } from "@/services/earnings/types";
-import { Skeleton } from "@/components/ui/skeleton";
-import { DollarSign, Clock, Calendar, RefreshCcw } from "lucide-react";
-import { formatCurrency } from "@/lib/utils";
+import { RefreshCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
+import { EarningsStats } from "./earnings/EarningsStats";
+import { RecentEarningsList } from "./earnings/RecentEarningsList";
+import { useEarnings } from "./earnings/useEarnings";
 
 interface EarningsPanelProps {
   userId: string;
 }
 
 export function EarningsPanel({ userId }: EarningsPanelProps) {
-  const [earnings, setEarnings] = useState<ProviderEarning[]>([]);
-  const [statistics, setStatistics] = useState<ProviderEarningsStatistics | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-
-  useEffect(() => {
-    const loadEarningsData = async () => {
-      setLoading(true);
-      try {
-        console.log("Loading earnings data for user:", userId);
-        
-        // Load earnings statistics
-        const stats = await getProviderEarningsStatistics(userId);
-        console.log("Earnings statistics loaded:", stats);
-        
-        if (stats) {
-          console.log("Setting earnings statistics state:", {
-            total_earnings: stats.total_earnings,
-            available_balance: stats.available_balance,
-            pending_earnings: stats.pending_earnings,
-            total_withdrawn: stats.total_withdrawn,
-            jobs_completed: stats.jobs_completed
-          });
-          setStatistics(stats);
-        } else {
-          console.warn("No earnings statistics returned for user", userId);
-        }
-
-        // Load recent earnings (limit to 5)
-        const recentEarnings = await getProviderEarnings(userId);
-        console.log("Recent earnings loaded:", recentEarnings);
-        setEarnings(recentEarnings.slice(0, 5));
-      } catch (error) {
-        console.error("Error loading earnings data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (userId) {
-      loadEarningsData();
-    } else {
-      console.warn("EarningsPanel: No userId provided");
-    }
-  }, [userId]);
+  const {
+    earnings,
+    statistics,
+    loading,
+    refreshing,
+    handleRefreshEarnings
+  } = useEarnings(userId);
 
   // Debug logs for earnings stats
   console.log("Rendering earnings panel with stats:", statistics);
   console.log("Total earnings value:", statistics?.total_earnings);
   console.log("Total earnings type:", typeof statistics?.total_earnings);
-
-  const handleRefreshEarnings = async () => {
-    if (!userId || refreshing) return;
-    
-    setRefreshing(true);
-    try {
-      toast.info("Refreshing earnings data...");
-      
-      // Call the refresh function to sync earnings data
-      const updatedStats = await refreshProviderEarnings(userId);
-      
-      if (updatedStats) {
-        setStatistics(updatedStats);
-        toast.success("Earnings data refreshed successfully");
-        
-        // Also refresh the earnings list
-        const recentEarnings = await getProviderEarnings(userId);
-        setEarnings(recentEarnings.slice(0, 5));
-      } else {
-        toast.error("Failed to refresh earnings data");
-      }
-    } catch (error) {
-      console.error("Error refreshing earnings:", error);
-      toast.error("An error occurred while refreshing earnings data");
-    } finally {
-      setRefreshing(false);
-    }
-  };
 
   return (
     <Card className="mb-6">
@@ -113,107 +40,17 @@ export function EarningsPanel({ userId }: EarningsPanelProps) {
         </Button>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
-          <StatCard 
-            title="Available Balance" 
-            value={formatCurrency(Number(statistics?.available_balance || 0))}
-            icon={<DollarSign className="h-6 w-6 text-emerald-500" />}
-            loading={loading}
-          />
-          <StatCard 
-            title="Pending Earnings" 
-            value={formatCurrency(Number(statistics?.pending_earnings || 0))}
-            icon={<Clock className="h-6 w-6 text-amber-500" />}
-            loading={loading}
-          />
-          <StatCard 
-            title="Total Earnings" 
-            value={formatCurrency(Number(statistics?.total_earnings || 0))}
-            icon={<Calendar className="h-6 w-6 text-blue-500" />}
-            loading={loading}
-          />
-        </div>
+        <EarningsStats 
+          statistics={statistics} 
+          loading={loading} 
+        />
 
         <h3 className="text-lg font-medium mb-2">Recent Earnings</h3>
-        {loading ? (
-          <div className="space-y-3">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="bg-white p-3 rounded-md border border-gray-100">
-                <div className="flex justify-between">
-                  <div>
-                    <Skeleton className="h-5 w-40 mb-2" />
-                    <Skeleton className="h-4 w-32" />
-                  </div>
-                  <div className="text-right">
-                    <Skeleton className="h-5 w-20 mb-2" />
-                    <Skeleton className="h-4 w-16" />
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : earnings.length > 0 ? (
-          <div className="space-y-3">
-            {earnings.map((earning) => (
-              <RecentEarningItem key={earning.id} earning={earning} />
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-10 text-gray-500">
-            <p>No earnings recorded yet.</p>
-            <p className="mt-2 text-sm">Complete tasks to start earning!</p>
-          </div>
-        )}
+        <RecentEarningsList 
+          earnings={earnings}
+          loading={loading}
+        />
       </CardContent>
     </Card>
-  );
-}
-
-interface StatCardProps {
-  title: string;
-  value: string;
-  icon: React.ReactNode;
-  loading?: boolean;
-}
-
-function StatCard({ title, value, icon, loading = false }: StatCardProps) {
-  return (
-    <div className="bg-white p-4 rounded-md shadow-sm border border-gray-100">
-      <div className="flex justify-between items-center mb-2">
-        <p className="text-gray-600 text-sm">{title}</p>
-        {icon}
-      </div>
-      {loading ? (
-        <Skeleton className="h-6 w-20" />
-      ) : (
-        <p className="text-xl font-semibold">{value}</p>
-      )}
-    </div>
-  );
-}
-
-interface RecentEarningItemProps {
-  earning: ProviderEarning;
-}
-
-function RecentEarningItem({ earning }: RecentEarningItemProps) {
-  // Access task title via the joined tasks object from getProviderEarnings
-  const taskTitle = earning.tasks?.title || "Task";
-  // Format date
-  const earnedDate = new Date(earning.created_at).toLocaleDateString();
-
-  return (
-    <div className="bg-white p-3 rounded-md border border-gray-100">
-      <div className="flex justify-between">
-        <div>
-          <h4 className="font-medium">{taskTitle}</h4>
-          <p className="text-sm text-gray-600">{earning.status === 'pending' ? 'Available in 7 days' : 'Available for withdrawal'}</p>
-        </div>
-        <div className="text-right">
-          <p className="font-semibold text-emerald-600">{formatCurrency(earning.net_amount)}</p>
-          <p className="text-xs text-gray-500">{earnedDate}</p>
-        </div>
-      </div>
-    </div>
   );
 }
