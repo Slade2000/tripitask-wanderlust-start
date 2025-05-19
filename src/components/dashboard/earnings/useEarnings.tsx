@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { 
   getProviderEarnings, 
@@ -9,43 +8,71 @@ import {
 } from "@/services/earnings";
 import { toast } from "sonner";
 
-export function useEarnings(userId: string) {
+export function useEarnings(
+  userId: string, 
+  preloadedStatistics?: ProviderEarningsStatistics | null,
+  initialLoading: boolean = false
+) {
   const [earnings, setEarnings] = useState<ProviderEarning[]>([]);
-  const [statistics, setStatistics] = useState<ProviderEarningsStatistics | null>(null);
-  const [loading, setLoading] = useState(true);
+  // Use preloadedStatistics if provided
+  const [statistics, setStatistics] = useState<ProviderEarningsStatistics | null>(preloadedStatistics || null);
+  // Start with initialLoading value
+  const [loading, setLoading] = useState(preloadedStatistics ? false : initialLoading || true);
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
-    const loadEarningsData = async () => {
-      setLoading(true);
-      try {
-        console.log("Loading earnings data for user:", userId);
-        
-        // Load earnings statistics
-        const stats = await getProviderEarningsStatistics(userId);
-        console.log("Earnings statistics loaded:", stats);
-        
-        if (stats) {
-          console.log("Setting earnings statistics state:", {
-            total_earnings: stats.total_earnings,
-            available_balance: stats.available_balance,
-            pending_earnings: stats.pending_earnings,
-            total_withdrawn: stats.total_withdrawn,
-            jobs_completed: stats.jobs_completed
-          });
-          setStatistics(stats);
-        } else {
-          console.warn("No earnings statistics returned for user", userId);
-        }
+    // Update statistics if preloadedStatistics changes
+    if (preloadedStatistics) {
+      setStatistics(preloadedStatistics);
+    }
+  }, [preloadedStatistics]);
 
-        // Load recent earnings (limit to 5)
-        const recentEarnings = await getProviderEarnings(userId);
-        console.log("Recent earnings loaded:", recentEarnings);
-        setEarnings(recentEarnings.slice(0, 5));
-      } catch (error) {
-        console.error("Error loading earnings data:", error);
-      } finally {
-        setLoading(false);
+  useEffect(() => {
+    const loadEarningsData = async () => {
+      // If we already have statistics from props, only load earnings
+      if (preloadedStatistics) {
+        try {
+          // Load recent earnings (limit to 5)
+          const recentEarnings = await getProviderEarnings(userId);
+          console.log("Recent earnings loaded with preloaded statistics:", recentEarnings);
+          setEarnings(recentEarnings.slice(0, 5));
+          setLoading(false);
+        } catch (error) {
+          console.error("Error loading earnings data with preloaded statistics:", error);
+          setLoading(false);
+        }
+      } else {
+        // Otherwise load both statistics and earnings
+        setLoading(true);
+        try {
+          console.log("Loading earnings data for user:", userId);
+          
+          // Load earnings statistics
+          const stats = await getProviderEarningsStatistics(userId);
+          console.log("Earnings statistics loaded:", stats);
+          
+          if (stats) {
+            console.log("Setting earnings statistics state:", {
+              total_earnings: stats.total_earnings,
+              available_balance: stats.available_balance,
+              pending_earnings: stats.pending_earnings,
+              total_withdrawn: stats.total_withdrawn,
+              jobs_completed: stats.jobs_completed
+            });
+            setStatistics(stats);
+          } else {
+            console.warn("No earnings statistics returned for user", userId);
+          }
+
+          // Load recent earnings (limit to 5)
+          const recentEarnings = await getProviderEarnings(userId);
+          console.log("Recent earnings loaded:", recentEarnings);
+          setEarnings(recentEarnings.slice(0, 5));
+        } catch (error) {
+          console.error("Error loading earnings data:", error);
+        } finally {
+          setLoading(false);
+        }
       }
     };
 
@@ -54,7 +81,7 @@ export function useEarnings(userId: string) {
     } else {
       console.warn("useEarnings: No userId provided");
     }
-  }, [userId]);
+  }, [userId, preloadedStatistics]);
 
   const handleRefreshEarnings = async () => {
     if (!userId || refreshing) return;

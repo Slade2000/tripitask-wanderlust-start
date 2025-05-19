@@ -5,21 +5,26 @@ import { Button } from "@/components/ui/button";
 import { EarningsStats } from "./earnings/EarningsStats";
 import { RecentEarningsList } from "./earnings/RecentEarningsList";
 import { useEarnings } from "./earnings/useEarnings";
+import { ProviderEarning, ProviderEarningsStatistics } from "@/services/earnings/types";
 
 interface EarningsPanelProps {
   userId: string;
+  // Add optional props for pre-fetched data
+  preloadedStatistics?: ProviderEarningsStatistics | null;
+  isLoading?: boolean;
 }
 
-export function EarningsPanel({ userId }: EarningsPanelProps) {
+export function EarningsPanel({ userId, preloadedStatistics, isLoading = false }: EarningsPanelProps) {
+  // Pass the preloaded statistics to the useEarnings hook
   const {
     earnings,
     statistics,
     loading,
     refreshing,
     handleRefreshEarnings
-  } = useEarnings(userId);
+  } = useEarnings(userId, preloadedStatistics, isLoading);
 
-  // Debug logs for earnings stats
+  // Use the statistics from the hook (which might use preloadedStatistics)
   console.log("Rendering earnings panel with stats:", statistics);
   console.log("Total earnings value:", statistics?.total_earnings);
   console.log("Total earnings type:", typeof statistics?.total_earnings);

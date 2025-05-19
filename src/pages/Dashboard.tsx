@@ -43,7 +43,7 @@ const Dashboard = () => {
     enabled: !!user?.id
   });
 
-  // Fetch user's earnings statistics
+  // Fetch user's earnings statistics - will be passed to both StatCards and EarningsPanel
   const {
     data: earningsStats,
     isLoading: earningsStatsLoading
@@ -145,8 +145,14 @@ const Dashboard = () => {
           totalEarnings={totalEarnings} 
         />
 
-        {/* Earnings Panel Section */}
-        {user && <EarningsPanel userId={user.id} />}
+        {/* Earnings Panel Section - Pass the already fetched earningsStats */}
+        {user && (
+          <EarningsPanel 
+            userId={user.id} 
+            preloadedStatistics={earningsStats} 
+            isLoading={earningsStatsLoading} 
+          />
+        )}
         
         {/* Completed Tasks Section - For providers to access completed tasks for reviews */}
         {offers && offers.length > 0 && <CompletedTasksSection offers={offers as any} />}
