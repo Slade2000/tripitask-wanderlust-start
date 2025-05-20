@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getAllAvailableTasks } from "@/services/task/queries/getAllAvailableTasks";
+import { subscribeToTaskUpdates } from "@/services/task/queries/filterTasks";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -155,9 +156,29 @@ export const useTaskFilter = () => {
     },
     // Enable the query as soon as we have user data
     enabled: true,
-    staleTime: 0, // Changed from 30000 to 0 to always fetch fresh data
-    refetchOnWindowFocus: true, // Added to refetch when window gets focus
+    staleTime: 10000, // 10 seconds before considering data stale
+    refetchOnWindowFocus: true, // Refetch when window gets focus
+    refetchInterval: 30000, // Refetch every 30 seconds to keep data fresh
   });
+  
+  // Subscribe to real-time task updates
+  useEffect(() => {
+    // Set up real-time subscription
+    const unsubscribe = subscribeToTaskUpdates((payload) => {
+      console.log('Task update received:', payload);
+      if (payload.eventType === 'INSERT') {
+        // Show notification for new tasks
+        toast.info('New task posted! Pull to refresh.');
+      }
+      
+      // Trigger a refetch to update the task list
+      refetch();
+    });
+    
+    return () => {
+      unsubscribe();
+    };
+  }, [refetch]);
 
   // Re-enable location filtering when any filter is modified
   useEffect(() => {

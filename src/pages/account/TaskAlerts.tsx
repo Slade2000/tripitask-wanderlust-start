@@ -1,9 +1,11 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useCategories } from "@/hooks/useCategories";
+import { useSavedFilters } from "@/hooks/useSavedFilters";
 
 // Import the alert components
 import HeaderSection from "./components/task-alerts/HeaderSection";
@@ -12,6 +14,7 @@ import LocationSection from "./components/task-alerts/LocationSection";
 import BudgetSection from "./components/task-alerts/BudgetSection";
 import AlertFrequencySection from "./components/task-alerts/AlertFrequencySection";
 import FiltersCard from "./components/task-alerts/FiltersCard";
+import SavedFiltersSection from "./components/task-alerts/SavedFiltersSection";
 import BottomNav from "@/components/BottomNav";
 
 // Alert frequency options
@@ -26,6 +29,7 @@ const TaskAlerts = () => {
   const location = useLocation();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { categories, isLoading, error } = useCategories();
+  const { savedFilters, deleteFilter, isLoading: filtersLoading } = useSavedFilters();
   
   // State for alert preferences
   const [alertPreferences, setAlertPreferences] = useState({
@@ -81,6 +85,10 @@ const TaskAlerts = () => {
     setAlertPreferences(prev => ({...prev, isEnabled: enabled}));
   };
 
+  const handleDeleteSavedFilter = (filterId: string) => {
+    deleteFilter(filterId);
+  };
+
   return (
     <div className="bg-cream min-h-screen pb-20">
       {/* Header */}
@@ -102,7 +110,14 @@ const TaskAlerts = () => {
           onToggle={toggleAlerts}
         />
         
-        <FiltersCard title="Alert Preferences">
+        {/* Display saved filters from Find Work page */}
+        <SavedFiltersSection 
+          savedFilters={savedFilters}
+          onDeleteFilter={handleDeleteSavedFilter}
+          isLoading={filtersLoading}
+        />
+        
+        <FiltersCard title="Default Alert Preferences">
           <CategorySection 
             selectedCategories={alertPreferences.categories}
             onCategoriesChange={updateCategories}

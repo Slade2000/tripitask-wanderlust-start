@@ -1,5 +1,4 @@
 
-// Update filter tasks to exclude in_progress and completed tasks
 import { supabase } from "@/integrations/supabase/client";
 
 export interface TaskFilters {
@@ -15,10 +14,13 @@ export interface TaskFilters {
   longitude?: number;
   limit?: number;
   offset?: number;
+  userId?: string; // Added userId to exclude user's own tasks
 }
 
 export async function filterTasks(filters: TaskFilters) {
   try {
+    console.log("Filtering tasks with:", filters);
+    
     let query = supabase
       .from('tasks')
       .select(`
@@ -27,6 +29,11 @@ export async function filterTasks(filters: TaskFilters) {
         task_photos (photo_url)
       `)
       .eq('status', 'open'); // Only select tasks with status 'open'
+
+    // Exclude current user's tasks if userId is provided
+    if (filters.userId) {
+      query = query.neq('user_id', filters.userId);
+    }
 
     // Apply text search filter
     if (filters.search) {
@@ -82,5 +89,33 @@ export async function filterTasks(filters: TaskFilters) {
   } catch (error) {
     console.error("Error in filterTasks:", error);
     return [];
+  }
+}
+
+// Subscribe to real-time task updates
+export function subscribeToTaskUpdates(callback: (payload: any) => void) {
+  try {
+    const channel = supabase
+      .channel('tasks-changes')
+      .on('postgres_changes', 
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'tasks',
+          filter: 'status=eq.open'
+        }, 
+        (payload) => {
+          console.log('Real-time task update received:', payload);
+          callback(payload);
+        }
+      )
+      .subscribe();
+      
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  } catch (error) {
+    console.error('Error subscribing to task updates:', error);
+    return () => {};
   }
 }

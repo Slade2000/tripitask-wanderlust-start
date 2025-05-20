@@ -5,6 +5,9 @@ import FilterPanel from "@/components/find-work/FilterPanel";
 import TaskList from "@/components/find-work/TaskList";
 import SearchFilterBar from "@/components/find-work/SearchFilterBar";
 import { useTaskFilter } from "@/hooks/useTaskFilter";
+import { SaveFilterButton } from "@/components/find-work/SaveFilterButton";
+import { useSavedFilters } from "@/hooks/useSavedFilters";
+import { toast } from "sonner";
 
 const FindWork = () => {
   const location = useLocation();
@@ -38,9 +41,31 @@ const FindWork = () => {
     }
   } = useTaskFilter();
 
+  // Add saved filters hook
+  const { saveFilter } = useSavedFilters();
+
   // Manual refetch button handler
   const handleRefresh = () => {
     refetch();
+  };
+  
+  // Handler to save current filters
+  const handleSaveFilter = (name: string) => {
+    // Create a current filters object
+    const currentFilters = {
+      searchQuery,
+      selectedCategory,
+      distanceRadius,
+      minBudget,
+      maxBudget,
+      location: currentUserLocation ? {
+        name: currentUserLocation.name,
+        latitude: currentUserLocation.latitude, 
+        longitude: currentUserLocation.longitude
+      } : null
+    };
+    
+    return saveFilter(name, currentFilters);
   };
 
   return (
@@ -50,15 +75,29 @@ const FindWork = () => {
           Find Work
         </h1>
 
-        {/* Search and filter bar */}
-        <SearchFilterBar
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          filterOpen={filterOpen}
-          toggleFilters={toggleFilters}
-          onRefresh={handleRefresh}
-          onClearFilters={clearFilters}
-        />
+        {/* Search and filter bar with save filter button */}
+        <div className="flex items-center space-x-2 mb-4">
+          <SearchFilterBar
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            filterOpen={filterOpen}
+            toggleFilters={toggleFilters}
+            onRefresh={handleRefresh}
+            onClearFilters={clearFilters}
+          />
+          
+          <SaveFilterButton 
+            currentFilters={{
+              searchQuery,
+              selectedCategory,
+              distanceRadius,
+              minBudget,
+              maxBudget,
+              location: currentUserLocation
+            }}
+            onSaveFilter={handleSaveFilter}
+          />
+        </div>
 
         {/* Advanced filters panel */}
         {filterOpen && (
