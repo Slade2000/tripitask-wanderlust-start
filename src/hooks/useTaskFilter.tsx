@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getAllAvailableTasks } from "@/services/task/queries/getAllAvailableTasks";
@@ -24,7 +25,7 @@ export interface TaskFilterState {
 }
 
 export const useTaskFilter = () => {
-  const { toast } = useToast();
+  const { toast: toastHandler } = useToast();
   const { user } = useAuth();  // Get the current user from AuthContext
   
   // Filter states
@@ -70,7 +71,7 @@ export const useTaskFilter = () => {
         },
         (error) => {
           console.error("Error getting geolocation:", error);
-          toast({
+          toastHandler({
             title: "Location Error",
             description: "Could not get your location. Using default location.",
             variant: "destructive",
