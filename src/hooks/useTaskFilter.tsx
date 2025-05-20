@@ -1,10 +1,10 @@
-
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getAllAvailableTasks } from "@/services/task/queries/getAllAvailableTasks";
 import { subscribeToTaskUpdates } from "@/services/task/queries/filterTasks";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 interface TaskLocation {
   name: string;
@@ -168,7 +168,7 @@ export const useTaskFilter = () => {
       console.log('Task update received:', payload);
       if (payload.eventType === 'INSERT') {
         // Show notification for new tasks
-        toast.info('New task posted! Pull to refresh.');
+        toast("New task posted! Pull to refresh.");
       }
       
       // Trigger a refetch to update the task list

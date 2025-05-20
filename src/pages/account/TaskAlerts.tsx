@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
@@ -14,7 +13,7 @@ import LocationSection from "./components/task-alerts/LocationSection";
 import BudgetSection from "./components/task-alerts/BudgetSection";
 import AlertFrequencySection from "./components/task-alerts/AlertFrequencySection";
 import FiltersCard from "./components/task-alerts/FiltersCard";
-import SavedFiltersSection from "./components/task-alerts/SavedFiltersSection";
+import { SavedFiltersSection } from "./components/task-alerts/SavedFiltersSection";
 import BottomNav from "@/components/BottomNav";
 
 // Alert frequency options
