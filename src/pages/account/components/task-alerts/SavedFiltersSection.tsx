@@ -102,7 +102,7 @@ export function SavedFiltersSection({
             </div>
             
             <div className="text-sm text-gray-500">
-              <p>Created on {formatDate(filter.createdAt)}</p>
+              <p>Created on {formatDate(filter.created_at)}</p>
               <div className="flex flex-wrap gap-1 mt-2">
                 {filter.filters.searchQuery && (
                   <Badge variant="outline" className="text-xs">

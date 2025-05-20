@@ -2,6 +2,8 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface SavedFilter {
   id: string;
@@ -18,37 +20,91 @@ export interface SavedFilter {
       longitude?: number;
     } | null;
   };
-  createdAt: string;
+  created_at: string;
 }
 
 export function useSavedFilters() {
-  const [savedFilters, setSavedFilters] = useState<SavedFilter[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
+  const queryClient = useQueryClient();
 
-  // Load saved filters from localStorage
-  useEffect(() => {
-    if (user?.id) {
-      const loadSavedFilters = () => {
-        try {
-          const storedFilters = localStorage.getItem(`taskFilters_${user.id}`);
-          if (storedFilters) {
-            setSavedFilters(JSON.parse(storedFilters));
-          }
-          setIsLoading(false);
-        } catch (error) {
-          console.error('Error loading saved filters:', error);
-          setIsLoading(false);
-        }
-      };
+  // Fetch saved filters from database
+  const { data: savedFilters = [], isLoading: filtersLoading } = useQuery({
+    queryKey: ['savedFilters', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      
+      try {
+        const { data, error } = await supabase
+          .from('saved_filters')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+          
+        if (error) throw error;
+        
+        return data as SavedFilter[];
+      } catch (error) {
+        console.error('Error loading saved filters:', error);
+        return [];
+      }
+    },
+    enabled: !!user?.id,
+  });
 
-      loadSavedFilters();
-    } else {
-      setIsLoading(false);
+  // Insert new filter mutation
+  const saveFilterMutation = useMutation({
+    mutationFn: async ({ name, filters }: { name: string, filters: SavedFilter['filters'] }) => {
+      if (!user?.id) throw new Error("User not authenticated");
+      
+      const { data, error } = await supabase
+        .from('saved_filters')
+        .insert({
+          user_id: user.id,
+          name,
+          filters
+        })
+        .select()
+        .single();
+        
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['savedFilters', user?.id] });
+      toast.success("Filter saved successfully");
+    },
+    onError: (error) => {
+      console.error('Error saving filter:', error);
+      toast.error("Failed to save filter");
     }
-  }, [user?.id]);
+  });
 
-  // Save filters to localStorage
+  // Delete filter mutation
+  const deleteFilterMutation = useMutation({
+    mutationFn: async (filterId: string) => {
+      if (!user?.id) throw new Error("User not authenticated");
+      
+      const { error } = await supabase
+        .from('saved_filters')
+        .delete()
+        .eq('id', filterId)
+        .eq('user_id', user.id);
+        
+      if (error) throw error;
+      return filterId;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['savedFilters', user?.id] });
+      toast.success("Filter deleted successfully");
+    },
+    onError: (error) => {
+      console.error('Error deleting filter:', error);
+      toast.error("Failed to delete filter");
+    }
+  });
+
+  // Save filter function
   const saveFilter = (name: string, filters: SavedFilter['filters']) => {
     if (!user?.id) {
       toast.error("You must be logged in to save filters");
@@ -56,38 +112,23 @@ export function useSavedFilters() {
     }
 
     try {
-      const newFilter: SavedFilter = {
-        id: crypto.randomUUID(),
-        name,
-        filters,
-        createdAt: new Date().toISOString(),
-      };
-
-      const updatedFilters = [...savedFilters, newFilter];
-      localStorage.setItem(`taskFilters_${user.id}`, JSON.stringify(updatedFilters));
-      setSavedFilters(updatedFilters);
-      toast.success("Filter saved successfully");
+      saveFilterMutation.mutate({ name, filters });
       return true;
     } catch (error) {
       console.error('Error saving filter:', error);
-      toast.error("Failed to save filter");
       return false;
     }
   };
 
-  // Delete a filter
+  // Delete filter function
   const deleteFilter = (filterId: string) => {
     if (!user?.id) return false;
 
     try {
-      const updatedFilters = savedFilters.filter(filter => filter.id !== filterId);
-      localStorage.setItem(`taskFilters_${user.id}`, JSON.stringify(updatedFilters));
-      setSavedFilters(updatedFilters);
-      toast.success("Filter deleted successfully");
+      deleteFilterMutation.mutate(filterId);
       return true;
     } catch (error) {
       console.error('Error deleting filter:', error);
-      toast.error("Failed to delete filter");
       return false;
     }
   };
@@ -96,6 +137,6 @@ export function useSavedFilters() {
     savedFilters,
     saveFilter,
     deleteFilter,
-    isLoading
+    isLoading: filtersLoading || saveFilterMutation.isPending || deleteFilterMutation.isPending
   };
 }
